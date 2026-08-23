@@ -1,0 +1,422 @@
+@import "tailwindcss";
+
+/* ==================================================================
+   HAMKOR SAVDO — design tokens, straight from the brand guidebook.
+
+   Corporate colour  #5a3089 (CMYK 80 93 0 1 / RGB 90 48 137) + #FFFFFF
+   Secondary key     #dfd01f (the yellow key-visual from the guidebook)
+   Corporate fonts   TT Commons  -> Outfit      (geometric, same role)
+                     Bebas Neue Pro -> Bebas Neue (numerals / labels)
+
+   Every text pair below is >= 4.5:1 (measured). Yellow NEVER carries text
+   on white (1.59:1) — it is only ever a block, rule or badge ground.
+
+   NOTE on motion: this site ships no animation library. Everything moves
+   with CSS transitions/keyframes; only ~1KB of inline JS toggles a class
+   when a section enters the viewport. Slow connections were the constraint.
+   ================================================================== */
+
+:root {
+  /* Brand */
+  --purple: #5a3089;
+  --purple-dark: #45246a;
+  --purple-deep: #2f1848;
+  --purple-soft: #7a4fb0;
+  --purple-100: #e6dcf0;
+  --purple-50: #f3eef8;
+
+  --yellow: #dfd01f;
+  --yellow-soft: #f0e565;
+
+  /* Ground + ink */
+  --ground: #ffffff;
+  --ground-2: #f7f5fa;
+  --ink: #1a1130;
+  --ink-2: #55506b;
+  --ink-3: #6b6480;
+  --line: #e6e1ee;
+
+  /* On-purple ink */
+  --on-purple: #ffffff;
+  --on-purple-2: #cbb8e0;
+
+  /* Motion — one shared rhythm, per the guidebook's calm tone */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-1: 180ms;
+  --dur-2: 320ms;
+  --dur-3: 620ms;
+
+  --radius: 18px;
+  --radius-lg: 28px;
+}
+
+@theme inline {
+  --color-purple: var(--purple);
+  --color-purple-dark: var(--purple-dark);
+  --color-purple-deep: var(--purple-deep);
+  --color-purple-soft: var(--purple-soft);
+  --color-purple-100: var(--purple-100);
+  --color-purple-50: var(--purple-50);
+  --color-yellow: var(--yellow);
+  --color-yellow-soft: var(--yellow-soft);
+  --color-ground: var(--ground);
+  --color-ground-2: var(--ground-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-on-purple: var(--on-purple);
+  --color-on-purple-2: var(--on-purple-2);
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-display: var(--font-bebas), var(--font-outfit), system-ui, sans-serif;
+}
+
+/* ---------------- base ---------------- */
+
+html {
+  scroll-behavior: smooth;
+  background: var(--ground);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.on-purple :focus-visible {
+  outline-color: var(--yellow);
+}
+
+/* ---------------- type ---------------- */
+
+.display {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/* Bebas Neue tier — numerals, indices and small caps labels */
+.numeral {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kicker {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--purple);
+}
+.on-purple .kicker {
+  color: var(--yellow);
+}
+
+/* The guidebook's signature move: a yellow bar sitting under a key word. */
+.mark {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.mark::after {
+  content: "";
+  position: absolute;
+  left: -0.06em;
+  right: -0.06em;
+  bottom: 0.06em;
+  height: 0.32em;
+  background: var(--yellow);
+  z-index: -1;
+  transform-origin: left;
+}
+/* Drawn by default; only a block still waiting to be revealed starts empty. */
+.reveal:not(.is-in) .mark::after {
+  transform: scaleX(0);
+}
+.reveal.is-armed .mark::after {
+  transition: transform var(--dur-3) var(--ease) 240ms;
+}
+
+/* ---------------- buttons ---------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0 1.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  transition:
+    background-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
+}
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--purple);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--purple-dark);
+}
+
+.btn-yellow {
+  background: var(--yellow);
+  color: var(--ink);
+}
+.btn-yellow:hover {
+  background: var(--yellow-soft);
+}
+
+.btn-outline {
+  border: 2px solid var(--purple);
+  color: var(--purple);
+  background: transparent;
+}
+.btn-outline:hover {
+  background: var(--purple);
+  color: #fff;
+}
+
+.on-purple .btn-outline {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+.on-purple .btn-outline:hover {
+  background: #fff;
+  color: var(--purple);
+  border-color: #fff;
+}
+
+/* ---------------- mobile menu (no JavaScript required) ---------------- */
+
+.mobile-menu > summary {
+  list-style: none;
+}
+.mobile-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.mobile-menu > summary::marker {
+  content: "";
+}
+.mobile-menu:not([open]) .menu-close-icon,
+.mobile-menu[open] .menu-open-icon {
+  display: none;
+}
+.mobile-menu[open] > summary {
+  position: relative;
+  z-index: 60;
+  border-color: transparent;
+  background: var(--purple);
+  color: #fff;
+}
+
+/* A fixed-position child can escape the disclosure's own hiding in some
+   engines, which would leave focusable links behind a closed menu. Hide it
+   explicitly instead of trusting that. */
+.mobile-menu:not([open]) .mobile-menu-panel {
+  display: none;
+}
+
+.mobile-menu-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  padding-top: 5rem;
+  overscroll-behavior: contain;
+  overflow-y: auto;
+}
+
+/* ---------------- surfaces ---------------- */
+
+.card {
+  background: var(--ground);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition:
+    transform var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: var(--purple-100);
+  box-shadow: 0 18px 40px -24px rgba(47, 24, 72, 0.45);
+}
+
+.on-purple .card {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.on-purple .card-hover:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: none;
+}
+
+/* Placeholder frames for real company photography. Deliberately visible
+   as placeholders until the business supplies its own images. */
+.media-slot {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 2px dashed var(--purple-100);
+  background: var(--purple-50);
+}
+.on-purple .media-slot {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ---------------- reveal (IntersectionObserver adds .is-in) ---------------- */
+
+/* `.reveal` is added by components/ui/Reveal.tsx at runtime — never by the
+   server — so the page is fully visible without JavaScript.
+   Transitions live on `.is-armed`, which is applied one reflow later: hiding a
+   block that has already painted must be instant, or the content would visibly
+   fade out before it fades back in. */
+.reveal > * {
+  opacity: 0;
+  transform: translateY(22px);
+}
+.reveal.is-armed > * {
+  transition:
+    opacity var(--dur-3) var(--ease),
+    transform var(--dur-3) var(--ease);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.reveal.is-in > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------------- decorative motion ---------------- */
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 34s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise var(--dur-3) var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+@keyframes draw-bridge {
+  from {
+    stroke-dashoffset: 260;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Scroll-linked parallax where the browser supports it, free of JS.
+   Older browsers simply get the static position. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .parallax-slow {
+      animation: parallax-y linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+  @keyframes parallax-y {
+    from {
+      transform: translateY(6%);
+    }
+    to {
+      transform: translateY(-6%);
+    }
+  }
+}
+
+/* ---------------- reduced motion ---------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal > * {
+    opacity: 1;
+    transform: none;
+  }
+  .reveal:not(.is-in) .mark::after {
+    transform: scaleX(1);
+  }
+}
