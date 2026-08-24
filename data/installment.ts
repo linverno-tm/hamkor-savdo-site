@@ -1,8 +1,11 @@
 /**
  * The installment journey. The four steps describe the generic in-store flow;
- * the two hard facts (24 months, passport + card) are verified from the
+ * the two hard facts (muddat, passport + card) are verified from the
  * Instagram bio.
  */
+
+import { site } from "./site";
+
 
 export interface InstallmentStep {
   index: string;
@@ -29,6 +32,6 @@ export const installmentSteps: InstallmentStep[] = [
   {
     index: "04",
     title: "Qulay muddatda to'lang",
-    detail: "To'lovni 24 oygacha bo'lib to'laysiz.",
+    detail: `To'lovni ${site.facts.installmentMonthsMax} oygacha bo'lib to'laysiz.`,
   },
 ];
