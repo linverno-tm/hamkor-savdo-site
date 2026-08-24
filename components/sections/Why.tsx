@@ -10,7 +10,7 @@ export function Why() {
     <section
       id="afzalliklar"
       aria-labelledby="why-title"
-      className="bg-ground-2 py-24 sm:py-32"
+      className="bg-ground-2 py-16 sm:py-24"
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading

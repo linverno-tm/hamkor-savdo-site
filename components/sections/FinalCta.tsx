@@ -10,7 +10,7 @@ export function FinalCta() {
     <section
       id="hamkor-boling"
       aria-labelledby="cta-title"
-      className="on-purple relative overflow-hidden bg-purple py-24 text-white sm:py-32"
+      className="on-purple relative overflow-hidden bg-purple py-16 text-white sm:py-24"
     >
       <Logo
         variant="mark"

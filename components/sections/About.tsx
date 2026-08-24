@@ -12,7 +12,7 @@ export function About() {
     <section
       id="biz-haqimizda"
       aria-labelledby="about-title"
-      className="relative bg-ground py-24 sm:py-32"
+      className="relative bg-ground py-16 sm:py-24"
     >
       <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
         <div data-reveal>
@@ -21,6 +21,22 @@ export function About() {
             Biz shunchaki <br className="hidden sm:block" />
             do&apos;kon emasmiz
           </h2>
+
+          {/* Sarlavha ostidagi bo'sh ustunni to'ldiradi va matndagi "tarmoq"
+              so'zini ko'rsatib beradi. Ataylab boshqa filialdan olingan surat:
+              yonidagi bo'limlarda Andijonning peshtoqi va Shahrixonning
+              peshtaxtasi turibdi, bir rasm ikki joyda takrorlanmasin. */}
+          <img
+            src="/filiallar/andijon-amir-temur/zal-4-960.webp"
+            srcSet="/filiallar/andijon-amir-temur/zal-4-480.webp 480w, /filiallar/andijon-amir-temur/zal-4-960.webp 960w"
+            sizes="(max-width: 1024px) 100vw, 440px"
+            width={960}
+            height={720}
+            alt="HAMKOR SAVDO savdo maydoni — zargarlik peshtaxtasi va texnika bo'limi bir zalda"
+            className="mt-8 block w-full rounded-[28px] object-cover"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
 
         <div data-reveal className="space-y-6 text-lg leading-relaxed text-ink-2">

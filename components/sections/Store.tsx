@@ -3,6 +3,7 @@ import { site } from "@/data/site";
 import { branches } from "@/data/branches";
 import { branchPhotos } from "@/lib/photos";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Logo } from "@/components/ui/Logo";
 
 /**
  * Scene 08 — "Haqiqiy do'kon qanday?"
@@ -24,7 +25,7 @@ export function Store() {
   });
 
   return (
-    <section id="dokon" aria-labelledby="store-title" className="bg-ground py-24 sm:py-32">
+    <section id="dokon" aria-labelledby="store-title" className="bg-ground py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           id="store-title"
@@ -33,7 +34,10 @@ export function Store() {
           lead="Onlayn rasm emas, haqiqiy do'kon. Keling, mahsulotni qo'lingizga olib ko'ring, narxini solishtiring, savol bering — jamoamiz yordam beradi."
         />
 
-        <ul data-reveal className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Ikki ustun, to'rtta emas: filial surati kartochkaning bosh qismiga
+            aylanadi. To'rtta kichkina rasm yonma-yon turganda hech qaysisi
+            ko'rinmaydi. */}
+        <ul data-reveal className="mt-10 grid gap-5 sm:grid-cols-2">
           {cards.map(({ branch, cover, count }) => (
             <li key={branch.id}>
               <Link
@@ -44,17 +48,22 @@ export function Store() {
                   <img
                     src={cover.src}
                     srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    sizes="(max-width: 640px) 100vw, 50vw"
                     width={960}
                     height={720}
                     alt={cover.alt}
                     loading="lazy"
                     decoding="async"
-                    className="block aspect-[4/3] w-full object-cover"
+                    className="block aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 ) : (
-                  <span className="media-slot flex aspect-[4/3] w-full items-center justify-center rounded-none border-0 border-b border-dashed text-center text-sm text-ink-3">
-                    Surat kutilmoqda
+                  /* Suratsiz filial ham kartochkasini yo'qotmaydi — manzili va
+                     telefoni baribir kerak. Bo'sh ramka o'rniga brend belgisi
+                     turadi: sahifa buzilgandek emas, tayyorlanayotgandek
+                     ko'rinsin. */
+                  <span className="media-slot flex aspect-[16/10] w-full flex-col items-center justify-center gap-3 rounded-none border-0 border-b border-dashed text-center text-sm text-ink-3">
+                    <Logo variant="mark" className="h-10 w-auto text-purple-100" />
+                    Suratlar tayyorlanmoqda
                   </span>
                 )}
                 <span className="flex flex-1 flex-col p-5">

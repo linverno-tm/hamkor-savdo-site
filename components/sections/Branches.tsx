@@ -18,7 +18,7 @@ export function Branches() {
   const hours = site.unpublished.openingHours;
 
   return (
-    <section id="filiallar" aria-labelledby="branches-title" className="bg-ground-2 py-24 sm:py-32">
+    <section id="filiallar" aria-labelledby="branches-title" className="bg-ground-2 py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           id="branches-title"

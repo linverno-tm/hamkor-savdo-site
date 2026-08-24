@@ -42,7 +42,7 @@ export function Scale() {
     <section
       id="kolam"
       aria-labelledby="scale-title"
-      className="on-purple relative overflow-hidden bg-purple py-24 text-white sm:py-32"
+      className="on-purple relative overflow-hidden bg-purple py-16 text-white sm:py-24"
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div data-reveal className="text-center">
