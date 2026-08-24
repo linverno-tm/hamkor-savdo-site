@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { navigation } from "@/data/navigation";
 import { site } from "@/data/site";
 import { Logo } from "@/components/ui/Logo";
@@ -19,19 +20,19 @@ export function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-ground">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-        <a href="#hero" className="shrink-0 text-purple" aria-label="HAMKOR SAVDO — bosh sahifa">
+        <Link href="/" className="shrink-0 text-purple" aria-label="HAMKOR SAVDO — bosh sahifa">
           <Logo className="h-8 w-auto sm:h-9" />
-        </a>
+        </Link>
 
         <nav aria-label="Asosiy menyu" className="hidden items-center gap-6 lg:flex">
           {navigation.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className="text-[0.95rem] font-medium text-ink-2 transition-colors hover:text-purple"
             >
               {item.label}
-            </a>
+            </Link>
           ))}
           <a href={`tel:${site.phone}`} className="btn btn-primary !min-h-11 !px-5">
             {site.phoneDisplay}
@@ -69,7 +70,7 @@ export function Header() {
           <div className="on-purple mobile-menu-panel bg-purple text-white">
             <nav aria-label="Mobil menyu" className="flex flex-1 flex-col justify-center gap-1 px-6">
               {navigation.map((item, i) => (
-                <a
+                <Link
                   key={item.href}
                   href={item.href}
                   className="flex items-baseline gap-4 rounded-xl py-3 transition-colors hover:text-yellow"
@@ -78,7 +79,7 @@ export function Header() {
                     0{i + 1}
                   </span>
                   <span className="display text-3xl">{item.label}</span>
-                </a>
+                </Link>
               ))}
             </nav>
             <div className="grid gap-3 px-6 pb-10 sm:grid-cols-2">
