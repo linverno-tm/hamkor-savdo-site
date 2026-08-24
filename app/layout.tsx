@@ -25,7 +25,7 @@ const bebas = Bebas_Neue({
 });
 
 const description =
-  "HAMKOR SAVDO — Andijon viloyatidagi 4 ta filial: tilla, texnika va mebel. 7000 dan ortiq mahsulot, 24 oygacha muddatli to'lov, bepul yetkazib berish va o'rnatish.";
+  `HAMKOR SAVDO — Andijon viloyatidagi ${site.facts.branchCount} ta filial: tilla, texnika va mebel. ${site.facts.productCount.replace("+", " dan ortiq")} mahsulot, ${site.facts.installmentMonthsMax} oygacha muddatli to'lov, bepul yetkazib berish va o'rnatish.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

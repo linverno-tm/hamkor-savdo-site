@@ -3,6 +3,15 @@
  * Every entry traces to the official Telegram channel bio or the Instagram bio.
  */
 
+/*
+ * Muddat bitta joyda — data/site.ts dagi `installmentMonthsMax`.
+ * Sabab: Asaka filialidagi bannerda "18 oygacha" yozuvi bor, saytda esa
+ * hamma joyda 24 turibdi. Raqam o'zgarsa, bitta qatorni tuzatish yetarli
+ * bo'lsin — matnlar bo'ylab qidirib yurilmasin.
+ */
+import { site } from "./site";
+
+
 export interface Advantage {
   id: string;
   title: string;
@@ -12,9 +21,9 @@ export interface Advantage {
 export const advantages: Advantage[] = [
   {
     id: "installment",
-    title: "24 oygacha muddatli to'lov",
+    title: `${site.facts.installmentMonthsMax} oygacha muddatli to'lov`,
     detail:
-      "Mahsulotni bugun olib keting, to'lovni o'zingizga qulay muddatga bo'lib to'lang — 24 oygacha.",
+      `Mahsulotni bugun olib keting, to'lovni o'zingizga qulay muddatga bo'lib to'lang — ${site.facts.installmentMonthsMax} oygacha.`,
   },
   {
     id: "documents",
