@@ -420,3 +420,119 @@ section[id] {
     transform: scaleX(1);
   }
 }
+
+/* ---------------- photo gallery ---------------- */
+
+.photo {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--purple-50);
+}
+.photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform var(--dur-3) var(--ease);
+}
+.photo-lead img {
+  aspect-ratio: 16 / 7;
+}
+.photo:hover img {
+  transform: scale(1.04);
+}
+
+/* Caption sits on a gradient so it stays legible over any photograph. */
+.photo-cap {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 2.5rem 1rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(to top, rgba(26, 17, 48, 0.85), transparent);
+}
+.photo-lead .photo-cap {
+  font-size: 1rem;
+  padding: 3.5rem 1.5rem 1.25rem;
+}
+
+/* ---------------- lightbox (no JavaScript) ---------------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.lightbox:target {
+  display: flex;
+}
+.lightbox-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 17, 48, 0.92);
+}
+.lightbox-figure {
+  position: relative;
+  margin: 0;
+  max-width: min(100%, 1100px);
+}
+.lightbox-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 82svh;
+  object-fit: contain;
+  border-radius: var(--radius);
+}
+.lightbox-figure figcaption {
+  margin-top: 0.9rem;
+  text-align: center;
+  color: #fff;
+  font-size: 0.9375rem;
+}
+.lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* Sahifadan sahifaga o'tganda yumshoq kirish.
+   DIQQAT: bu yerda faqat `opacity` o'zgaradi, `transform` emas. Sababi —
+   transformli element o'z ichidagi `position: fixed` elementlar uchun
+   chegara (containing block) bo'lib qoladi va suratni kattalashtirish
+   ekranga emas, `main` ichiga bog'lanib qolardi. */
+@media (prefers-reduced-motion: no-preference) {
+  main {
+    animation: page-in 260ms var(--ease) both;
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

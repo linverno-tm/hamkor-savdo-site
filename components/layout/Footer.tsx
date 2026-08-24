@@ -19,9 +19,9 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm">
             {navigation.map((item) => (
               <li key={item.href}>
-                <a href={item.href} className="text-ink-2 transition-colors hover:text-purple">
+                <Link href={item.href} className="text-ink-2 transition-colors hover:text-purple">
                   {item.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

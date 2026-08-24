@@ -25,11 +25,14 @@ $THROTTLE_SECONDS = 20;
 $PHONE_DISPLAY = '+998 74 342 08 80';
 $PHONE_LINK = '+998743420880';
 
+/* Har bir filial uchun nom va xeshteg. Xeshteg call-center guruhida
+   qidirish uchun: operator #asaka deb qidirsa, faqat o'z filialining
+   arizalarini ko'radi. */
 $FILIALLAR = array(
-    'shahrixon-ozodbek'  => "Shahrixon — Ozodbek savdo markazi",
-    'shahrixon-bog'      => "Shahrixon — Markaziy istirohat bog'i yonida",
-    'asaka-umid'         => "Asaka — Makro supermarketi, 2-qavat",
-    'andijon-amir-temur' => "Andijon — Amir Temur shoh ko'chasi, 62",
+    'shahrixon-ozodbek'  => array("Shahrixon — Ozodbek savdo markazi", '#shahrixon_ozodbek'),
+    'shahrixon-bog'      => array("Shahrixon — Markaziy istirohat bog'i yonida", '#shahrixon_bog'),
+    'asaka-umid'         => array("Asaka — Makro supermarketi, 2-qavat", '#asaka'),
+    'andijon-amir-temur' => array("Andijon — Amir Temur shoh ko'chasi, 62", '#andijon'),
 );
 
 /** mbstring bo'lmasa ham ishlashi uchun. */
@@ -113,8 +116,20 @@ $page   = hs_cut(trim(isset($_POST['page']) ? $_POST['page'] : ''), 200);
 if (hs_len($name) < 2) {
     hs_fail(422, "Ismingiz kiritilmagan. Iltimos, formani qayta to'ldiring.");
 }
-if (strlen(preg_replace('/\D/', '', $phone)) < $PHONE_MIN_DIGITS) {
+$digits = preg_replace('/\D/', '', $phone);
+if (strlen($digits) < $PHONE_MIN_DIGITS) {
     hs_fail(422, "Telefon raqami to'liq kiritilmagan. Iltimos, qayta urinib ko'ring.");
+}
+
+/* Telegram +998... ko'rinishidagi raqamni o'zi bosiladigan qilib beradi,
+   shuning uchun operator qo'lda ko'chirmasin. */
+$tel = $phone;
+if (strlen($digits) === 9) {
+    $tel = '+998' . $digits;
+} elseif (strlen($digits) === 12 && substr($digits, 0, 3) === '998') {
+    $tel = '+' . $digits;
+} elseif (strlen($digits) > 9) {
+    $tel = '+' . $digits;
 }
 
 /* Oddiy tezlik cheklovi: bitta IP ketma-ket ariza yubormasin. */
@@ -136,20 +151,24 @@ if ($token === '' || $chatId === '') {
     hs_fail(503, "Ariza qabul qilish vaqtincha ishlamayapti. Iltimos, telefon orqali bog'laning.");
 }
 
+$known = isset($FILIALLAR[$branch]);
+$filialNomi = $known ? $FILIALLAR[$branch][0] : 'tanlanmagan';
+$filialTag  = $known ? $FILIALLAR[$branch][1] : '#filial_tanlanmagan';
+
+/* Filial birinchi qatorda va xeshteg bilan — operator qaysi filialga
+   tegishli ekanini bir qarashda ko'radi. */
 $lines = array(
-    '🟣 Saytdan yangi ariza',
+    '🟣 YANGI ARIZA — ' . $filialTag,
     '',
+    '📍 Filial: ' . $filialNomi,
     '👤 Ism: ' . $name,
-    '📞 Telefon: ' . $phone,
-    '📍 Filial: ' . (isset($FILIALLAR[$branch]) ? $FILIALLAR[$branch] : 'tanlanmagan'),
+    '📞 Telefon: ' . $tel,
 );
 if ($note !== '') {
-    $lines[] = '💬 Izoh: ' . $note;
+    $lines[] = "💬 So'rovi: " . $note;
 }
-if ($page !== '') {
-    $lines[] = '🔗 Sahifa: ' . $page;
-}
-$lines[] = '🕒 ' . date('d.m.Y H:i');
+$lines[] = '';
+$lines[] = '🕒 ' . date('d.m.Y H:i') . ($page !== '' ? ' · ' . $page : '');
 
 /* parse_mode berilmaydi — foydalanuvchi matni hech qachon belgilash sifatida
    talqin qilinmasin. */

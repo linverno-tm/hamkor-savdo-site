@@ -5,9 +5,11 @@ import { branches, mapsUrl } from "@/data/branches";
 import { categories } from "@/data/categories";
 import { site } from "@/data/site";
 import { absolute } from "@/lib/seo";
+import { branchPhotos } from "@/lib/photos";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { LeadForm } from "@/components/sections/LeadForm";
+import { BranchGallery } from "@/components/sections/BranchGallery";
 import { Logo } from "@/components/ui/Logo";
 
 /**
@@ -54,6 +56,7 @@ export default async function BranchPage({
   const phone = branch.phone ?? site.phone;
   const phoneLabel = branch.phoneDisplay ?? site.phoneDisplay;
   const others = branches.filter((b) => b.id !== branch.id);
+  const photos = branchPhotos(branch.id, branch.city);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -186,6 +189,8 @@ export default async function BranchPage({
             </div>
           </div>
         </section>
+
+        <BranchGallery photos={photos} city={branch.city} slug={branch.id} />
 
         <LeadForm branchId={branch.id} />
 

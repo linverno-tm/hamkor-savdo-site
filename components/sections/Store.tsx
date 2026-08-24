@@ -1,24 +1,28 @@
+import Link from "next/link";
 import { site } from "@/data/site";
+import { branches } from "@/data/branches";
+import { branchPhotos } from "@/lib/photos";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
  * Scene 08 — "Haqiqiy do'kon qanday?"
  *
- * [REAL STORE PHOTO REQUIRED] × 3 — these frames are deliberate, visibly
- * labelled placeholders for the company's own photography. No stock imagery
- * stands in for a real business. To fill them: drop files into
- * `public/store/` and replace each figure's placeholder block with
- * `<Image src="/store/…" fill sizes="(max-width:768px) 100vw, 33vw" />`.
- * The layout, aspect ratios and captions are already built around them.
+ * One real photograph per branch, each linking to that branch's own page where
+ * the full set lives. Every image is the company's own — no stock photography
+ * stands in for the business.
+ *
+ * A branch that has not supplied photos yet keeps a clearly-labelled empty
+ * frame rather than borrowing another branch's picture: the section is meant to
+ * prove these places are real, and a stand-in would quietly undo that.
  */
-
-const slots = [
-  { id: "bino", title: "Do'kon binosi", note: "Filial tashqi ko'rinishi" },
-  { id: "zal", title: "Savdo zali", note: "Tilla, texnika va mebel bo'limlari" },
-  { id: "jamoa", title: "Jamoamiz", note: "Har kuni mijozlar xizmatida" },
-];
-
 export function Store() {
+  const cards = branches.map((b) => {
+    const photos = branchPhotos(b.id, b.city);
+    // Prefer the storefront shot; fall back to the first interior.
+    const cover = photos.find((p) => p.kind === "tashqi") ?? photos[0] ?? null;
+    return { branch: b, cover, count: photos.length };
+  });
+
   return (
     <section id="dokon" aria-labelledby="store-title" className="bg-ground py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -29,36 +33,43 @@ export function Store() {
           lead="Onlayn rasm emas, haqiqiy do'kon. Keling, mahsulotni qo'lingizga olib ko'ring, narxini solishtiring, savol bering — jamoamiz yordam beradi."
         />
 
-        <div data-reveal className="mt-14 grid gap-5 md:grid-cols-3">
-          {slots.map((slot) => (
-            <figure key={slot.id} className="media-slot flex aspect-[4/3] flex-col justify-end p-6">
-              <span
-                aria-hidden="true"
-                className="absolute right-4 top-4 rounded-full bg-purple px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white"
+        <ul data-reveal className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map(({ branch, cover, count }) => (
+            <li key={branch.id}>
+              <Link
+                href={`/filiallar/${branch.id}`}
+                className="card card-hover group flex h-full flex-col overflow-hidden"
               >
-                Surat joyi
-              </span>
-              <svg
-                aria-hidden="true"
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-purple-100"
-                width="64"
-                height="64"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.4"
-              >
-                <rect x="3" y="5" width="18" height="14" rx="2.5" />
-                <circle cx="8.5" cy="10" r="1.6" />
-                <path d="M3 17l5-4.5 3.5 3L15 12l6 5.5" />
-              </svg>
-              <figcaption className="relative">
-                <h3 className="font-semibold text-ink">{slot.title}</h3>
-                <p className="mt-1 text-sm text-ink-2">{slot.note}</p>
-              </figcaption>
-            </figure>
+                {cover ? (
+                  <img
+                    src={cover.src}
+                    srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    width={960}
+                    height={720}
+                    alt={cover.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className="block aspect-[4/3] w-full object-cover"
+                  />
+                ) : (
+                  <span className="media-slot flex aspect-[4/3] w-full items-center justify-center rounded-none border-0 border-b border-dashed text-center text-sm text-ink-3">
+                    Surat kutilmoqda
+                  </span>
+                )}
+                <span className="flex flex-1 flex-col p-5">
+                  <span className="numeral text-2xl tracking-[0.06em] text-purple">
+                    {branch.city}
+                  </span>
+                  <span className="mt-1 text-sm text-ink-2">{branch.landmark}</span>
+                  <span className="mt-3 text-sm font-semibold text-purple group-hover:underline">
+                    {count > 0 ? `${count} ta surat` : "Batafsil"} &rarr;
+                  </span>
+                </span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <div
           data-reveal

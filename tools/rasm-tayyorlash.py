@@ -27,6 +27,13 @@ import sys
 
 from PIL import Image, ImageOps
 
+try:  # iPhone HEIC fayllari uchun
+    import pillow_heif
+    pillow_heif.register_heif_opener()
+except ImportError:
+    print("Eslatma: pillow-heif o'rnatilmagan, HEIC fayllar o'tkazib yuboriladi.")
+    print("O'rnatish uchun: python -m pip install pillow-heif")
+
 ASL = r"D:/CLAUDE folder/HamkorSaVDO/rasmlar/asl"
 CHIQISH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public", "filiallar")
 
