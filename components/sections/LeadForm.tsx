@@ -46,7 +46,7 @@ export function LeadForm({ branchId }: { branchId?: string }) {
   }
 
   return (
-    <section id="ariza" aria-labelledby="lead-title" className="bg-ground py-24 sm:py-32">
+    <section id="ariza" aria-labelledby="lead-title" className="bg-ground py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>

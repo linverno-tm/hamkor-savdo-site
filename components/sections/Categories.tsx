@@ -9,7 +9,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  */
 export function Categories() {
   return (
-    <section id="yonalishlar" aria-labelledby="categories-title" className="bg-ground py-24 sm:py-32">
+    <section id="yonalishlar" aria-labelledby="categories-title" className="bg-ground py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           id="categories-title"
@@ -44,17 +44,35 @@ export function Categories() {
               id={`yonalish-${c.id}`}
               className="card card-hover group scroll-mt-28 overflow-hidden"
             >
-              <div className="flex items-start justify-between gap-4 bg-purple-50 px-7 pb-6 pt-7">
-                <div>
-                  <span className="numeral text-sm tracking-[0.3em] text-ink-3" aria-hidden="true">
-                    {c.index}
-                  </span>
-                  <h3 className="numeral mt-2 text-5xl tracking-[0.04em] text-purple">{c.name}</h3>
-                </div>
-                <span
-                  aria-hidden="true"
-                  className="mt-1 h-3 w-10 shrink-0 rounded-full bg-yellow transition-all duration-300 group-hover:w-16"
+              {/* The department itself. The name sits on the photograph over a
+                  dark gradient rather than beside it — the frame and the label
+                  then read as one object instead of two stacked boxes. */}
+              <div className="photo relative rounded-none">
+                <img
+                  src={c.photo.src}
+                  srcSet={`${c.photo.srcSmall} 480w, ${c.photo.src} 900w`}
+                  sizes="(max-width: 1024px) 100vw, 400px"
+                  width={900}
+                  height={675}
+                  alt={c.photo.alt}
+                  loading="lazy"
+                  decoding="async"
                 />
+                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-6 pt-16 [background:linear-gradient(to_top,rgba(26,17,48,0.88),rgba(26,17,48,0.35)_45%,transparent)]">
+                  <div>
+                    <span
+                      className="numeral text-sm tracking-[0.3em] text-white/70"
+                      aria-hidden="true"
+                    >
+                      {c.index}
+                    </span>
+                    <h3 className="numeral mt-1 text-5xl tracking-[0.04em] text-white">{c.name}</h3>
+                  </div>
+                  <span
+                    aria-hidden="true"
+                    className="mb-2 h-3 w-10 shrink-0 rounded-full bg-yellow transition-all duration-300 group-hover:w-16"
+                  />
+                </div>
               </div>
               <div className="px-7 pb-7 pt-6">
                 <p className="font-semibold text-ink">{c.kicker}</p>

@@ -303,6 +303,40 @@ section[id] {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* ---------------- telefondagi doimiy amallar qatori ---------------- */
+
+/* Sahifa uzun, odam qiziqib qolgan joyidan yuqoriga qaytmasin.
+   z-index ataylab past: mobil menyu (55) va suratni kattalashtirish
+   oynasi (70) ochilganda bu qator ularning ostida qolishi kerak. */
+/* DIQQAT: ko'rinish-yo'qligi shu yerda hal qilinadi, Tailwind `lg:hidden`
+   bilan emas. Ikkalasi ham bir xil kuchga ega selektor bo'lgani uchun qaysi
+   biri keyin yozilgani hal qilardi — natijada qator kompyuterda ham
+   ko'rinib qolgan edi. */
+.action-bar {
+  display: none;
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 40;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem calc(0.625rem + env(safe-area-inset-bottom));
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+}
+.action-bar .btn {
+  min-height: 3rem;
+  padding-inline: 1rem;
+}
+
+@media (max-width: 1023.98px) {
+  .action-bar {
+    display: flex;
+  }
+  /* Qator futerning oxirgi qatorlarini yopib qo'ymasin. */
+  body {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* ---------------- reveal (IntersectionObserver adds .is-in) ---------------- */
 
 /* `.reveal` is added by components/ui/Reveal.tsx at runtime — never by the
@@ -439,6 +473,16 @@ section[id] {
   transition: transform var(--dur-3) var(--ease);
 }
 .photo-lead img {
+  aspect-ratio: 16 / 7;
+}
+/* Ikki ustunni egallagan suratlar — qo'shni suratlar bilan bir xil
+   ko'rinmasligi uchun nisbati ham boshqacha. */
+.photo-wide img {
+  aspect-ratio: 3 / 2;
+}
+/* Butun kenglikni egallagan yakuniy surat: balandligi cheklanmasa,
+   ekranni to'sib qo'yadi. */
+.photo-full img {
   aspect-ratio: 16 / 7;
 }
 .photo:hover img {

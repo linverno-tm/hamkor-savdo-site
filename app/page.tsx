@@ -3,6 +3,7 @@ import { site } from "@/data/site";
 import { absolute } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ActionBar } from "@/components/layout/ActionBar";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Scale } from "@/components/sections/Scale";
@@ -68,6 +69,7 @@ export default function Home() {
         <FinalCta />
       </main>
       <Footer />
+      <ActionBar />
     </>
   );
 }

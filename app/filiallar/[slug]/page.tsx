@@ -8,6 +8,7 @@ import { absolute } from "@/lib/seo";
 import { branchPhotos } from "@/lib/photos";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ActionBar } from "@/components/layout/ActionBar";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { BranchGallery } from "@/components/sections/BranchGallery";
 import { Logo } from "@/components/ui/Logo";
@@ -216,6 +217,7 @@ export default async function BranchPage({
         </section>
       </main>
       <Footer />
+      <ActionBar />
     </>
   );
 }

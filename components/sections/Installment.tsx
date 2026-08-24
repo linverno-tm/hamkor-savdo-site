@@ -14,7 +14,7 @@ export function Installment() {
     <section
       id="muddatli-tolov"
       aria-labelledby="installment-title"
-      className="bg-ground py-24 sm:py-32"
+      className="bg-ground py-16 sm:py-24"
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading

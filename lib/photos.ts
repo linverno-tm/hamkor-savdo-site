@@ -41,6 +41,23 @@ const LABEL: Record<PhotoKind, string> = {
 
 const ORDER: PhotoKind[] = ["tashqi", "zal", "jamoa", "mijoz"];
 
+/**
+ * Per-photo overrides, keyed `<slug>/<base>`.
+ *
+ * The generic captions above are right for almost every frame, but not for
+ * every one. The Asaka branch sits on the second floor of somebody else's
+ * building, so its "storefront" photo shows the Makro supermarket sign and no
+ * HAMKOR SAVDO branding at all. Labelled "Do'kon tashqarisi" that frame is
+ * simply confusing; labelled as the building you walk into, it becomes the most
+ * useful photo on the page.
+ */
+const OVERRIDE: Record<string, { label?: string; alt?: string }> = {
+  "asaka-umid/tashqi-1": {
+    label: "Kirish — Makro binosi",
+    alt: "Makro supermarketi binosi — HAMKOR SAVDO shu binoning 2-qavatida joylashgan",
+  },
+};
+
 function isKind(v: string): v is PhotoKind {
   return (ORDER as string[]).includes(v);
 }
@@ -61,12 +78,13 @@ export function branchPhotos(slug: string, cityName: string): Photo[] {
       const base = f.replace("-960.webp", "");
       const kind = base.split("-")[0];
       if (!isKind(kind)) return null;
+      const custom = OVERRIDE[`${slug}/${base}`] ?? {};
       return {
         src: `/filiallar/${slug}/${base}-960.webp`,
         srcSmall: `/filiallar/${slug}/${base}-480.webp`,
         kind,
-        alt: `HAMKOR SAVDO ${cityName} filiali — ${CAPTION[kind]}`,
-        label: LABEL[kind],
+        alt: custom.alt ?? `HAMKOR SAVDO ${cityName} filiali — ${CAPTION[kind]}`,
+        label: custom.label ?? LABEL[kind],
       } satisfies Photo;
     })
     .filter((p): p is Photo => p !== null);

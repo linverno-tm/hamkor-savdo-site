@@ -3,8 +3,17 @@ import { site } from "@/data/site";
 /**
  * Scene 01 — "Bu kim va menga nima beradi?"
  *
- * A first-time visitor gets the brand statement, the three directions, the
- * headline offer and a way to act, all above the fold and all in plain text.
+ * A first-time visitor gets the brand statement, the headline offer, a way to
+ * act, and — the part that used to be missing — a look at the actual shop. A
+ * retailer whose first screen carries no photograph asks the visitor to take
+ * the whole thing on trust; the Andijon floor shot answers "what is this
+ * place?" before a word is read.
+ *
+ * The photo is the LCP element, so it loads eagerly at high priority while the
+ * rest of the page stays lazy. Two widths are written at build time by
+ * `tools/bosh-rasmlar.py` and picked through srcset — a phone on a slow
+ * connection pulls 41 KB, not 96 KB.
+ *
  * The entrance animation is a CSS `rise` keyframe with a per-item delay — it
  * costs nothing and never gates the content.
  */
@@ -61,41 +70,43 @@ export function Hero() {
               </a>
             </div>
 
-            <ul
-              className="rise mt-9 flex flex-wrap gap-2"
-              style={{ ["--i" as string]: 4 }}
-              aria-label="Yo'nalishlar"
-            >
-              {["TILLA", "TEXNIKA", "MEBEL"].map((c) => (
-                <li
-                  key={c}
-                  className="numeral rounded-full bg-purple-50 px-4 py-2 text-lg tracking-[0.14em] text-purple"
-                >
-                  {c}
-                </li>
-              ))}
-            </ul>
           </div>
 
-          {/* Quick-answer panel: the four numbers that decide whether someone visits. */}
-          <div
-            className="on-purple rise rounded-[28px] bg-purple p-7 text-white sm:p-9"
-            style={{ ["--i" as string]: 3 }}
-          >
-            <p className="kicker">Qisqacha</p>
-            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-7">
-              {facts.map((f) => (
-                /* flex-col-reverse keeps <dt> before <dd> in the DOM (as the spec
-                   requires) while showing the number above its label. */
-                <div key={f.label} className="flex flex-col-reverse gap-2">
-                  <dt className="text-sm leading-snug text-on-purple-2">{f.label}</dt>
-                  <dd className="numeral text-4xl text-yellow sm:text-5xl">{f.value}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-8 border-t border-white/20 pt-5 text-sm leading-relaxed text-on-purple-2">
-              Bepul yetkazib berish va o&apos;rnatish — {site.serviceArea}.
-            </p>
+          {/* The shop, with the quick-answer panel overlapping its lower edge.
+              The overlap is a negative margin, never a transform: a transformed
+              element becomes the containing block for its `position: fixed`
+              descendants, which is what once trapped the photo lightbox inside
+              <main> instead of the viewport. */}
+          <div className="rise relative" style={{ ["--i" as string]: 3 }}>
+            <img
+              src="/bosh/sarlavha-1024.webp"
+              srcSet="/bosh/sarlavha-640.webp 640w, /bosh/sarlavha-1024.webp 1024w"
+              sizes="(max-width: 1024px) 100vw, 560px"
+              width={1024}
+              height={768}
+              alt="HAMKOR SAVDO do'koni ichkarisi — jamoamiz mijozlarni kutib olmoqda"
+              className="block w-full rounded-[28px] object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+
+            <div className="on-purple relative z-10 -mt-12 rounded-[28px] bg-purple p-7 text-white sm:-mt-16 sm:ml-10 sm:p-9">
+              <p className="kicker">Qisqacha</p>
+              <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-7">
+                {facts.map((f) => (
+                  /* flex-col-reverse keeps <dt> before <dd> in the DOM (as the spec
+                     requires) while showing the number above its label. */
+                  <div key={f.label} className="flex flex-col-reverse gap-2">
+                    <dt className="text-sm leading-snug text-on-purple-2">{f.label}</dt>
+                    <dd className="numeral text-4xl text-yellow sm:text-5xl">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-8 border-t border-white/20 pt-5 text-sm leading-relaxed text-on-purple-2">
+                Bepul yetkazib berish va o&apos;rnatish — {site.serviceArea}.
+              </p>
+            </div>
           </div>
         </div>
       </div>
