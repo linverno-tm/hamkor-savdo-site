@@ -39,7 +39,10 @@ export function Branches() {
             const phone = b.phone ?? site.phone;
             const phoneLabel = b.phoneDisplay ?? site.phoneDisplay;
             return (
-              <li key={b.id} className="card card-hover flex flex-col p-7 sm:p-8">
+              <li
+                key={b.id}
+                className="card card-hover stretch-host group flex cursor-pointer flex-col p-7 sm:p-8"
+              >
                 <div className="flex items-baseline gap-4">
                   <span className="numeral text-2xl text-purple-100" aria-hidden="true">
                     {b.index}
@@ -99,9 +102,13 @@ export function Branches() {
                   <a href={`tel:${phone}`} className="btn btn-outline !min-h-11 !px-5 text-sm">
                     Qo&apos;ng&apos;iroq qilish
                   </a>
+                  {/* `stretch-link` bu havolaning bosiladigan maydonini butun
+                      kartochkaga yoyadi (globals.css). Kartochkaning bo'sh
+                      joyiga bosgan odam ham filial sahifasiga o'tadi. */}
                   <Link
                     href={`/filiallar/${b.id}`}
-                    className="tap self-center text-sm font-semibold text-purple underline-offset-4 hover:underline"
+                    aria-label={`${b.city} — ${b.landmark} filiali haqida batafsil`}
+                    className="stretch-link tap self-center text-sm font-semibold text-purple underline-offset-4 group-hover:underline hover:underline"
                   >
                     Batafsil &rarr;
                   </Link>

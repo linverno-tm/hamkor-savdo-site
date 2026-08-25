@@ -16,14 +16,16 @@ from PIL import Image
 SRC = "D:/CLAUDE folder/portfolio/hamkor-savdo-flagship"
 OUT = "D:/CLAUDE folder/portfolio/hamkor-savdo-flagship/preview/hamkor-savdo-preview.html"
 
+# (nom, fayl, sayt manzili). Manzil yo'naltirgich uchun kalit bo'ladi —
+# oxirgi chiziqchasiz yoziladi, chunki yo'naltirgich ham shunday solishtiradi.
 PAGES = [
-    ("home", ".next/server/app/index.html"),
-    ("filiallar", ".next/server/app/filiallar.html"),
-    ("shahrixon-ozodbek", ".next/server/app/filiallar/shahrixon-ozodbek.html"),
-    ("shahrixon-bog", ".next/server/app/filiallar/shahrixon-bog.html"),
-    ("asaka-umid", ".next/server/app/filiallar/asaka-umid.html"),
-    ("andijon-amir-temur", ".next/server/app/filiallar/andijon-amir-temur.html"),
-    ("maxfiylik", ".next/server/app/maxfiylik.html"),
+    ("home", ".next/server/app/index.html", "/"),
+    ("filiallar", ".next/server/app/filiallar.html", "/filiallar"),
+    ("shahrixon-ozodbek", ".next/server/app/filiallar/shahrixon-ozodbek.html", "/filiallar/shahrixon-ozodbek"),
+    ("shahrixon-bog", ".next/server/app/filiallar/shahrixon-bog.html", "/filiallar/shahrixon-bog"),
+    ("asaka-umid", ".next/server/app/filiallar/asaka-umid.html", "/filiallar/asaka-umid"),
+    ("andijon-amir-temur", ".next/server/app/filiallar/andijon-amir-temur.html", "/filiallar/andijon-amir-temur"),
+    ("maxfiylik", ".next/server/app/maxfiylik.html", "/maxfiylik"),
 ]
 
 
@@ -103,18 +105,29 @@ def namespace(html, prefix):
 
 
 def relink(html):
+    """Ichki manzillarni hash yo'lga o'giradi.
+
+    Oxirgi chiziqcha olib tashlanadi: sayt `trailingSlash` bilan quriladi,
+    yo'naltirgich esa chiziqchasiz solishtiradi. Ilgari `/filiallar/` uchun
+    alohida qoida bor edi va u yangi sahifalarni (`/maxfiylik/`) qamramasdi —
+    endi qoida umumiy.
+    """
     html = re.sub(r'href="/#([^"]+)"', r'href="#\1"', html)
-    html = re.sub(r'href="/filiallar/([^"]+)"', r'href="#/filiallar/\1"', html)
-    html = re.sub(r'href="/"', 'href="#/"', html)
+
+    def ichki(m):
+        yol = m.group(1).rstrip("/")
+        return 'href="#' + (yol or "/") + '"'
+
+    html = re.sub(r'href="(/[^"#:]*)"', ichki, html)
     return html
 
 
 parts = []
-for slug, path in PAGES:
+for slug, path, route_path in PAGES:
     inner = body_of(read(path))
     inner = namespace(inner, slug)
     inner = relink(inner)
-    parts.append(f'<div class="rt-page" data-page="{slug}" hidden>\n{inner}\n</div>')
+    parts.append(f'<div class="rt-page" data-page="{slug}" data-path="{route_path}" hidden>\n{inner}\n</div>')
     print(f"  {slug}: {len(inner)//1024} KB")
 
 pages_html = "\n".join(parts)
@@ -180,12 +193,26 @@ JS = r"""
     window.scrollTo(0, 0);
   }
 
+  function byPath(p) {
+    return pages.filter(function (el) { return el.dataset.path === p; })[0];
+  }
+
   function route() {
     var h = decodeURIComponent(location.hash || '#/');
-    var m = h.match(/^#\/filiallar\/(.+)$/);
-    if (m) return show(m[1]);
-    if (h === '#/' || h === '#') return show('home');
     var bare = h.slice(1);
+
+    // Sahifa manzili: '/', '/filiallar', '/filiallar/asaka-umid', '/maxfiylik'.
+    // Oxirgi chiziqcha e'tiborga olinmaydi.
+    var path = bare.charAt(0) === '/' ? (bare.length > 1 ? bare.replace(/\/+$/, '') : '/') : null;
+    if (path) {
+      var el = byPath(path);
+      if (el) return show(el.dataset.page);
+      return show('home');
+    }
+
+    if (bare === '') return show('home');
+
+    // Sahifa ichidagi anchor: "asaka-umid--suratlar" ko'rinishida.
     var slug = bare.split('--')[0];
     if (pageEl(slug)) return show(slug, bare);
     show('home', bare);
