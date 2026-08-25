@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { site } from "@/data/site";
 import { branches } from "@/data/branches";
-import { branchPhotos } from "@/lib/photos";
+import { branchCover, branchPhotos } from "@/lib/photos";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Logo } from "@/components/ui/Logo";
 
@@ -19,8 +19,7 @@ import { Logo } from "@/components/ui/Logo";
 export function Store() {
   const cards = branches.map((b) => {
     const photos = branchPhotos(b.id, b.city);
-    // Prefer the storefront shot; fall back to the first interior.
-    const cover = photos.find((p) => p.kind === "tashqi") ?? photos[0] ?? null;
+    const cover = branchCover(photos, b.id);
     return { branch: b, cover, count: photos.length };
   });
 
