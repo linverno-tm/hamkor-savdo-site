@@ -62,6 +62,29 @@ function isKind(v: string): v is PhotoKind {
   return (ORDER as string[]).includes(v);
 }
 
+/**
+ * Which photo represents a branch on the home page, when the usual rule —
+ * "show the storefront" — picks a poor one.
+ *
+ * Asaka trades on the second floor of a building that carries somebody else's
+ * signs, so its storefront frame is the least recognisable of the four. On its
+ * own page that frame still earns the lead slot, because it shows the door you
+ * walk through. In a row of four cards, though, it is simply the weakest, so
+ * the card leads with the branch's own counter instead.
+ */
+const COVER: Record<string, string> = {
+  "asaka-umid": "jamoa-1",
+};
+
+export function branchCover(photos: Photo[], slug: string): Photo | null {
+  const preferred = COVER[slug];
+  if (preferred) {
+    const hit = photos.find((p) => p.src.endsWith(`/${preferred}-960.webp`));
+    if (hit) return hit;
+  }
+  return photos.find((p) => p.kind === "tashqi") ?? photos[0] ?? null;
+}
+
 export function branchPhotos(slug: string, cityName: string): Photo[] {
   const dir = join(process.cwd(), "public", "filiallar", slug);
 

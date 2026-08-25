@@ -43,6 +43,25 @@ SIFAT = 78
 KIRISH_TURLARI = (".jpg", ".jpeg", ".png", ".webp", ".heic")
 TURLAR = ("tashqi", "zal", "jamoa", "mijoz")
 
+# Ayrim kadrlarni markazdan qirqish to'g'ri kelmaydi. Kalit: "<filial>/<nom>",
+# qiymat: (chapdan, o'ngdan, tepadan, pastdan) — har biri 0..1 ulush, 4:3 ga
+# qirqishdan OLDIN qo'llanadi.
+#
+# asaka-umid/jamoa-1: kadrning chap chekkasida kutib o'tirgan mijoz bor,
+# yuqorisi esa bo'sh shift. Chapdan 15% olib tashlansa, yog'och devor va
+# menejerlar stoli kadrni to'ldiradi.
+#
+# asaka-umid/zal-3 va zal-4: shu filialning devorida "18 oygacha — barcha
+# tovarlar" banneri osilgan, sayt esa 24 oy deydi (buyurtmachi 2026-08-25 da
+# tasdiqladi). Banner kadrning yuqori qismida, shuning uchun tepadan kesiladi.
+# BU QATORLARNI O'CHIRMANG — o'chirilsa, skript keyingi safar bannerni qaytadan
+# saytga chiqaradi va sayt o'z-o'ziga qarshi gapiradi.
+QIRQIM = {
+    "asaka-umid/jamoa-1": (0.15, 0.0, 0.00, 0.0),
+    "asaka-umid/zal-3": (0.00, 0.0, 0.36, 0.0),
+    "asaka-umid/zal-4": (0.00, 0.0, 0.30, 0.0),
+}
+
 
 def tayyorla(manba: str, filial: str) -> list[str]:
     nom = os.path.splitext(os.path.basename(manba))[0].lower()
@@ -55,6 +74,14 @@ def tayyorla(manba: str, filial: str) -> list[str]:
     with Image.open(manba) as im:
         im = ImageOps.exif_transpose(im)  # burilishni to'g'rilash
         im = im.convert("RGB")            # EXIF va alfa yo'qoladi
+
+        qirqim = QIRQIM.get(f"{filial}/{nom}")
+        if qirqim:
+            chap, ong, tepa, past = qirqim
+            w, h = im.size
+            im = im.crop((round(w * chap), round(h * tepa),
+                          w - round(w * ong), h - round(h * past)))
+
         im = ImageOps.fit(im, _kadr(im.size), Image.LANCZOS)
 
         yozilgan = []
