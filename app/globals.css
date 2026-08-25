@@ -303,6 +303,27 @@ section[id] {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* ---------------- barmoq uchun bosiladigan maydon ---------------- */
+
+/* WCAG 2.2 bo'yicha bosiladigan joy kamida 24px, amaliy tavsiya 44px.
+   O'lchab ko'rilganda saytda 33 ta element 44px dan past chiqdi — eng
+   yomoni telefon raqamlari: 18px. Telefon raqami esa do'kon saytidagi eng
+   muhim harakat.
+   Matn o'lchami o'zgarmaydi — faqat bosiladigan maydon kengayadi. */
+a[href^="tel:"]:not(.btn),
+a.tap:not(.btn) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+/* Futerdagi havolalar ro'yxat bo'lib turadi va barmoq bilan adashib
+   bosiladi — ular ham kengaytiriladi. */
+footer a:not(.btn) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 /* ---------------- telefondagi doimiy amallar qatori ---------------- */
 
 /* Sahifa uzun, odam qiziqib qolgan joyidan yuqoriga qaytmasin.

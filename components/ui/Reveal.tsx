@@ -25,7 +25,13 @@ export function Reveal() {
     const menu = document.getElementById("mobile-menu") as HTMLDetailsElement | null;
     if (!menu) return;
 
-    const close = () => menu.removeAttribute("open");
+    const close = () => {
+      menu.removeAttribute("open");
+      // Scroll qulfini shu yerda ochamiz, `toggle` hodisasini kutmasdan:
+      // u navbatga tushadi va brauzer anchor'ga sakraydigan paytda
+      // `overflow: hidden` hali kuchda bo'lishi mumkin.
+      document.documentElement.style.overflow = "";
+    };
     const onToggle = () => {
       document.documentElement.style.overflow = menu.open ? "hidden" : "";
     };
@@ -35,8 +41,14 @@ export function Reveal() {
         menu.querySelector("summary")?.focus();
       }
     };
+    /* Menyudagi HAR QANDAY havola panelni yopadi.
+       Avval bu shart `a[href^="#"]` edi va hech qachon bajarilmasdi:
+       navigatsiya havolalari `/#filiallar` ko'rinishida, ya'ni `/` bilan
+       boshlanadi. Natijada telefonda odam menyudan bo'lim tanlasa, panel
+       ochiq qolib, sahifa qulflanib turaverardi — bosdi, hech narsa
+       bo'lmadi. Telefon va Telegram havolalarida ham yopilgani to'g'ri. */
     const onClick = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).closest('a[href^="#"]')) close();
+      if ((e.target as HTMLElement).closest("a[href]")) close();
     };
 
     menu.addEventListener("toggle", onToggle);

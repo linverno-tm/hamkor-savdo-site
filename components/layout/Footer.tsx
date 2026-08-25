@@ -88,7 +88,14 @@ export function Footer() {
           <p>
             © {new Date().getFullYear()} {site.name}. {site.serviceArea}.
           </p>
-          <p>Sahifadagi surat maydonlari do&apos;konning haqiqiy fotolari uchun ajratilgan.</p>
+          <p className="flex flex-wrap items-center gap-x-5">
+            <Link href="/filiallar" className="transition-colors hover:text-purple">
+              Filiallar
+            </Link>
+            <Link href="/maxfiylik" className="transition-colors hover:text-purple">
+              Maxfiylik siyosati
+            </Link>
+          </p>
         </div>
       </div>
     </footer>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { branches } from "@/data/branches";
 import { site } from "@/data/site";
 
@@ -117,6 +118,14 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   inputMode="tel"
                   maxLength={24}
                   autoComplete="tel"
+                  /* `type="tel"` hech narsani tekshirmaydi — u faqat telefonda
+                     raqamli klaviatura ochadi. Bu shablon esa "asdasd" kabi
+                     yozuvni brauzerning o'zi to'xtatadi. Serverdagi tekshiruv
+                     baribir qoladi: brauzerni chetlab o'tish oson. Bo'sh joy,
+                     qavs va chiziqchaga ruxsat, chunki odam raqamni
+                     "+998 90 123 45 67" ko'rinishida yozadi. */
+                  pattern="[+]?[0-9()\-\s]{9,24}"
+                  title="Telefon raqamini kiriting, masalan: +998 90 123 45 67"
                   aria-describedby="lead-phone-help"
                   className="mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
                   placeholder="+998 90 123 45 67"
@@ -168,8 +177,16 @@ export function LeadForm({ branchId }: { branchId?: string }) {
               >
                 {status.kind === "sending" ? "Yuborilmoqda…" : "Arizani yuborish"}
               </button>
+              {/* Forma ism va telefon raqamini yig'adi — bu shaxsga doir
+                  ma'lumot. O'zbekiston qonuni bo'yicha odam nima uchun va
+                  kimga berayotganini bilishi kerak. */}
               <p className="text-xs leading-relaxed text-ink-3">
                 Ma&apos;lumotlaringiz faqat siz bilan bog&apos;lanish uchun ishlatiladi.
+                Arizani yuborish orqali{" "}
+                <Link href="/maxfiylik" className="font-semibold text-purple underline-offset-2 hover:underline">
+                  shaxsiy ma&apos;lumotlarni qayta ishlashga
+                </Link>{" "}
+                rozilik bildirasiz.
               </p>
             </div>
 

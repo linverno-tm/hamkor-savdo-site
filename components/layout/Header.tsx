@@ -20,7 +20,7 @@ export function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-ground">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-        <Link href="/" className="shrink-0 text-purple" aria-label="HAMKOR SAVDO — bosh sahifa">
+        <Link href="/" className="tap shrink-0 text-purple" aria-label="HAMKOR SAVDO — bosh sahifa">
           <Logo className="h-8 w-auto sm:h-9" />
         </Link>
 

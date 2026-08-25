@@ -101,6 +101,38 @@ if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST')
     hs_fail(405, "Bu sahifa to'g'ridan-to'g'ri ochilmaydi.");
 }
 
+/* Ariza shu saytdagi formadan kelganini tekshiramiz.
+ *
+ * Bu spam uchun devor emas — Origin sarlavhasini soxtalashtirish qiyin emas.
+ * Lekin boshqa saytga qo'yilgan forma yoki oddiy skript aynan shu yerda
+ * to'xtaydi, va bu bir necha qator kodga arziydi.
+ *
+ * DIQQAT: sarlavha BO'LMASA o'tkazib yuboramiz. Ba'zi brauzerlar va ichki
+ * tarmoq proksilari uni yubormaydi; yo'qligi uchun rad etsak, haqiqiy
+ * mijozning arizasi yo'qoladi. Faqat sarlavha bor va BEGONA bo'lsa rad
+ * etamiz.
+ */
+function hs_host($url)
+{
+    $host = parse_url($url, PHP_URL_HOST);
+    return is_string($host) ? strtolower($host) : '';
+}
+
+$ownHost = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
+$ownHost = preg_replace('/:\d+$/', '', $ownHost);
+$allowedHosts = array($ownHost, 'hamkorsavdo.uz', 'www.hamkorsavdo.uz');
+
+$senderHost = '';
+if (!empty($_SERVER['HTTP_ORIGIN'])) {
+    $senderHost = hs_host($_SERVER['HTTP_ORIGIN']);
+} elseif (!empty($_SERVER['HTTP_REFERER'])) {
+    $senderHost = hs_host($_SERVER['HTTP_REFERER']);
+}
+
+if ($senderHost !== '' && !in_array($senderHost, $allowedHosts, true)) {
+    hs_fail(403, "Ariza qabul qilinmadi. Iltimos, saytdagi formadan foydalaning.");
+}
+
 /* Botlarga tuzoq: odam ko'rmaydigan maydon. To'ldirilgan bo'lsa, jimgina
    "muvaffaqiyat" qaytaramiz — bot moslashishni o'rganmasin. */
 if (trim(isset($_POST['website']) ? $_POST['website'] : '') !== '') {
