@@ -57,9 +57,10 @@ export const branches: Branch[] = [
     city: "Andijon",
     address: "Andijon shahar, Amir Temur shoh ko'chasi, 62",
     landmark: "Amir Temur shoh ko'chasi, 62",
-    // [VERIFIED BRANCH PHONE REQUIRED] — not supplied yet; UI shows the main number.
-    phone: null,
-    phoneDisplay: null,
+    // Egasi tomonidan berildi (2026-08-25). Mobil raqam: abonent qismi
+    // Shahrixon-Ozodbek filialinikiga o'xshaydi, faqat kodi 74 emas, 33.
+    phone: "+998333420880",
+    phoneDisplay: "+998 33 342 08 80",
     mapQuery: "Amir Temur shoh ko'chasi 62, Andijon",
   },
 ];

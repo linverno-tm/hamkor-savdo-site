@@ -167,6 +167,34 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   placeholder="Masalan: muzlatgich, muddatli to'lov shartlari"
                 />
               </div>
+
+              {/* Do'konda yo'q mahsulot uchun kelgan ariza boshqacha ishlanadi:
+                  operator avval narxini aniqlashi kerak. Bitta belgi qo'yilsa,
+                  Telegramdagi xabarga alohida xeshteg tushadi va call-center
+                  uni darhol ajratib oladi. JavaScriptsiz ham ishlaydi —
+                  oddiy checkbox. */}
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="lead-special"
+                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-ground p-4"
+                >
+                  <input
+                    id="lead-special"
+                    name="special"
+                    type="checkbox"
+                    value="ha"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--purple)]"
+                  />
+                  <span className="text-sm leading-relaxed text-ink-2">
+                    <span className="font-semibold text-ink">
+                      Mahsulot sizda yo&apos;q — boshqa joyda ko&apos;rganman
+                    </span>
+                    <br />
+                    Uni ham muddatli to&apos;lovga rasmiylashtirib beramiz. Nomi, narxi va
+                    qayerdaligini yuqorida yozib qoldiring.
+                  </span>
+                </label>
+              </div>
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-4">

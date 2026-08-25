@@ -10,6 +10,7 @@ import { Scale } from "@/components/sections/Scale";
 import { Categories } from "@/components/sections/Categories";
 import { Why } from "@/components/sections/Why";
 import { Installment } from "@/components/sections/Installment";
+import { SpecialOrder } from "@/components/sections/SpecialOrder";
 import { Branches } from "@/components/sections/Branches";
 import { Store } from "@/components/sections/Store";
 import { LeadForm } from "@/components/sections/LeadForm";
@@ -62,6 +63,7 @@ export default function Home() {
         <Categories />
         <Why />
         <Installment />
+        <SpecialOrder />
         <Branches />
         <Store />
         <LeadForm />
