@@ -30,7 +30,7 @@ export function Categories() {
             <a
               key={c.id}
               href={`#yonalish-${c.id}`}
-              className="numeral rounded-full border-2 border-purple-100 px-5 py-2 text-lg tracking-[0.12em] text-purple transition-colors hover:border-purple hover:bg-purple hover:text-white"
+              className="tap numeral rounded-full border-2 border-purple-100 px-5 py-2 text-lg tracking-[0.12em] text-purple transition-colors hover:border-purple hover:bg-purple hover:text-white"
             >
               {c.name}
             </a>
@@ -79,7 +79,7 @@ export function Categories() {
                 <p className="mt-3 leading-relaxed text-ink-2">{c.description}</p>
                 <a
                   href="#filiallar"
-                  className="mt-6 inline-flex items-center gap-2 font-semibold text-purple underline-offset-4 hover:underline"
+                  className="tap mt-6 inline-flex items-center gap-2 font-semibold text-purple underline-offset-4 hover:underline"
                 >
                   Filialda ko&apos;rish
                   <span aria-hidden="true">→</span>

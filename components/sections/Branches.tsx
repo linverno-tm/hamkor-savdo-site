@@ -101,7 +101,7 @@ export function Branches() {
                   </a>
                   <Link
                     href={`/filiallar/${b.id}`}
-                    className="self-center text-sm font-semibold text-purple underline-offset-4 hover:underline"
+                    className="tap self-center text-sm font-semibold text-purple underline-offset-4 hover:underline"
                   >
                     Batafsil &rarr;
                   </Link>

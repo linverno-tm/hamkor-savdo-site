@@ -34,8 +34,13 @@ export async function generateMetadata({
   const branch = branches.find((b) => b.id === slug);
   if (!branch) return {};
 
-  const title = `${branch.city} filiali — HAMKOR SAVDO`;
-  const description = `HAMKOR SAVDO ${branch.city} filiali: ${branch.address}. Tilla, texnika va mebel — ${site.facts.installmentMonthsMax} oygacha muddatli to'lov, bepul yetkazib berish va o'rnatish.`;
+  /* Sarlavhaga mo'ljal ham kiradi. Aks holda ikkala Shahrixon filiali
+     "Shahrixon filiali — HAMKOR SAVDO" bo'lib chiqadi: Google buni takroriy
+     sarlavha deb hisoblaydi va ikkalasidan birini natijalardan tushirib
+     yuboradi. Mo'ljal qidiruvda ham foydali — odam do'konni shu bo'yicha
+     qidiradi. */
+  const title = `${branch.city}, ${branch.landmark} — HAMKOR SAVDO`;
+  const description = `HAMKOR SAVDO ${branch.city} filiali — ${branch.address}. Tilla, texnika va mebel: ${site.facts.installmentMonthsMax} oygacha muddatli to'lov, bepul yetkazib berish va o'rnatish.`;
 
   return {
     title,
