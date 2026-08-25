@@ -1,8 +1,20 @@
 # HAMKOR SAVDO — ahost.uz (Apache) uchun sozlamalar.
 
-# --- HTTPS ga yo'naltirish ---
+# --- Bitta manzil: https va www siz ---
+#
+# Bittasini tanlash shart: aks holda sayt to'rt xil manzilda ochiladi
+# (http/https x www bor/yo'q) va Google ularni alohida sahifa deb hisoblaydi.
+# Sahifalardagi canonical yozuv www siz variantga ishora qiladi, shuning uchun
+# yo'naltirish ham o'sha tomonga.
+#
+# www qoidasi birinchi turadi va darhol https ga olib o'tadi — shunda
+# "www + http" so'rovi ikki marta emas, bir marta yo'naltiriladi.
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
@@ -16,7 +28,7 @@
   AddOutputFilterByType DEFLATE image/svg+xml
 </IfModule>
 
-# --- Kesh. _next/static ичидаги fayllar nomida xesh bor, ular o'zgarmaydi. ---
+# --- Kesh. _next/static ichidagi fayllar nomida xesh bor, ular o'zgarmaydi. ---
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresDefault "access plus 1 hour"
