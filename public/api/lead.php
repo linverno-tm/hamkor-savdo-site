@@ -189,13 +189,26 @@ $filialTag  = $known ? $FILIALLAR[$branch][1] : '#filial_tanlanmagan';
 
 /* Filial birinchi qatorda va xeshteg bilan — operator qaysi filialga
    tegishli ekanini bir qarashda ko'radi. */
+/* Do'konda yo'q mahsulot uchun kelgan ariza — boshqacha ish oqimi: operator
+   avval mahsulotni va narxini aniqlashi kerak, faqat keyin shartlarni aytadi.
+   Shuning uchun u birinchi qatorda, xeshteg bilan ajratiladi. */
+$special = isset($_POST['special']) && $_POST['special'] !== '';
+
+$sarlavha = '🟣 YANGI ARIZA — ' . $filialTag;
+if ($special) {
+    $sarlavha = '🟡 BIZDA YO\'Q MAHSULOT — ' . $filialTag . ' #maxsus_buyurtma';
+}
+
 $lines = array(
-    '🟣 YANGI ARIZA — ' . $filialTag,
+    $sarlavha,
     '',
     '📍 Filial: ' . $filialNomi,
     '👤 Ism: ' . $name,
     '📞 Telefon: ' . $tel,
 );
+if ($special) {
+    $lines[] = '🔎 Mahsulot do\'konda yo\'q — topib berish so\'ralmoqda';
+}
 if ($note !== '') {
     $lines[] = "💬 So'rovi: " . $note;
 }
