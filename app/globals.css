@@ -475,15 +475,59 @@ section[id] {
 .photo-lead img {
   aspect-ratio: 16 / 7;
 }
-/* Ikki ustunni egallagan suratlar — qo'shni suratlar bilan bir xil
-   ko'rinmasligi uchun nisbati ham boshqacha. */
-.photo-wide img {
+
+/* ---------------- galereya mozaikasi ---------------- */
+
+/* DIQQAT: balandlik KATAKCHAda belgilanadi, suratda emas.
+   Avval har bir suratga o'z nisbati berilgan edi — keng surat 3:2, tor surat
+   4:3. Kengliklari har xil bo'lgani uchun balandliklari ham har xil chiqdi,
+   qatorlar notekis bo'lib qoldi. Endi qator balandligini 1x1 katakchalar
+   belgilaydi, katta surat esa o'sha balandlikni to'ldiradi. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.gallery > li {
+  aspect-ratio: 4 / 3;
+  /* To'r elementining standart `min-width: auto` qiymati uni ichidagi
+     narsadan kichik bo'lishga qo'ymaydi. Surat fayli 960px keng, shuning
+     uchun ustun shuncha kengayib ketardi va `1fr` ustunlar teng bo'lmay
+     qolardi (189px, 189px, 805px). Nolga tushirilsa, ustunlar chindan teng
+     bo'linadi. */
+  min-width: 0;
+  min-height: 0;
+}
+/* Telefonda katta surat butun enni oladi va bitta qator balandligida qoladi:
+   u yerda ikki qatorga cho'zilsa, o'sha qatorlarda balandlikni belgilaydigan
+   kichik katakcha bo'lmaydi va qator yig'ilib qoladi. */
+.gallery > li.cell-big {
   aspect-ratio: 3 / 2;
 }
-/* Butun kenglikni egallagan yakuniy surat: balandligi cheklanmasa,
-   ekranni to'sib qo'yadi. */
-.photo-full img {
+.gallery > li.cell-banner {
   aspect-ratio: 16 / 7;
+}
+.gallery .photo {
+  height: 100%;
+}
+/* Surat qatorning balandligini BELGILAMASLIGI kerak, faqat to'ldirishi kerak.
+   Oqimda qolsa, 805px keng surat o'zining 4:3 balandligini (604px) qatorga
+   majburlaydi, yonidagi 296px lik kichik katakcha esa tepaga yopishib qoladi.
+   Absolyut joylashtirilsa, balandlikni katakcha hal qiladi. */
+.gallery .photo img {
+  position: absolute;
+  inset: 0;
+}
+
+@media (min-width: 1024px) {
+  .gallery {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  /* Katta va keng katakchalar endi to'r qatoridan balandlik oladi. */
+  .gallery > li.cell-big,
+  .gallery > li.cell-wide {
+    aspect-ratio: auto;
+  }
 }
 .photo:hover img {
   transform: scale(1.04);

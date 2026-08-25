@@ -17,51 +17,56 @@ import type { Photo } from "@/lib/photos";
  * arrives — on a slow connection that is the difference between a page that
  * settles and one that jumps while it loads.
  */
-const COLS = 3;
+type CellKind = "big" | "small" | "wide" | "banner";
 
 /**
- * How many columns each photo after the establishing shot should take.
+ * Which shape each photo after the establishing shot takes.
  *
- * The base rhythm is 2+1, then 1+2, repeating: every row still adds up to
- * three columns, so the grid never leaves a hole mid-page, but no two
- * neighbours share a shape. That difference — varied frames rather than
- * identical thumbnails — is what separates a page of photographs from a
- * folder of files.
+ * Photos come in threes: one large frame beside two smaller ones stacked in the
+ * last column. On a phone the same three become one wide frame with the two
+ * small ones side by side under it. Either way the block is a closed rectangle,
+ * so the grid never trails a half-empty row.
  *
- * The one exception is the final photo. If the rhythm leaves it starting a row
- * on its own, it stretches to the full width instead of trailing a gap beside
- * it, which reads as an unfinished row rather than a deliberate ending.
+ * A leftover one or two at the end get their own closed shapes: a single photo
+ * runs the full width, a pair splits two-thirds / one-third.
+ *
+ * The large frame always sits on the left. Alternating sides looks tempting but
+ * needs explicit row placement to tile correctly — CSS auto-placement will not
+ * back-fill the hole it leaves — and a repeated block reads as deliberate
+ * anyway.
  */
-function layoutSpans(count: number): number[] {
-  const spans: number[] = [];
-  let used = 0;
+function layoutCells(count: number): CellKind[] {
+  const cells: CellKind[] = [];
+  let placed = 0;
 
-  for (let i = 0; i < count; i++) {
-    let span = i % 4 === 0 || i % 4 === 3 ? 2 : 1;
-    if (used + span > COLS) used = 0; // yangi qator boshlandi
-    if (i === count - 1 && used === 0 && span < COLS) span = COLS;
-
-    spans.push(span);
-    used += span;
-    if (used >= COLS) used = 0;
+  while (count - placed >= 3) {
+    cells.push("big", "small", "small");
+    placed += 3;
   }
 
-  return spans;
+  if (count - placed === 1) cells.push("banner");
+  else if (count - placed === 2) cells.push("wide", "small");
+
+  return cells;
 }
 
 /* Tailwind sinf nomlarini shablon orqali yasab bo'lmaydi — u manba matnidan
-   to'liq nomlarni qidiradi. Shuning uchun ular shu yerda to'liq yozilgan.
-   Telefonda ustun ikkita, shuning uchun 3 ham 2 ham butun kenglikni oladi. */
-const SPAN_CLASS: Record<number, string> = {
-  1: "lg:col-span-1",
-  2: "col-span-2 lg:col-span-2",
-  3: "col-span-2 lg:col-span-3",
+   to'liq nomlarni qidiradi, shuning uchun to'liq yozilgan.
+   Telefonda ustun ikkita, kompyuterda uchta.
+   Balandlik katakchada (`cell-*`, globals.css), suratda emas — shuning uchun
+   bitta qatordagi ikki surat hech qachon har xil bo'yda bo'lmaydi. */
+const CELL_CLASS: Record<CellKind, string> = {
+  big: "cell-big col-span-2 lg:row-span-2",
+  small: "cell-small",
+  wide: "cell-wide lg:col-span-2",
+  banner: "cell-banner col-span-2 lg:col-span-3",
 };
 
-const SPAN_SIZES: Record<number, string> = {
-  1: "(max-width: 640px) 50vw, 33vw",
-  2: "(max-width: 1024px) 100vw, 66vw",
-  3: "100vw",
+const CELL_SIZES: Record<CellKind, string> = {
+  big: "(max-width: 1024px) 100vw, 66vw",
+  small: "(max-width: 640px) 50vw, 33vw",
+  wide: "(max-width: 1024px) 50vw, 66vw",
+  banner: "100vw",
 };
 
 export function BranchGallery({
@@ -79,7 +84,7 @@ export function BranchGallery({
 
   const [lead, ...rest] = photos;
   const id = (i: number) => `foto-${slug}-${i}`;
-  const spans = layoutSpans(rest.length);
+  const cells = layoutCells(rest.length);
 
   return (
     <section id="suratlar" aria-labelledby="gallery-title" className="bg-ground py-16 sm:py-20">
@@ -109,17 +114,16 @@ export function BranchGallery({
           </a>
 
           {rest.length > 0 ? (
-            <ul className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-3">
+            <ul className="gallery mt-4">
               {rest.map((p, i) => {
-                const span = spans[i];
-                const shape = span === 3 ? " photo-full" : span === 2 ? " photo-wide" : "";
+                const kind = cells[i];
                 return (
-                  <li key={p.src} className={SPAN_CLASS[span]}>
-                    <a href={`#${id(i + 1)}`} className={`photo group block${shape}`}>
+                  <li key={p.src} className={CELL_CLASS[kind]}>
+                    <a href={`#${id(i + 1)}`} className="photo group block">
                       <img
                         src={p.src}
                         srcSet={`${p.srcSmall} 480w, ${p.src} 960w`}
-                        sizes={SPAN_SIZES[span]}
+                        sizes={CELL_SIZES[kind]}
                         width={960}
                         height={720}
                         alt={p.alt}
