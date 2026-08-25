@@ -7,20 +7,43 @@ becomes hash routing between the five prerendered documents, and the enquiry
 form says it is a preview instead of posting nowhere.
 """
 import base64
+from io import BytesIO
 import os
 import re
+
+from PIL import Image
 
 SRC = "D:/CLAUDE folder/portfolio/hamkor-savdo-flagship"
 OUT = "D:/CLAUDE folder/portfolio/hamkor-savdo-flagship/preview/hamkor-savdo-preview.html"
 
 PAGES = [
     ("home", ".next/server/app/index.html"),
+    ("filiallar", ".next/server/app/filiallar.html"),
     ("shahrixon-ozodbek", ".next/server/app/filiallar/shahrixon-ozodbek.html"),
     ("shahrixon-bog", ".next/server/app/filiallar/shahrixon-bog.html"),
     ("asaka-umid", ".next/server/app/filiallar/asaka-umid.html"),
     ("andijon-amir-temur", ".next/server/app/filiallar/andijon-amir-temur.html"),
+    ("maxfiylik", ".next/server/app/maxfiylik.html"),
 ]
 
+
+def preview_photo(path):
+    """Namoyish uchun suratni kichraytirib qayta siqadi.
+
+    Saytdagi fayllarni o''zgarishsiz joylashtirsak, hujjat 10 MB dan oshadi:
+    har bir surat kartochkada ham, kattalashtirish oynasida ham takrorlanadi,
+    ya''ni o''rtacha ikki yarim marta ichkariga tushadi. Namoyish nusxasi
+    bir marta ko''rib chiqish uchun — 800px va biroz pastroq sifat yetarli.
+    Saytning o''zidagi fayllarga bu ta''sir qilmaydi.
+    """
+    with Image.open(path) as im:
+        im = im.convert("RGB")
+        w = min(800, im.size[0])
+        if w != im.size[0]:
+            im = im.resize((w, round(w * im.size[1] / im.size[0])), Image.LANCZOS)
+        buf = BytesIO()
+        im.save(buf, "WEBP", quality=65, method=4)
+        return buf.getvalue()
 
 def read(p):
     with open(os.path.join(SRC, p), encoding="utf-8") as f:
@@ -95,6 +118,35 @@ for slug, path in PAGES:
     print(f"  {slug}: {len(inner)//1024} KB")
 
 pages_html = "\n".join(parts)
+
+# ---------- suratlar, hujjat ichiga joylanadi ----------
+#
+# Namoyish nusxasi — bitta fayl, orqasida server yo'q. Shuning uchun har bir
+# surat hujjatning ichida sayohat qilishi kerak. Ikki qaror faylni
+# haddan tashqari shishirib yubormaydi:
+#
+#   * `srcset` olib tashlanadi. Aks holda har bir suratning 480 va 960
+#     variantlari ham ichkariga tushadi va sahifa butun galereyaning
+#     ikkinchi nusxasini behuda ko'tarib yuradi — namoyishga bir marta,
+#     kompyuterdan qaraladi.
+#   * faqat haqiqatda ishlatilgan fayllar o'qiladi, public/ da yotgan
+#     ortiqcha surat sahifani og'irlashtirmaydi.
+pages_html = re.sub(r'\s+srcset="[^"]*"', '', pages_html)
+
+photo_refs = sorted(set(re.findall(r'/(?:filiallar|bosh|yonalishlar)/[^"\'&; ]+?\.webp', pages_html)))
+photo_bytes = 0
+for ref in photo_refs:
+    disk = os.path.join(SRC, 'public', ref.lstrip('/'))
+    if not os.path.isfile(disk):
+        print('  ! rasm topilmadi:', ref)
+        continue
+    raw = preview_photo(disk)
+    photo_bytes += len(raw)
+    pages_html = pages_html.replace(
+        ref, 'data:image/webp;base64,' + base64.b64encode(raw).decode())
+
+print('photos inlined:', len(photo_refs), '(' + str(photo_bytes // 1024) + ' KB on disk)')
+assert not re.search(r'src="/(?:filiallar|bosh|yonalishlar)/', pages_html), 'a photo URL survived'
 
 EXTRA_CSS = """
 /* --- preview shell: only routing and the form notice live here --- */
