@@ -303,6 +303,31 @@ section[id] {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* ---------------- butun kartochka bosiladigan ---------------- */
+
+/* Filial kartochkasida uchta havola bor: xarita, qo'ng'iroq va "Batafsil".
+   Kartochkani butunlay <a> ichiga solib bo'lmaydi — havola ichida havola
+   bo'lishi mumkin emas. Buning o'rniga "Batafsil" havolasiga ko'rinmas
+   soya beriladi: u kartochkani to'liq qoplaydi, shuning uchun bo'sh joyga
+   bosilsa ham filial sahifasi ochiladi.
+
+   Qolgan tugmalar soyadan yuqorida turadi (z-index 2), ya'ni xaritaga yoki
+   qo'ng'iroqqa bosgan odam baribir o'sha amalni oladi. */
+.stretch-host {
+  position: relative;
+}
+.stretch-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.stretch-host a:not(.stretch-link),
+.stretch-host button {
+  position: relative;
+  z-index: 2;
+}
+
 /* ---------------- barmoq uchun bosiladigan maydon ---------------- */
 
 /* WCAG 2.2 bo'yicha bosiladigan joy kamida 24px, amaliy tavsiya 44px.
