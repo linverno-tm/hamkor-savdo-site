@@ -15,3 +15,6 @@ public/api/secrets.php
 
 # Namoyish nusxasi tools/namoyish-yasash.py orqali qayta yasaladi
 preview/
+
+# Hostingga yuklash uchun arxiv — ichida api/secrets.php (bot kaliti) bor.
+*.zip
