@@ -34,6 +34,17 @@ export function Branches() {
           lead={`${site.facts.branchCount} ta filial — Shahrixon, Asaka va Andijonda. Mahsulotni jonli ko'rib, taqqoslab tanlaysiz.`}
         />
 
+        {/* Yetkazib berish endi butun mamlakat bo'ylab, filiallar esa faqat
+            Andijon viloyatida. Boshqa viloyatdagi odam bu bo'limga kelib
+            "menga to'g'ri kelmas ekan" deb chiqib ketmasin — xarid uchun
+            filialga kelish shart emasligi shu yerda aytiladi. */}
+        <p data-reveal className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-2">
+          Boshqa viloyatdamisiz?{" "}
+          <strong className="font-semibold text-ink">Filialga kelish shart emas</strong> —
+          mahsulotni telefon orqali tanlab, rasmiylashtirasiz va{" "}
+          {site.deliveryArea.toLowerCase()} yetkazib beramiz.
+        </p>
+
         <ul data-reveal className="mt-14 grid gap-5 sm:grid-cols-2">
           {branches.map((b) => {
             const phone = b.phone ?? site.phone;
