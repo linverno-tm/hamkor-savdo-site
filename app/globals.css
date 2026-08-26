@@ -298,6 +298,48 @@ section[id] {
   border: 2px dashed var(--purple-100);
   background: var(--purple-50);
 }
+
+/* Bo'sh o'rin ustidan sekin o'tadigan yorug'lik to'lqini.
+   Bu — "skeleton" naqshi: brauzerda kontent yuklanayotganini bildiradigan
+   tanish til. Shu sababli izohsiz ham "hali tayyorlanmoqda" degan ma'noni
+   beradi va bo'sh joy tashlab qo'yilgandek emas, kutilayotgandek ko'rinadi.
+   Faqat CSS — kutubxona ham, JavaScript ham yo'q. */
+/* To'lqin OQ emas, binafsha. Fon allaqachon juda och (`--purple-50`) —
+   oq yorug'lik unda umuman sezilmaydi, sinab ko'rilganda uch xil lahzada
+   olingan surat bir xil chiqdi. Fondan biroz to'qroq band esa ko'rinadi. */
+.media-slot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(90, 48, 137, 0.13) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+}
+.on-purple .media-slot::before {
+  background: linear-gradient(
+    100deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 75%
+  );
+}
+
+/* Harakat faqat foydalanuvchi qarshi bo'lmasa. Yozuv va belgi to'lqindan
+   ustun turadi, shuning uchun o'qish hech qachon qiyinlashmaydi. */
+@media (prefers-reduced-motion: no-preference) {
+  .media-slot::before {
+    animation: slot-shimmer 3.6s ease-in-out infinite;
+  }
+}
+@keyframes slot-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
 .on-purple .media-slot {
   border-color: rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.06);

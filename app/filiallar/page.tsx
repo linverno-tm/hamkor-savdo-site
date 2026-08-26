@@ -7,7 +7,7 @@ import { branchCover, branchPhotos } from "@/lib/photos";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
-import { Logo } from "@/components/ui/Logo";
+import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
 
 /**
  * The branch index at `/filiallar/`.
@@ -90,10 +90,7 @@ export default function BranchIndexPage() {
                     className="block aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 ) : (
-                  <span className="media-slot flex aspect-[16/10] w-full flex-col items-center justify-center gap-3 rounded-none border-0 border-b border-dashed text-center text-sm text-ink-3">
-                    <Logo variant="mark" className="h-10 w-auto text-purple-100" />
-                    Suratlar tayyorlanmoqda
-                  </span>
+                  <PhotoPlaceholder className="aspect-[16/10]" />
                 )}
                 <span className="flex flex-1 flex-col p-6">
                   <span className="numeral text-2xl tracking-[0.06em] text-purple">

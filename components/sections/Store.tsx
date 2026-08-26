@@ -3,7 +3,7 @@ import { site } from "@/data/site";
 import { branches } from "@/data/branches";
 import { branchCover, branchPhotos } from "@/lib/photos";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Logo } from "@/components/ui/Logo";
+import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
 
 /**
  * Scene 08 — "Haqiqiy do'kon qanday?"
@@ -60,10 +60,7 @@ export function Store() {
                      telefoni baribir kerak. Bo'sh ramka o'rniga brend belgisi
                      turadi: sahifa buzilgandek emas, tayyorlanayotgandek
                      ko'rinsin. */
-                  <span className="media-slot flex aspect-[16/10] w-full flex-col items-center justify-center gap-3 rounded-none border-0 border-b border-dashed text-center text-sm text-ink-3">
-                    <Logo variant="mark" className="h-10 w-auto text-purple-100" />
-                    Suratlar tayyorlanmoqda
-                  </span>
+                  <PhotoPlaceholder className="aspect-[16/10]" />
                 )}
                 <span className="flex flex-1 flex-col p-5">
                   <span className="numeral text-2xl tracking-[0.06em] text-purple">
