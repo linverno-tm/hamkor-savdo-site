@@ -151,6 +151,12 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                       {b.city} — {b.landmark}
                     </option>
                   ))}
+                  {/* Filiallar Andijon viloyatida, lekin yetkazib berish butun
+                      mamlakat bo'ylab. Boshqa viloyatdagi odam ro'yxatdan o'ziga
+                      begona filialni tanlashga majbur bo'lmasin — bu ariza ham
+                      boshqacha ishlanadi, operator yetkazish shartlarini
+                      aytishi kerak. */}
+                  <option value="boshqa-viloyat">Boshqa viloyatdaman — yetkazib berasizmi?</option>
                 </select>
               </div>
 

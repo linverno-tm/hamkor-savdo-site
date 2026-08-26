@@ -35,7 +35,7 @@ export const advantages: Advantage[] = [
     id: "delivery",
     title: "Bepul yetkazib berish",
     detail:
-      "Xaridingizni manzilingizga bepul yetkazamiz — Andijon viloyati bo'ylab.",
+      `Andijon viloyatida yetkazish bepul. ${site.deliveryArea} ham yetkazib beramiz — boshqa viloyatlar uchun shartlarni qo'ng'iroqda aytamiz.`,
   },
   {
     id: "installation",

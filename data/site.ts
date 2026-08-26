@@ -35,8 +35,23 @@ export const site = {
   telegramBot: "hamkor_taklifbot",
   telegramBotUrl: "https://t.me/hamkor_taklifbot",
 
-  /** Where the company operates, per the official Telegram channel. */
+  /** Where the branches are, per the official Telegram channel. */
   serviceArea: "Andijon viloyati bo'ylab",
+
+  /**
+   * How far the company will deliver — the owner confirmed on 2026-08-25 that
+   * this is not limited to the region the shops sit in.
+   *
+   * Kept separate from `serviceArea` on purpose. The official channel ties
+   * FREE delivery to Andijon viloyati; reaching the rest of the country is a
+   * different claim, and the site must not let the word "bepul" travel with it.
+   *
+   * [DELIVERY TERMS REQUIRED] Whether delivery outside the region is free,
+   * charged, or free above some amount is not known — so the site says only
+   * that it happens and points at the phone for terms.
+   */
+  deliveryArea: "O'zbekiston bo'ylab",
+  freeDeliveryArea: "Andijon viloyati",
 
   /** Verified claims — safe to state as fact. */
   facts: {

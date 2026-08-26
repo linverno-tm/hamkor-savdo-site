@@ -35,7 +35,7 @@ export function Hero() {
               style={{ ["--i" as string]: 0 }}
             >
               <span className="h-2 w-2 rounded-full bg-yellow" aria-hidden="true" />
-              {site.serviceArea} · {site.facts.branchCount} ta filial
+              {site.deliveryArea} yetkazamiz · {site.facts.branchCount} ta filial
             </p>
 
             <h1
@@ -104,7 +104,7 @@ export function Hero() {
                 ))}
               </dl>
               <p className="mt-8 border-t border-white/20 pt-5 text-sm leading-relaxed text-on-purple-2">
-                Bepul yetkazib berish va o&apos;rnatish — {site.serviceArea}.
+                {`${site.freeDeliveryArea}da yetkazish va o'rnatish bepul. ${site.deliveryArea} yetkazib beramiz.`}
               </p>
             </div>
           </div>

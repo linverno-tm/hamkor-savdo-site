@@ -61,8 +61,9 @@ export function About() {
             {site.facts.installmentMonthsMax} oygacha bo&apos;lib to&apos;laysiz.
           </p>
           <p>
-            Xaridingizni bepul yetkazib beramiz va bepul o&apos;rnatib beramiz — ya&apos;ni
-            do&apos;kondan chiqqaningizdan keyin ham yolg&apos;iz qolmaysiz.
+            {site.freeDeliveryArea}da xaridingizni bepul yetkazib beramiz va bepul o&apos;rnatib
+            beramiz — ya&apos;ni do&apos;kondan chiqqaningizdan keyin ham yolg&apos;iz qolmaysiz.
+            Boshqa viloyatlarga ham yetkazamiz.
           </p>
 
           {site.unpublished.companyStory ? <p>{site.unpublished.companyStory}</p> : null}

@@ -33,6 +33,9 @@ $FILIALLAR = array(
     'shahrixon-bog'      => array("Shahrixon — Markaziy istirohat bog'i yonida", '#shahrixon_bog'),
     'asaka-umid'         => array("Asaka — Makro supermarketi, 2-qavat", '#asaka'),
     'andijon-amir-temur' => array("Andijon — Amir Temur shoh ko'chasi, 62", '#andijon'),
+    /* Filial emas, lekin ro'yxatdagi variant: boshqa viloyatdagi mijoz.
+       Bunday arizada operator avval yetkazish shartlarini aytishi kerak. */
+    'boshqa-viloyat'     => array('Boshqa viloyat — yetkazib berish', '#boshqa_viloyat'),
 );
 
 /** mbstring bo'lmasa ham ishlashi uchun. */
