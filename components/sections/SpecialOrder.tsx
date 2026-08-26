@@ -1,85 +1,95 @@
 import { site } from "@/data/site";
+import { Logo } from "@/components/ui/Logo";
 
 /**
  * Scene 06b — "Sizda yo'q narsani ham olsam bo'ladimi?"
  *
  * The strongest thing the business does that the site did not say anywhere: the
  * installment offer is not limited to the stock on the shelves. Someone who has
- * already found what they want somewhere else can still buy it here, on terms.
+ * already found what they want elsewhere can still buy it here, on terms.
  *
- * That changes what the visitor is looking at — not a catalogue to browse, but
- * a way to pay for whatever they have already decided on. It earns its own
- * section rather than a line in the advantages list, and sits directly after
- * the installment steps because it is an extension of them.
+ * The first version of this section lost that message by being shaped like its
+ * neighbour — the installment steps directly above are four numbered circles in
+ * a row, and this repeated the pattern with three. Adjacent and near-identical,
+ * the eye reads the second one as "more of the same" and skips it.
  *
- * The copy states only what the owner confirmed: goods the shop does not stock
- * can be arranged on installment. No limit, no fee and no timescale is claimed,
- * because none has been given — the exact terms come from the phone call, the
- * same rule the installment section already follows.
+ * So this one deliberately breaks the page's rhythm instead of joining it:
+ * centred where every other section is left-aligned, one short question and its
+ * answer at display size, and the three steps demoted to a single quiet line.
+ * A reader who is scanning rather than reading gets the whole offer from two
+ * lines — which is the point. It stays a normal section otherwise, with the
+ * same padding and colours as the rest, so it catches the eye without
+ * shouting over the sections around it.
+ *
+ * The copy claims only what the owner confirmed: goods the shop does not stock
+ * can be arranged on installment. No limit, fee or timescale is stated, because
+ * none has been given — exact terms come from the phone call, the same rule the
+ * installment section follows.
  */
-const steps = [
-  {
-    index: "01",
-    title: "Mahsulotni toping",
-    detail:
-      "Boshqa do'konda, bozorda yoki internetda ko'rgan bo'lsangiz — o'shanisi bo'laveradi.",
-  },
-  {
-    index: "02",
-    title: "Bizga ayting",
-    detail: "Mahsulot nomi, narxi va qayerda ko'rganingizni aytsangiz kifoya.",
-  },
-  {
-    index: "03",
-    title: "Muddatli to'lovga rasmiylashtiramiz",
-    detail: "Shartlarni aniqlaymiz va mahsulotni siz uchun muddatli to'lovga olib beramiz.",
-  },
-];
+const steps = ["Mahsulotni toping", "Nomi va narxini ayting", "Rasmiylashtiramiz"];
 
 export function SpecialOrder() {
   return (
     <section
       id="maxsus-buyurtma"
       aria-labelledby="special-title"
-      className="on-purple bg-purple py-16 text-white sm:py-24"
+      className="on-purple relative overflow-hidden bg-purple py-16 text-white sm:py-24"
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="max-w-3xl">
-          <p className="kicker text-yellow">Bizda yo&apos;q bo&apos;lsa ham</p>
-          <h2 id="special-title" className="display mt-3 text-3xl leading-[1.08] sm:text-5xl">
-            Boshqa joyda ko&apos;rgan mahsulotni ham{" "}
-            <span className="text-yellow">muddatli to&apos;lovga</span> olasiz
-          </h2>
-          <p className="mt-6 text-lg leading-relaxed text-on-purple-2">
-            Muddatli to&apos;lov faqat do&apos;konimizdagi mahsulotlar uchun emas. Kerakli
-            narsani boshqa joyda topgan bo&apos;lsangiz ham, uni siz uchun rasmiylashtirib
-            beramiz — naqd pul yig&apos;ib yurish shart emas.
-          </p>
-        </div>
+      {/* Brend monogrammasi — filial sahifalarida ishlatilgan usul. Fon uchun
+          tayyor shakl, yangi bezak o'ylab topilmaydi. */}
+      <Logo
+        variant="mark"
+        className="pointer-events-none absolute -right-8 top-1/2 hidden h-80 w-auto -translate-y-1/2 text-white/[0.07] lg:block"
+      />
 
-        <ol data-reveal className="mt-14 grid gap-8 sm:grid-cols-3 sm:gap-6">
-          {steps.map((step) => (
-            <li key={step.index}>
-              <span className="numeral flex h-14 w-14 items-center justify-center rounded-full bg-yellow text-2xl text-ink">
-                {step.index}
-              </span>
-              <h3 className="display mt-5 text-xl">{step.title}</h3>
-              <p className="mt-2 leading-relaxed text-on-purple-2">{step.detail}</p>
+      {/* max-w-4xl: sarlavha ikki qatorga sig'sin. Torroq bo'lsa "olasiz."
+          uchinchi qatorda yolg'iz qoladi va zarba yo'qoladi. */}
+      <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-8">
+        <p className="kicker text-yellow">Bizda yo&apos;q bo&apos;lsa ham</p>
+
+        {/* Savol va javob. Ikki qatorda butun taklif tushunarli bo'lishi kerak —
+            odam qolganini o'qimasa ham. */}
+        <h2
+          id="special-title"
+          className="display mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl"
+        >
+          Bizda yo&apos;qmi?
+          <br />
+          Baribir <span className="text-yellow">muddatli to&apos;lovga</span> olasiz.
+        </h2>
+
+        <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-on-purple-2">
+          Boshqa do&apos;konda, bozorda yoki internetda ko&apos;rgan mahsulotingizni siz uchun
+          rasmiylashtirib beramiz. Naqd pul yig&apos;ib yurish shart emas.
+        </p>
+
+        {/* Uch qadam — endi bitta jimgina qator. Ma'lumot saqlanadi, lekin
+            yuqoridagi bo'limning raqamli doiralarini takrorlamaydi. */}
+        <ol className="mt-9 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm font-semibold">
+          {steps.map((step, i) => (
+            <li key={step} className="flex items-center gap-3">
+              {i > 0 ? (
+                <span className="text-yellow" aria-hidden="true">
+                  &rarr;
+                </span>
+              ) : null}
+              {step}
             </li>
           ))}
         </ol>
 
-        <div data-reveal className="mt-12 flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
           <a href="#ariza" className="btn btn-yellow">
             Mahsulotni ayting
           </a>
           <a href={`tel:${site.phone}`} className="btn btn-outline">
             {site.phoneDisplay}
           </a>
-          <p className="text-sm leading-relaxed text-on-purple-2 sm:max-w-sm">
-            Shartlar mahsulot narxiga qarab aniqlanadi — qo&apos;ng&apos;iroqda aytamiz.
-          </p>
         </div>
+
+        <p className="mt-6 text-sm text-on-purple-2">
+          Shartlar mahsulot narxiga qarab aniqlanadi — qo&apos;ng&apos;iroqda aytamiz.
+        </p>
       </div>
     </section>
   );
