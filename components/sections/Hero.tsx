@@ -34,7 +34,7 @@ export function Hero() {
   return (
     <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden pt-28 sm:pt-32">
       <div className="relative mx-auto max-w-7xl px-5 pb-20 sm:px-8 lg:pb-28">
-        <div className="grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+        <div className="grid items-start gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div>
             <p
               className="rise inline-flex items-center gap-2 rounded-full border border-line bg-ground px-4 py-2 text-sm font-medium text-ink-2"
