@@ -157,19 +157,24 @@ if ($senderHost !== '' && !in_array($senderHost, $allowedHosts, true)) {
 
 /* Botlarga tuzoq: odam ko'rmaydigan maydon. To'ldirilgan bo'lsa, jimgina
    "muvaffaqiyat" qaytaramiz — bot moslashishni o'rganmasin. */
-if (trim(isset($_POST['website']) ? $_POST['website'] : '') !== '') {
+/** Faqat oddiy matn: bot `name[]=...` yuborsa, massiv bo'lib kelib PHP yiqilmasin. */
+function hs_field($key)
+{
+    return isset($_POST[$key]) && is_string($_POST[$key]) ? trim($_POST[$key]) : '';
+}
+
+if (hs_field('website') !== '' || (isset($_POST['website']) && !is_string($_POST['website']))) {
     hs_ok();
 }
 
-$name   = hs_cut(trim(isset($_POST['name']) ? $_POST['name'] : ''), $MAX_NAME);
-$phone  = hs_cut(trim(isset($_POST['phone']) ? $_POST['phone'] : ''), $MAX_PHONE);
-$note   = hs_cut(trim(isset($_POST['note']) ? $_POST['note'] : ''), $MAX_NOTE);
-$branch = isset($_POST['branch']) ? $_POST['branch'] : '';
-$page   = hs_cut(trim(isset($_POST['page']) ? $_POST['page'] : ''), 200);
+$name   = hs_cut(hs_field('name'), $MAX_NAME);
+$phone  = hs_cut(hs_field('phone'), $MAX_PHONE);
+$note   = hs_cut(hs_field('note'), $MAX_NOTE);
+$branch = hs_field('branch');
+$page   = hs_cut(hs_field('page'), 200);
 /* Mijoz saytga qayerdan kelgan (instagram, google, telegram...) — brauzerdagi
    kichik skript to'ldiradi. Faqat xavfsiz belgilar qoladi. */
-$source = isset($_POST['src']) ? strtolower(preg_replace('/[^a-z0-9._\-]/i', '', (string) $_POST['src'])) : '';
-$source = substr($source, 0, 60);
+$source = substr(strtolower(preg_replace('/[^a-z0-9._\-]/i', '', hs_field('src'))), 0, 60);
 
 if (hs_len($name) < 2) {
     hs_fail(422, "Ismingiz kiritilmagan. Iltimos, formani qayta to'ldiring.");
@@ -204,7 +209,7 @@ $token = isset($secrets['token']) ? $secrets['token'] : '';
 $chatId = isset($secrets['chat_id']) ? $secrets['chat_id'] : '';
 
 $known = isset($FILIALLAR[$branch]);
-$special = isset($_POST['special']) && $_POST['special'] !== '';
+$special = hs_field('special') !== '';
 
 /* Ariza avval admin panel bazasiga yoziladi — Telegram ishlamay qolsa ham
    yo'qolmasin. Baza bo'lmasa (masalan panel hali o'rnatilmagan), jimgina

@@ -242,6 +242,42 @@ td a:hover { text-decoration: underline; }
 .pager a, .pager strong { min-width: 34px; padding: .3rem .5rem; border-radius: 9px; text-align: center; border: 1px solid var(--line); text-decoration: none; }
 .pager strong { background: var(--purple); color: #fff; border-color: var(--purple); }
 .inline-form { display: inline; }
+
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 6.2rem; }
+.pw-toggle { position: absolute; right: .35rem; top: 50%; transform: translateY(-50%); border: 0; background: var(--purple-50); color: var(--purple); font: inherit; font-size: .82rem; font-weight: 600; padding: .35rem .6rem; border-radius: 8px; cursor: pointer; }
+html:not(.js) .pw-toggle { display: none; }
+.list-thumb { width: 56px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; background: var(--ground-2); }
+
+/* arizalar */
+.note-preview { display: block; color: var(--ink-3); font-size: .82rem; margin-top: .15rem; }
+tr.is-new td:first-child { box-shadow: inset 3px 0 0 var(--yellow); }
+.status-form { display: flex; gap: .3rem; align-items: center; }
+.st-select { width: auto; min-width: 150px; padding: .35rem .55rem; font-size: .84rem; font-weight: 600; border-radius: 999px; }
+.st-select.st-yangi { background: var(--warn-bg); color: var(--warn); border-color: #f1e2a1; }
+.st-select.st-qongiroq { background: var(--purple-50); color: var(--purple); border-color: var(--purple-100); }
+.st-select.st-sotildi { background: var(--ok-bg); color: var(--ok); border-color: #c6e9d5; }
+.st-select.st-rad { background: #eeecf1; color: #5f596b; }
+.js .js-hide { display: none; }
+.actions.tight { margin-top: .4rem; gap: .35rem; }
+
+/* filiallar ro'yxati */
+.branch-list { display: flex; flex-direction: column; }
+.branch-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 1rem; align-items: center; padding: .9rem 0; border-bottom: 1px solid var(--line); }
+.branch-row:last-child { border-bottom: 0; }
+.branch-main small { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin-top: .25rem; }
+.branch-main small .ico { width: 14px; height: 14px; }
+.closed-note { color: var(--err) !important; }
+.branch-actions { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-end; position: relative; }
+@media (max-width: 759.98px) { .branch-row { grid-template-columns: 1fr; gap: .5rem; } .branch-actions { justify-content: flex-start; } }
+.inline-details { display: inline-block; position: relative; }
+.inline-details > summary { list-style: none; }
+.inline-details > summary::-webkit-details-marker { display: none; }
+.popover { position: absolute; right: 0; top: calc(100% + .4rem); z-index: 5; width: 300px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: .9rem; box-shadow: var(--shadow); }
+details.card > summary.summary-head { cursor: pointer; font-weight: 650; list-style: none; }
+details.card > summary.summary-head::-webkit-details-marker { display: none; }
+details.card > summary.summary-head::after { content: " ▾"; color: var(--ink-3); }
+details.card[open] > summary.summary-head { margin-bottom: .6rem; }
 .thumb { display: block; max-width: 240px; height: auto; border-radius: 12px; border: 1px solid var(--line); }
 .code { font-family: ui-monospace, Consolas, monospace; background: var(--ground-2); border: 1px solid var(--line); padding: .05rem .35rem; border-radius: 6px; font-size: .86em; word-break: break-all; }
 .seg { display: inline-flex; flex-wrap: wrap; gap: .25rem; padding: .25rem; background: var(--ground); border: 1px solid var(--line); border-radius: 13px; margin-bottom: 1.1rem; }

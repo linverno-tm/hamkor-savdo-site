@@ -19,6 +19,17 @@ if (!$lead || !hs_can_see_lead($user, $lead)) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     hs_require_post_csrf();
     $action = hs_post('amal');
+    if ($action === 'holat') {
+        // Ro'yxatdan tezkor o'zgartirish — izohga tegilmaydi.
+        $status = hs_post('holat');
+        if (isset(hs_lead_statuses()[$status]) && $status !== $lead['status']) {
+            $up = hs_db()->prepare('UPDATE leads SET status = ?, updated_at = ?, updated_by = ? WHERE id = ?');
+            $up->execute(array($status, hs_now(), $user['login'], $id));
+            hs_audit($user['login'], 'ariza holati', "#{$id}: {$lead['status']} -> {$status}");
+            hs_flash("Ariza #{$id}: " . hs_lead_statuses()[$status]);
+        }
+        hs_redirect(hs_safe_return(hs_post('qayt'), '/admin/arizalar.php'));
+    }
     if ($action === 'saqlash') {
         $status = hs_post('holat');
         $note = mb_substr(hs_post('izoh'), 0, 2000);
@@ -44,7 +55,12 @@ hs_page_start('Ariza #' . $id, $user);
 
 echo '<div class="grid grid-2"><section class="card"><h2>Mijoz</h2><dl class="kv">';
 echo '<dt>Ism</dt><dd>' . h($lead['name']) . '</dd>';
-echo '<dt>Telefon</dt><dd><a class="btn small" href="tel:' . h($lead['phone']) . '">' . h($lead['phone']) . '</a></dd>';
+$digits = preg_replace('/\D/', '', $lead['phone']);
+echo '<dt>Telefon</dt><dd><span class="nowrap">' . h($lead['phone']) . '</span><div class="actions tight"><a class="btn small" href="tel:' . h($lead['phone']) . '">' . hs_icon('phone') . ' Qo\'ng\'iroq</a>';
+if (strlen($digits) >= 12) {
+    echo '<a class="btn outline small" href="https://t.me/+' . h($digits) . '" target="_blank" rel="noopener noreferrer">' . hs_icon('send') . ' Telegram</a>';
+}
+echo '</div></dd>';
 echo '<dt>Filial</dt><dd>' . h($lead['branch'] !== '' ? (isset($branches[$lead['branch']]) ? $branches[$lead['branch']] : $lead['branch']) : 'tanlanmagan') . '</dd>';
 echo '<dt>So\'rovi</dt><dd>' . ($lead['note'] !== '' ? nl2br(h($lead['note'])) : '—') . '</dd>';
 if ((int) $lead['special']) {

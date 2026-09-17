@@ -129,7 +129,8 @@ function hs_setting($key, $default = null)
 
 function hs_set_setting($key, $value)
 {
-    $st = hs_db()->prepare('INSERT INTO settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+    // INSERT OR REPLACE — eski hostinglardagi SQLite (3.24 dan past) UPSERT'ni bilmaydi.
+    $st = hs_db()->prepare('INSERT OR REPLACE INTO settings(key, value) VALUES(?, ?)');
     $st->execute(array($key, (string) $value));
 }
 
@@ -149,7 +150,7 @@ function hs_cache_get($key)
 
 function hs_cache_set($key, $value, $ttl)
 {
-    $st = hs_db()->prepare('INSERT INTO cache(key, value, expires_at) VALUES(?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, expires_at = excluded.expires_at');
+    $st = hs_db()->prepare('INSERT OR REPLACE INTO cache(key, value, expires_at) VALUES(?, ?, ?)');
     $st->execute(array($key, json_encode($value, JSON_UNESCAPED_UNICODE), time() + (int) $ttl));
 }
 

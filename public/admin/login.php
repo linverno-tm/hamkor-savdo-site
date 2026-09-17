@@ -34,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 echo '<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
-echo '<meta name="robots" content="noindex, nofollow"><title>Kirish — HAMKOR SAVDO admin</title>';
-echo '<link rel="stylesheet" href="/admin/assets/admin.css?v=2"></head><body class="center">';
+echo '<meta name="robots" content="noindex, nofollow"><title>Kirish — HAMKOR SAVDO admin</title><script src="/admin/assets/admin.js?v=3" defer></script>';
+echo '<link rel="stylesheet" href="/admin/assets/admin.css?v=3"></head><body class="center">';
 echo '<form class="card narrow auth-card" method="post" action="/admin/login.php" autocomplete="on">';
 echo '<div class="auth-icon">' . hs_icon('shield') . '</div><h1>HAMKOR SAVDO</h1><p class="muted">Boshqaruv paneliga kirish</p>';
 if (!hs_owner_configured()) {
@@ -47,7 +47,7 @@ if ($error !== '') {
 echo hs_csrf_field();
 echo '<input type="hidden" name="qayt" value="' . h($back) . '">';
 echo '<label for="login">Login</label><input id="login" name="login" type="text" autocomplete="username" required maxlength="80" value="' . h($login) . '">';
-echo '<label for="parol">Parol</label><input id="parol" name="parol" type="password" autocomplete="current-password" required maxlength="200">';
+echo '<label for="parol">Parol</label><div class="pw-wrap"><input id="parol" name="parol" type="password" autocomplete="current-password" required maxlength="200"><button type="button" class="pw-toggle" data-toggle-password="parol">Ko\'rsatish</button></div>';
 echo '<div class="actions"><button class="btn" type="submit">Kirish</button></div>';
 echo '<p class="hint">5 marta noto\'g\'ri kiritilsa, bu qurilma bloklanadi.</p>';
 echo '</form></body></html>';

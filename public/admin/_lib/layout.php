@@ -129,8 +129,8 @@ function hs_page_start($title, $user = null, $subtitle = null)
     echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<meta name="robots" content="noindex, nofollow">';
     echo '<title>' . h($title) . ' — HAMKOR SAVDO admin</title>';
-    echo '<link rel="stylesheet" href="/admin/assets/admin.css?v=2">';
-    echo '<script src="/admin/assets/admin.js?v=2" defer></script>';
+    echo '<link rel="stylesheet" href="/admin/assets/admin.css?v=3">';
+    echo '<script src="/admin/assets/admin.js?v=3" defer></script>';
     echo '</head><body>';
 
     if (!$user) {
@@ -168,7 +168,7 @@ function hs_render_blocked()
 {
     http_response_code(403);
     echo '<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
-    echo '<meta name="robots" content="noindex"><title>Kirish yopiq</title><link rel="stylesheet" href="/admin/assets/admin.css?v=2"></head>';
+    echo '<meta name="robots" content="noindex"><title>Kirish yopiq</title><link rel="stylesheet" href="/admin/assets/admin.css?v=3"></head>';
     echo '<body class="center"><div class="card narrow auth-card"><div class="auth-icon danger">' . hs_icon('shield') . '</div><h1>Kirish yopiq</h1>';
     echo "<p>Bu qurilmadan juda ko'p noto'g'ri urinish bo'ldi, shuning uchun admin panelga kirish bloklandi.</p>";
     echo '</div></body></html>';
