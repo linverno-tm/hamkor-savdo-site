@@ -9,9 +9,38 @@ function hs_metrika_counter()
     return (int) hs_config('metrika_counter', 112743600);
 }
 
+/**
+ * Token ikki joydan: secrets.php (ustun) yoki paneldagi "Metrika'ni ulash"
+ * formasi (bazadagi settings). Baza veb orqali ochilmaydi.
+ */
+function hs_metrika_token()
+{
+    $t = (string) hs_config('metrika_token', '');
+    return $t !== '' ? $t : (string) hs_setting('metrika_token', '');
+}
+
 function hs_metrika_ready()
 {
-    return (string) hs_config('metrika_token', '') !== '';
+    return hs_metrika_token() !== '';
+}
+
+/** Tokenni saqlashdan oldin tekshirish: hisoblagichni o'qiy oladimi. */
+function hs_metrika_check_token($token)
+{
+    list($code, $body) = hs_http(
+        'GET',
+        'https://api-metrika.yandex.net/management/v1/counter/' . hs_metrika_counter(),
+        array('Authorization: OAuth ' . $token, 'Accept: application/json'),
+        null,
+        20
+    );
+    if ($code === 200) {
+        return null;
+    }
+    if ($code === 401 || $code === 403) {
+        return "Token qabul qilinmadi: u noto'liq nusxalangan yoki boshqa Yandex akkauntdan olingan. Tokenni Metrika (hisoblagich " . hs_metrika_counter() . ") ochilgan akkaunt bilan qaytadan oling.";
+    }
+    return $code === 0 ? "Yandex'ga ulanib bo'lmadi (internet yoki serverda curl yo'q)." : "Yandex javob bermadi (HTTP {$code}).";
 }
 
 function hs_metrika_request($endpoint, $params, &$error = null)
@@ -22,7 +51,7 @@ function hs_metrika_request($endpoint, $params, &$error = null)
     if ($cached !== null) {
         return $cached;
     }
-    list($code, $body) = hs_http('GET', $url, array('Authorization: OAuth ' . hs_config('metrika_token', ''), 'Accept: application/json'), null, 20);
+    list($code, $body) = hs_http('GET', $url, array('Authorization: OAuth ' . hs_metrika_token(), 'Accept: application/json'), null, 20);
     if ($code !== 200) {
         $error = $code === 401 || $code === 403
             ? "Metrika tokeni yaroqsiz yoki ruxsati yetmaydi (HTTP {$code})."

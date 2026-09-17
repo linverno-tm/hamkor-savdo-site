@@ -5,6 +5,38 @@ require_once __DIR__ . '/_lib/leads.php';
 
 $user = hs_require_login(true);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    hs_require_post_csrf();
+    $action = hs_post('amal');
+    if ($action === 'metrika_ulash') {
+        // Token ba'zan "#access_token=...&token_type=..." havola ko'rinishida nusxalanadi.
+        $raw = hs_post('token');
+        if (preg_match('/access_token=([^&\s]+)/', $raw, $m)) {
+            $raw = $m[1];
+        }
+        $token = preg_replace('/\s+/', '', $raw);
+        if (!preg_match('/^[A-Za-z0-9_\-.]{20,200}$/', $token)) {
+            hs_flash("Token noto'g'ri ko'rinishda. Yandex sahifasidagi uzun kodni to'liq nusxalang.", 'err');
+        } else {
+            $problem = hs_metrika_check_token($token);
+            if ($problem !== null) {
+                hs_flash($problem, 'err');
+            } else {
+                hs_set_setting('metrika_token', $token);
+                hs_db()->exec("DELETE FROM cache WHERE key LIKE 'ym:%'");
+                hs_audit($user['login'], 'Metrika ulandi');
+                hs_flash("Metrika ulandi. Statistika endi shu yerda ko'rinadi.");
+            }
+        }
+    } elseif ($action === 'metrika_uzish') {
+        hs_db()->prepare('DELETE FROM settings WHERE key = ?')->execute(array('metrika_token'));
+        hs_db()->exec("DELETE FROM cache WHERE key LIKE 'ym:%'");
+        hs_audit($user['login'], 'Metrika uzildi');
+        hs_flash('Metrika uzildi.');
+    }
+    hs_redirect('/admin/statistika.php');
+}
+
 $periods = array(
     'bugun' => array('Bugun', 'today', 'today', 0),
     'kecha' => array('Kecha', 'yesterday', 'yesterday', 1),
@@ -19,11 +51,11 @@ list($pLabel, $d1, $d2, $back) = $periods[$p];
 
 hs_page_start('Statistika', $user);
 
-echo '<div class="actions">';
+echo '<div class="seg">';
 foreach ($periods as $k => $v) {
-    echo $k === $p ? '<span class="btn small">' . h($v[0]) . '</span>' : '<a class="btn outline small" href="/admin/statistika.php?davr=' . h($k) . '">' . h($v[0]) . '</a>';
+    echo $k === $p ? '<span>' . h($v[0]) . '</span>' : '<a href="/admin/statistika.php?davr=' . h($k) . '">' . h($v[0]) . '</a>';
 }
-echo '</div><br>';
+echo '</div>';
 
 // Arizalar bazadan — Metrika bo'lmasa ham ishlaydi.
 $from = date('Y-m-d', strtotime("-{$back} day")) . ' 00:00:00';
@@ -43,12 +75,32 @@ $branchRows = $st->fetchAll();
 $names = hs_branch_names();
 
 if (!hs_metrika_ready()) {
-    echo '<section class="card"><h2>Yandex Metrika ulanmagan</h2>';
-    echo '<p>Tashriflar, manbalar va shaharlarni shu yerda ko\'rish uchun bir martalik token kerak:</p><ol>';
-    echo '<li><a href="https://oauth.yandex.ru/client/new" target="_blank" rel="noopener noreferrer">oauth.yandex.ru</a> da yangi ilova yarating, ruxsatlardan <b>Yandex.Metrika: получение статистики</b> ni belgilang.</li>';
-    echo '<li>Tokenni oling va hostingdagi <span class="code">api/secrets.php</span> ga <span class="code">\'metrika_token\' => \'...\'</span> qatorini qo\'shing.</li>';
-    echo '<li>Metrika\'da maqsadlar bo\'lsin: <span class="code">phone_click</span>, <span class="code">telegram_click</span>, <span class="code">lead_sent</span> (JavaScript-событие).</li>';
-    echo '</ol><p class="muted">Tokenni hech kimga (jumladan menga ham) yubormang — faqat secrets.php ga yozing.</p></section>';
+    $clientId = preg_match('/^[a-f0-9]{32}$/', hs_get('client_id')) ? hs_get('client_id') : '';
+    echo '<section class="card"><h2>Yandex Metrika\'ni ulash</h2>';
+    echo '<p>Bir marta qilinadi (taxminan 3 daqiqa). Metrika ochilgan Yandex akkauntingiz bilan kirgan bo\'lishingiz kerak.</p>';
+
+    echo '<h3>1-qadam. Yandex\'da ilova yaratish</h3><ol>';
+    echo '<li><a href="https://oauth.yandex.ru/client/new/id/" target="_blank" rel="noopener noreferrer">oauth.yandex.ru/client/new</a> ni oching.</li>';
+    echo '<li>Nomi: <span class="code">HAMKOR SAVDO admin</span>. Platforma: <b>Веб-сервисы</b>.</li>';
+    echo '<li>Redirect URI maydoniga aynan shuni yozing: <span class="code">https://oauth.yandex.ru/verification_code</span></li>';
+    echo '<li>Ruxsatlar (Доступ к данным) ichidan faqat <b>Получение статистики</b> (Яндекс Метрика) ni belgilang.</li>';
+    echo '<li>"Создать приложение" ni bosing va chiqqan <b>ClientID</b> ni nusxalang.</li></ol>';
+
+    echo '<h3>2-qadam. Tokenni olish</h3>';
+    echo '<form method="get" action="/admin/statistika.php" class="filters"><div><label for="client_id">ClientID</label><input id="client_id" type="text" name="client_id" maxlength="32" value="' . h($clientId) . '" placeholder="32 belgili kod" autocomplete="off"></div><div class="actions"><button class="btn outline" type="submit">Davom etish</button></div></form>';
+    if ($clientId !== '') {
+        $url = 'https://oauth.yandex.ru/authorize?response_type=token&client_id=' . rawurlencode($clientId);
+        echo '<p><a class="btn" href="' . h($url) . '" target="_blank" rel="noopener noreferrer">Yandex\'da ruxsat berish</a></p>';
+        echo '<p class="hint">Ochilgan sahifada "Разрешить" ni bosing — uzun kod (token) chiqadi. Uni nusxalang.</p>';
+    }
+
+    echo '<h3>3-qadam. Tokenni shu yerga qo\'yish</h3>';
+    echo '<form method="post" action="/admin/statistika.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="metrika_ulash">';
+    echo '<label for="token">Token</label><input id="token" type="password" name="token" required maxlength="400" autocomplete="off" spellcheck="false">';
+    echo '<p class="hint">Token tekshiriladi va faqat serverda saqlanadi. Uni hech kimga (jumladan menga ham) yubormang.</p>';
+    echo '<div class="actions"><button class="btn" type="submit">Tekshirish va ulash</button></div></form>';
+    echo '<p class="muted">Metrika\'da maqsadlar bo\'lsin: <span class="code">phone_click</span>, <span class="code">telegram_click</span>, <span class="code">lead_sent</span> (JavaScript-событие).</p>';
+    echo '</section>';
 }
 
 $err = '';
@@ -129,4 +181,7 @@ if (!$branchRows) {
 echo '</section></div>';
 
 echo '<p class="muted">Davr: ' . h($pLabel) . '. Metrika ma\'lumoti 10 daqiqada bir yangilanadi.</p>';
+if (hs_metrika_ready() && (string) hs_config('metrika_token', '') === '') {
+    echo '<form method="post" action="/admin/statistika.php" data-confirm="Metrika uzilsinmi? Statistika ko\'rinmay qoladi.">' . hs_csrf_field() . '<input type="hidden" name="amal" value="metrika_uzish"><button class="btn danger small" type="submit">Metrika\'ni uzish</button></form>';
+}
 hs_page_end();
