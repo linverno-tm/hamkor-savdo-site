@@ -100,11 +100,11 @@ foreach ($c['promotions'] as $p) {
 }
 
 $today = date('Y-m-d');
-echo '<section class="card"><h2>Barcha aksiyalar</h2>';
+echo '<section class="card"><div class="card-head"><h2>Barcha aksiyalar</h2><a class="btn small" href="/admin/aksiyalar.php#forma">+ Yangi aksiya</a></div>';
 if (!$c['promotions']) {
     echo '<p class="muted">Aksiya yo\'q — saytda bu bo\'lim ko\'rinmaydi.</p>';
 } else {
-    echo '<div class="table-wrap"><table><thead><tr><th>Sarlavha</th><th>Muddat</th><th>Holat</th><th></th></tr></thead><tbody>';
+    echo '<div class="table-wrap"><table><thead><tr><th></th><th>Sarlavha</th><th>Muddat</th><th>Holat</th><th></th></tr></thead><tbody>';
     foreach ($c['promotions'] as $p) {
         if ($p['endsAt'] !== '' && $p['endsAt'] < $today) {
             $state = '<span class="pill st-rad">Tugagan</span>';
@@ -113,7 +113,8 @@ if (!$c['promotions']) {
         } else {
             $state = '<span class="pill pill-ok">Saytda</span>';
         }
-        echo '<tr><td>' . h($p['title']) . '</td><td class="nowrap">' . h(($p['startsAt'] ?: '…') . ' — ' . ($p['endsAt'] ?: '…')) . '</td><td>' . $state . '</td>';
+        $thumb = $p['image'] !== '' ? '<img class="list-thumb" src="/rasm/' . h($p['image']) . '-480.webp" alt="" loading="lazy">' : '<span class="list-thumb"></span>';
+        echo '<tr><td>' . $thumb . '</td><td>' . h($p['title']) . '</td><td class="nowrap">' . h(($p['startsAt'] ?: '…') . ' — ' . ($p['endsAt'] ?: '…')) . '</td><td>' . $state . '</td>';
         echo '<td class="nowrap"><a class="btn outline small" href="/admin/aksiyalar.php?id=' . h(rawurlencode($p['id'])) . '">Tahrirlash</a> ';
         echo '<form class="inline-form" method="post" action="/admin/aksiyalar.php" data-confirm="Aksiya o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . h($p['id']) . '"><input type="hidden" name="rasm" value="' . h($p['image']) . '"><button class="btn danger small" type="submit">O\'chirish</button></form></td></tr>';
     }
@@ -121,7 +122,7 @@ if (!$c['promotions']) {
 }
 echo '</section>';
 
-echo '<form class="card" method="post" action="/admin/aksiyalar.php" enctype="multipart/form-data">' . hs_csrf_field();
+echo '<form id="forma" class="card" method="post" action="/admin/aksiyalar.php" enctype="multipart/form-data">' . hs_csrf_field();
 echo '<input type="hidden" name="amal" value="saqlash"><input type="hidden" name="id" value="' . h($edit['id']) . '"><input type="hidden" name="eski_rasm" value="' . h($edit['image']) . '">';
 echo '<h2>' . ($edit['id'] === '' ? 'Yangi aksiya' : 'Aksiyani tahrirlash') . '</h2>';
 echo '<label for="title">Sarlavha</label><input id="title" type="text" name="title" required maxlength="120" value="' . h($edit['title']) . '">';

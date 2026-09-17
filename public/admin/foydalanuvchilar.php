@@ -3,17 +3,6 @@ require __DIR__ . '/_lib/bootstrap.php';
 
 $user = hs_require_login(true);
 
-function hs_password_problem($p)
-{
-    if (mb_strlen($p) < 10) {
-        return "Parol kamida 10 belgi bo'lsin.";
-    }
-    if (!preg_match('/\d/', $p) || !preg_match('/\pL/u', $p)) {
-        return "Parolda harf ham, raqam ham bo'lsin.";
-    }
-    return null;
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     hs_require_post_csrf();
     $action = hs_post('amal');

@@ -55,9 +55,12 @@ if (mb_strlen($p1) < 10) {
 
 $hash = password_hash($p1, PASSWORD_DEFAULT);
 $src = file_get_contents($file);
+// admin_hash_set_at: paneldan o'zgartirilgan paroldan yangiroq ekanini bildiradi
+// (unutilgan parolni shu vosita bilan tiklash uchun).
 $lines = array(
     'admin_login' => "    'admin_login' => " . var_export($login, true) . ',',
     'admin_hash' => "    'admin_hash' => " . var_export($hash, true) . ',',
+    'admin_hash_set_at' => "    'admin_hash_set_at' => " . time() . ',',
 );
 foreach ($lines as $key => $line) {
     $pattern = "/^\s*'" . $key . "'\s*=>.*$/m";

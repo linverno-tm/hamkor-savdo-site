@@ -101,13 +101,14 @@ foreach ($c['products'] as $p) {
     }
 }
 
-echo '<section class="card"><h2>Mahsulotlar (' . count($c['products']) . ')</h2>';
+echo '<section class="card"><div class="card-head"><h2>Mahsulotlar (' . count($c['products']) . ')</h2><a class="btn small" href="/admin/katalog.php#forma">+ Yangi mahsulot</a></div>';
 if (!$c['products']) {
     echo '<p class="muted">Mahsulot kiritilmagan — saytda katalog bo\'limi ko\'rinmaydi.</p>';
 } else {
-    echo '<div class="table-wrap"><table><thead><tr><th>Nomi</th><th>Bo\'lim</th><th class="right">Narx</th><th>Mavjud</th><th></th></tr></thead><tbody>';
+    echo '<div class="table-wrap"><table><thead><tr><th></th><th>Nomi</th><th>Bo\'lim</th><th class="right">Narx</th><th>Mavjud</th><th></th></tr></thead><tbody>';
     foreach ($c['products'] as $p) {
-        echo '<tr><td>' . h($p['name']) . '</td><td>' . h(isset($CATS[$p['category']]) ? $CATS[$p['category']] : $p['category']) . '</td>';
+        $thumb = $p['image'] !== '' ? '<img class="list-thumb" src="/rasm/' . h($p['image']) . '-480.webp" alt="" loading="lazy">' : '<span class="list-thumb"></span>';
+        echo '<tr><td>' . $thumb . '</td><td>' . h($p['name']) . '</td><td>' . h(isset($CATS[$p['category']]) ? $CATS[$p['category']] : $p['category']) . '</td>';
         echo '<td class="right nowrap">' . ($p['price'] === null ? '—' : h(number_format($p['price'], 0, '', ' ')) . ' so\'m') . '</td>';
         echo '<td>' . ($p['inStock'] ? '<span class="pill pill-ok">ha</span>' : '<span class="pill st-rad">buyurtma</span>') . '</td>';
         echo '<td class="nowrap"><a class="btn outline small" href="/admin/katalog.php?id=' . h(rawurlencode($p['id'])) . '">Tahrirlash</a> ';
@@ -117,7 +118,7 @@ if (!$c['products']) {
 }
 echo '</section>';
 
-echo '<form class="card" method="post" action="/admin/katalog.php" enctype="multipart/form-data">' . hs_csrf_field();
+echo '<form id="forma" class="card" method="post" action="/admin/katalog.php" enctype="multipart/form-data">' . hs_csrf_field();
 echo '<input type="hidden" name="amal" value="saqlash"><input type="hidden" name="id" value="' . h($edit['id']) . '"><input type="hidden" name="eski_rasm" value="' . h($edit['image']) . '">';
 echo '<h2>' . ($edit['id'] === '' ? 'Yangi mahsulot' : 'Mahsulotni tahrirlash') . '</h2><div class="grid grid-2">';
 echo '<div><label for="name">Nomi</label><input id="name" type="text" name="name" required maxlength="120" value="' . h($edit['name']) . '"></div>';

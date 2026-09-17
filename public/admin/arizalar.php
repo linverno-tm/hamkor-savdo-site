@@ -48,7 +48,7 @@ echo '</form>';
 $query = http_build_query(array_filter($f, 'strlen'));
 echo '<section class="card"><div class="actions"><strong>' . $total . ' ta ariza</strong>';
 echo '<a class="btn outline small" href="/admin/eksport.php' . ($query ? '?' . h($query) : '') . '">Excel\'ga yuklab olish</a></div>';
-hs_render_leads_table($rows);
+hs_render_leads_table($rows, true);
 if ($pages > 1) {
     echo '<div class="pager">';
     for ($i = 1; $i <= $pages; $i++) {

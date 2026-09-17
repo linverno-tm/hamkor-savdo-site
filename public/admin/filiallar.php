@@ -67,6 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             unset($c['photos'][$id]);
             return count($c['branches']) === $before ? 'Filial topilmadi.' : null;
         });
+    } elseif ($action === 'holat') {
+        $close = hs_post('yopiq') === '1';
+        $note = mb_substr(hs_post('closedNote'), 0, 200);
+        $problem = hs_content_publish($user, ($close ? 'filial vaqtincha yopildi: ' : 'filial qayta ochildi: ') . $id, function (&$c) use ($id, $close, $note) {
+            foreach ($c['branches'] as $i => $b) {
+                if ($b['id'] === $id) {
+                    $c['branches'][$i]['closed'] = $close;
+                    $c['branches'][$i]['closedNote'] = $close ? $note : '';
+                    return null;
+                }
+            }
+            return 'Filial topilmadi.';
+        });
     } elseif ($action === 'tartib') {
         $order = isset($_POST['tartib']) && is_array($_POST['tartib']) ? $_POST['tartib'] : array();
         $problem = hs_content_publish($user, 'filiallar tartibi', function (&$c) use ($order) {
@@ -112,33 +125,76 @@ function hs_branch_fields($b, $prefix)
     echo '<div><label for="' . $prefix . 'lng">Xarita: uzunlik (lng)</label><input id="' . $prefix . 'lng" type="text" name="lng" required inputmode="decimal" value="' . h($v('lng')) . '"><p class="hint">Google Maps\'da joyni bosib turing — koordinata chiqadi.</p></div>';
     echo '</div>';
     echo '<label for="' . $prefix . 'mapQuery">Xarita qidiruv matni</label><input id="' . $prefix . 'mapQuery" type="text" name="mapQuery" maxlength="200" value="' . h($v('mapQuery')) . '">';
-    echo '<label class="inline"><input type="checkbox" name="closed" value="1"' . (!empty($b['closed']) ? ' checked' : '') . '> Vaqtincha yopiq</label>';
+    echo '<label class="inline"><input type="checkbox" name="closed" value="1"' . (!empty($b['closed']) ? ' checked' : '') . '> Filial vaqtincha yopiq</label>';
     echo '<label for="' . $prefix . 'closedNote">Yopiqlik izohi (masalan: "25-sentabrgacha ta\'mirlanmoqda")</label><input id="' . $prefix . 'closedNote" type="text" name="closedNote" maxlength="200" value="' . h($v('closedNote')) . '">';
 }
 
-echo '<p class="muted">Har bir filial alohida saqlanadi. O\'zgarish saytda 2–3 daqiqada ko\'rinadi.</p>';
+$editId = hs_get('id');
+$isNew = hs_get('yangi') === '1';
+$edit = null;
+foreach ($c['branches'] as $b) {
+    if ($b['id'] === $editId) {
+        $edit = $b;
+    }
+}
 
-echo '<form class="card" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="tartib"><h2>Saytdagi tartib</h2><div class="grid grid-4">';
+if ($edit) {
+    echo '<p><a href="/admin/filiallar.php">← Barcha filiallar</a></p>';
+    echo '<form class="card" method="post" action="/admin/filiallar.php">' . hs_csrf_field();
+    echo '<input type="hidden" name="amal" value="saqlash"><input type="hidden" name="id" value="' . h($edit['id']) . '">';
+    echo '<div class="card-head"><h2>' . h($edit['city'] . ' — ' . $edit['landmark']) . '</h2><a class="btn outline small" href="' . h(hs_site_url()) . '/filiallar/' . h($edit['id']) . '/" target="_blank" rel="noopener noreferrer">' . hs_icon('external') . ' Saytda ko\'rish</a></div>';
+    hs_branch_fields($edit, 'e-');
+    echo '<div class="actions"><button class="btn" type="submit">Saqlash va nashr qilish</button><a class="btn outline" href="/admin/filiallar.php">Bekor qilish</a></div></form>';
+    echo '<form class="card" method="post" action="/admin/filiallar.php" data-confirm="Filial saytdan butunlay olib tashlanadi. Davom etasizmi?">' . hs_csrf_field();
+    echo '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . h($edit['id']) . '">';
+    echo '<h2>Filialni o\'chirish</h2><p class="muted">Filial sahifasi va bosh sahifadagi kartochkasi saytdan olib tashlanadi. Arizalar tarixi panelda qoladi.</p>';
+    echo '<button class="btn danger" type="submit">Filialni o\'chirish</button></form>';
+    hs_page_end();
+    exit;
+}
+
+if ($isNew) {
+    echo '<p><a href="/admin/filiallar.php">← Barcha filiallar</a></p>';
+    echo '<form class="card" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="qoshish">';
+    echo '<h2>Yangi filial</h2>';
+    echo '<label for="newid">Sahifa manzili</label><input id="newid" type="text" name="newid" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="40" placeholder="masalan: namangan-markaz"><p class="hint">Saytda <span class="code">hamkorsavdo.uz/filiallar/<b>shu-nom</b>/</span> bo\'ladi. Faqat kichik lotin harf, raqam va chiziqcha; keyin o\'zgartirib bo\'lmaydi.</p>';
+    hs_branch_fields(array('closed' => false), 'n-');
+    echo '<div class="actions"><button class="btn" type="submit">Filialni qo\'shish</button><a class="btn outline" href="/admin/filiallar.php">Bekor qilish</a></div></form>';
+    hs_page_end();
+    exit;
+}
+
+echo '<div class="card"><div class="card-head"><h2>' . count($c['branches']) . ' ta filial</h2><a class="btn small" href="/admin/filiallar.php?yangi=1">+ Yangi filial</a></div>';
+echo '<div class="branch-list">';
+foreach ($c['branches'] as $b) {
+    $phone = $b['phoneDisplay'] ?: 'umumiy raqam';
+    echo '<div class="branch-row">';
+    echo '<div class="branch-main"><b>' . h($b['city']) . '</b> <span class="muted">— ' . h($b['landmark']) . '</span>';
+    echo '<small>' . hs_icon('phone') . ' ' . h($phone) . ' &nbsp; ' . hs_icon('clock') . ' ' . h($b['hours']) . '</small>';
+    if (!empty($b['closed']) && $b['closedNote'] !== '') {
+        echo '<small class="closed-note">' . h($b['closedNote']) . '</small>';
+    }
+    echo '</div>';
+    echo '<div>' . (!empty($b['closed']) ? '<span class="pill pill-err">Vaqtincha yopiq</span>' : '<span class="pill pill-ok">Ishlayapti</span>') . '</div>';
+    echo '<div class="branch-actions">';
+    if (empty($b['closed'])) {
+        echo '<details class="inline-details"><summary class="btn outline small">Vaqtincha yopish</summary><form method="post" action="/admin/filiallar.php" class="popover">' . hs_csrf_field()
+            . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="1">'
+            . '<label>Saytda ko\'rinadigan izoh (ixtiyoriy)</label><input type="text" name="closedNote" maxlength="200" placeholder="masalan: 25-sentabrgacha ta\'mirlanmoqda">'
+            . '<div class="actions"><button class="btn danger small" type="submit">Yopish</button></div></form></details>';
+    } else {
+        echo '<form class="inline-form" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="0"><button class="btn small" type="submit">Qayta ochish</button></form>';
+    }
+    echo '<a class="btn outline small" href="/admin/filiallar.php?id=' . h(rawurlencode($b['id'])) . '">Tahrirlash</a>';
+    echo '</div></div>';
+}
+echo '</div></div>';
+
+echo '<details class="card"><summary class="summary-head">Saytdagi tartibni o\'zgartirish</summary>';
+echo '<form method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="tartib"><div class="grid grid-4">';
 foreach ($c['branches'] as $i => $b) {
     echo '<div><label for="t-' . h($b['id']) . '">' . h($b['city'] . ', ' . $b['landmark']) . '</label><input id="t-' . h($b['id']) . '" type="number" min="1" max="99" name="tartib[' . h($b['id']) . ']" value="' . ($i + 1) . '"></div>';
 }
-echo '</div><div class="actions"><button class="btn outline" type="submit">Tartibni saqlash</button></div></form>';
-
-foreach ($c['branches'] as $b) {
-    echo '<form class="card" method="post" action="/admin/filiallar.php">' . hs_csrf_field();
-    echo '<input type="hidden" name="amal" value="saqlash"><input type="hidden" name="id" value="' . h($b['id']) . '">';
-    echo '<h2>' . h($b['city'] . ' — ' . $b['landmark']) . ' <small class="code">/filiallar/' . h($b['id']) . '/</small></h2>';
-    hs_branch_fields($b, h($b['id']) . '-');
-    echo '<div class="actions"><button class="btn" type="submit">Saqlash</button></div></form>';
-    echo '<form method="post" action="/admin/filiallar.php" data-confirm="Filial saytdan butunlay olib tashlanadi. Davom etasizmi?">' . hs_csrf_field();
-    echo '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . h($b['id']) . '">';
-    echo '<button class="btn danger small" type="submit">' . h($b['city'] . ', ' . $b['landmark']) . ' — filialni o\'chirish</button></form><br>';
-}
-
-echo '<form class="card" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="qoshish">';
-echo '<h2>Yangi filial qo\'shish</h2>';
-echo '<label for="newid">Sahifa manzili</label><input id="newid" type="text" name="newid" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="40" placeholder="masalan: namangan-markaz"><p class="hint">Faqat kichik lotin harf, raqam va chiziqcha. Keyin o\'zgartirib bo\'lmaydi.</p>';
-hs_branch_fields(array('closed' => false), 'new-');
-echo '<div class="actions"><button class="btn" type="submit">Filialni qo\'shish</button></div></form>';
+echo '</div><div class="actions"><button class="btn outline" type="submit">Tartibni saqlash</button></div></form></details>';
 
 hs_page_end();

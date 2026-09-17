@@ -167,7 +167,38 @@ function hs_unblock($blockId, $actor)
 
 function hs_owner_configured()
 {
-    return hs_config('admin_login', '') !== '' && hs_config('admin_hash', '') !== '';
+    return hs_config('admin_login', '') !== '' && hs_owner_hash() !== '';
+}
+
+/**
+ * Egasining amaldagi paroli xeshi.
+ *
+ * Ikki manba: secrets.php (tools/admin-parol.php yozadi) va paneldagi
+ * "Parolni o'zgartirish" (bazaga yozadi). Qaysi biri YANGIROQ bo'lsa, o'sha
+ * amalda — shunda panelda o'zgartirilgan parolni unutsangiz ham, kompyuterdan
+ * admin-parol.php bilan yangi parol qo'yib, kirishni tiklay olasiz.
+ */
+function hs_owner_hash()
+{
+    $fileHash = (string) hs_config('admin_hash', '');
+    $fileTime = (int) hs_config('admin_hash_set_at', 0);
+    $dbHash = (string) hs_setting('owner_hash', '');
+    $dbTime = (int) hs_setting('owner_hash_set_at', '0');
+    if ($dbHash !== '' && $dbTime > $fileTime) {
+        return $dbHash;
+    }
+    return $fileHash;
+}
+
+function hs_password_problem($p)
+{
+    if (mb_strlen($p) < 10) {
+        return "Parol kamida 10 belgi bo'lsin.";
+    }
+    if (!preg_match('/\d/', $p) || !preg_match('/\pL/u', $p)) {
+        return "Parolda harf ham, raqam ham bo'lsin.";
+    }
+    return null;
 }
 
 /**
@@ -182,7 +213,7 @@ function hs_attempt_login($login, $password)
 
     $user = null;
     $ownerLogin = (string) hs_config('admin_login', '');
-    $ownerHash = (string) hs_config('admin_hash', '');
+    $ownerHash = hs_owner_hash();
     // Vaqt bo'yicha farq bo'lmasin: foydalanuvchi topilmasa ham xesh tekshiriladi.
     $dummy = password_hash('hs-timing-dummy', PASSWORD_DEFAULT);
 

@@ -50,6 +50,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_set_setting('report_parts', implode(',', $parts));
         hs_audit($user['login'], 'hisobot sozlamasi', "soat {$hour}, " . implode(',', $parts));
         hs_flash('Hisobot sozlamalari saqlandi.');
+    } elseif ($action === 'parol') {
+        $current = isset($_POST['joriy']) ? (string) $_POST['joriy'] : '';
+        $new = isset($_POST['yangi']) ? (string) $_POST['yangi'] : '';
+        $again = isset($_POST['yangi2']) ? (string) $_POST['yangi2'] : '';
+        if (!password_verify($current, hs_owner_hash())) {
+            sleep(1);
+            hs_flash("Joriy parol noto'g'ri.", 'err');
+        } elseif ($new !== $again) {
+            hs_flash('Yangi parollar bir xil emas.', 'err');
+        } elseif (($pp = hs_password_problem($new)) !== null) {
+            hs_flash($pp, 'err');
+        } elseif (password_verify($new, hs_owner_hash())) {
+            hs_flash("Yangi parol eskisi bilan bir xil bo'lmasin.", 'err');
+        } else {
+            hs_set_setting('owner_hash', password_hash($new, PASSWORD_DEFAULT));
+            hs_set_setting('owner_hash_set_at', (string) time());
+            session_regenerate_id(true);
+            hs_audit($user['login'], "egasining paroli o'zgartirildi", 'IP ' . hs_ip());
+            hs_telegram_send("🔑 Admin panel paroli o'zgartirildi\nIP: " . hs_ip() . "\nQurilma: " . hs_describe_agent(hs_user_agent()) . "\nVaqt: " . date('d.m.Y H:i') . "\n\nSiz bo'lmasangiz — darhol kompyuterda php tools/admin-parol.php bilan yangi parol qo'ying.");
+            hs_flash("Parol o'zgartirildi. Keyingi kirishda yangi parolni ishlating.");
+        }
     } elseif ($action === 'sinov') {
         $ok = hs_telegram_send("🧪 Sinov hisoboti\n\n" . hs_build_daily_report(date('Y-m-d')));
         hs_flash($ok ? "Sinov hisoboti Telegram'ga yuborildi." : "Yuborilmadi — bot tokeni va chat_id ni tekshiring.", $ok ? 'ok' : 'err');
@@ -106,6 +127,15 @@ foreach (hs_report_parts() as $k => $v) {
 }
 echo '<p class="hint">Hostingda Cron har soatda <span class="code">php …/public_html/admin/cron/hisobot.php</span> ni ishga tushirishi kerak.</p>';
 echo '<div class="actions"><button class="btn" type="submit">Saqlash</button></div></form>';
+
+echo '<form class="card" method="post" action="/admin/sozlamalar.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="parol">';
+echo '<div class="card-head"><h2>Mening parolim</h2><span class="muted">' . h($user['login']) . '</span></div>';
+echo '<div class="grid grid-3">';
+echo '<div><label for="joriy">Joriy parol</label><input id="joriy" type="password" name="joriy" required autocomplete="current-password"></div>';
+echo '<div><label for="yangi">Yangi parol</label><input id="yangi" type="password" name="yangi" required minlength="10" autocomplete="new-password"></div>';
+echo '<div><label for="yangi2">Yangi parolni takrorlang</label><input id="yangi2" type="password" name="yangi2" required minlength="10" autocomplete="new-password"></div>';
+echo '</div><p class="hint">Kamida 10 belgi, harf va raqam. O\'zgarganda Telegram\'ga xabar keladi. Parolni unutsangiz — kompyuterda <span class="code">php tools/admin-parol.php</span>.</p>';
+echo '<div class="actions"><button class="btn" type="submit">Parolni o\'zgartirish</button></div></form>';
 
 echo '<form class="card" method="post" action="/admin/sozlamalar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sinov">';
 echo '<h2>Sinab ko\'rish</h2><p class="muted">Bugungi hisobotni hozir Telegram\'ga yuboradi.</p><button class="btn outline" type="submit">Sinov hisobotini yuborish</button></form>';
