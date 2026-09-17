@@ -148,9 +148,13 @@ export function Contact() {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-sm leading-relaxed text-ink-3">
-              Andijon filiali: 9:00–22:00. Boshqa filiallar: 8:00–18:00.
-            </p>
+            <ul className="mt-5 space-y-1 text-sm leading-relaxed text-ink-3">
+              {branches.map((b) => (
+                <li key={b.id}>
+                  {b.city}, {b.landmark}: {b.closed ? "vaqtincha yopiq" : b.hours}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Social + web */}

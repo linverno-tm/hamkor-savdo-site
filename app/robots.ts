@@ -12,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
       /* `/rahmat/` — ariza yuborilgandan keyingi sahifa: qidiruvdan unga
          tushgan odam nima uchun rahmat aytilayotganini tushunmaydi.
          `/api/` — forma qabul qiluvchisi, sahifa emas. */
-      disallow: ["/rahmat/", "/api/"],
+      disallow: ["/rahmat/", "/api/", "/admin/", "/uz-kr/rahmat/"],
     },
     sitemap: absolute("/sitemap.xml"),
   };

@@ -16,6 +16,9 @@ import { Store } from "@/components/sections/Store";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { Contact } from "@/components/sections/Contact";
 import { FinalCta } from "@/components/sections/FinalCta";
+import { Promotions } from "@/components/sections/Promotions";
+import { Catalog } from "@/components/sections/Catalog";
+import { Faq } from "@/components/sections/Faq";
 
 /** "8:00–18:00" -> {opens:"08:00", closes:"18:00"} — schema.org soat qatori uchun. */
 function parseHours(hours: string) {
@@ -107,14 +110,17 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
+        <Promotions />
         <About />
         <Scale />
         <Categories />
+        <Catalog />
         <Why />
         <Installment />
         <SpecialOrder />
         <Branches />
         <Store />
+        <Faq />
         <LeadForm />
         <Contact />
         <FinalCta />

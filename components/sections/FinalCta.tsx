@@ -1,4 +1,5 @@
 import { site } from "@/data/site";
+import { content, Rich } from "@/lib/content";
 import { Logo } from "@/components/ui/Logo";
 
 /**
@@ -23,8 +24,7 @@ export function FinalCta() {
           HAMKOR BO&apos;LING
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-on-purple-2">
-          Keyingi xaridingizni HAMKOR SAVDO bilan boshlang — eng yaqin filialga keling yoki
-          hoziroq qo&apos;ng&apos;iroq qiling.
+          <Rich text={content.texts.finalCtaLead} strongClass="font-semibold text-white" />
         </p>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
           <a href={`tel:${site.phone}`} className="btn btn-yellow">

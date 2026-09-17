@@ -1,4 +1,5 @@
 import { site } from "@/data/site";
+import { content, Rich } from "@/lib/content";
 
 /**
  * Scene 01 — "Bu kim va menga nima beradi?"
@@ -58,11 +59,7 @@ export function Hero() {
               className="rise mt-6 max-w-xl text-lg leading-relaxed text-ink-2 sm:text-xl"
               style={{ ["--i" as string]: 2 }}
             >
-              Tilla, texnika va mebel — {site.facts.productCount} mahsulot bitta do'konda.{" "}
-              <strong className="font-semibold text-ink">
-                {site.facts.installmentMonthsMax} oygacha muddatli to'lov
-              </strong>
-              , rasmiylashtirish uchun pasport va plastik kifoya.
+              <Rich text={content.texts.heroLead} />
             </p>
 
             <div className="rise mt-9 flex flex-col gap-3" style={{ ["--i" as string]: 3 }}>

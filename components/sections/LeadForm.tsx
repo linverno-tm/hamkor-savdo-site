@@ -85,6 +85,8 @@ export function LeadForm({ branchId }: { branchId?: string }) {
               <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
             </div>
             <input type="hidden" name="page" value={branchId ? `/filiallar/${branchId}` : "/"} />
+            {/* Mijoz qayerdan kelgani — app/layout.tsx dagi SOURCE_SCRIPT yuborishdan oldin to'ldiradi. */}
+            <input type="hidden" name="src" defaultValue="" />
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-1">
