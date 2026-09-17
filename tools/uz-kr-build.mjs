@@ -29,6 +29,18 @@ const isPageHref = (href) =>
   href.startsWith("/") && !href.startsWith("/uz-kr") && !href.includes(".") && !href.startsWith("/api");
 
 /**
+ * Kirillga o'girilmaydigan bo'laklar: @nomlar (Instagram/Telegram), veb
+ * manzillar va domenlar. "@hamkorsavdo.uz" -> "@ҳамкорсавдо.уз" bo'lib
+ * qolsa, mijoz sahifani qidirib topa olmaydi.
+ */
+const KEEP_LATIN = /(@[A-Za-z0-9_.]+|https?:\/\/[^\s<>"]+|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:uz|com|ru|me|org|net)\b(?:\/[^\s<>"]*)?)/g;
+const toCyr = (s) =>
+  s
+    .split(KEEP_LATIN)
+    .map((part, i) => (i % 2 === 1 ? part : toUzbekCyrillic(part)))
+    .join("");
+
+/**
  * `rawText` — HTML manbadagi qochirilgan shakl (masalan "do&#x27;konda"),
  * `.text` esa hal qilingan haqiqiy belgilar ("do'konda"). Kirillga
  * o'girishdan OLDIN hal qilingan matn kerak (aks holda "&#x27;" ichidagi
@@ -45,11 +57,11 @@ function walkText(node) {
   for (const child of node.childNodes) {
     if (child.nodeType === 3) {
       // matn tuguni
-      child.rawText = escapeHtmlText(toUzbekCyrillic(child.text));
+      child.rawText = escapeHtmlText(toCyr(child.text));
     } else if (child.nodeType === 1 && !SKIP_TAGS.has(child.tagName?.toLowerCase())) {
       for (const attr of ATTRS_TO_TRANSLATE) {
         const v = child.getAttribute(attr);
-        if (v) child.setAttribute(attr, escapeAttr(toUzbekCyrillic(v)));
+        if (v) child.setAttribute(attr, escapeAttr(toCyr(v)));
       }
       if (child.tagName?.toLowerCase() === "a" && !child.hasAttribute("data-lang-link")) {
         const href = child.getAttribute("href");
@@ -83,12 +95,12 @@ function stripHydrationScripts(root) {
 function processHtml(html) {
   const root = parse(html, { comment: false });
   const titleEl = root.querySelector("title");
-  if (titleEl) titleEl.set_content(escapeHtmlText(toUzbekCyrillic(titleEl.text)));
+  if (titleEl) titleEl.set_content(escapeHtmlText(toCyr(titleEl.text)));
   for (const meta of root.querySelectorAll("meta")) {
     const name = meta.getAttribute("name") || meta.getAttribute("property");
     if (name && ["description", "og:title", "og:description", "og:site_name"].includes(name)) {
       const c = meta.getAttribute("content");
-      if (c) meta.setAttribute("content", escapeAttr(toUzbekCyrillic(c)));
+      if (c) meta.setAttribute("content", escapeAttr(toCyr(c)));
     }
   }
   const htmlEl = root.querySelector("html");
