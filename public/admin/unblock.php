@@ -24,7 +24,7 @@ if ($block && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 echo '<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
-echo '<meta name="robots" content="noindex"><title>Blokni ochish</title><link rel="stylesheet" href="/admin/assets/admin.css?v=1"></head><body class="center"><div class="card narrow">';
+echo '<meta name="robots" content="noindex"><title>Blokni ochish</title><link rel="stylesheet" href="/admin/assets/admin.css?v=2"></head><body class="center"><div class="card narrow auth-card"><div class="auth-icon">' . hs_icon('shield') . '</div>';
 echo '<h1>Blokni ochish</h1>';
 if ($done) {
     echo '<p class="flash flash-ok">Blok ochildi. Endi shu qurilmadan qayta kirish mumkin.</p><p><a class="btn" href="/admin/login.php">Kirish sahifasi</a></p>';

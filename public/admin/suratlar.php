@@ -137,22 +137,26 @@ if (!$c) {
     exit;
 }
 
-echo '<div class="actions">';
+echo '<div class="seg">';
 foreach ($c['branches'] as $b) {
     $label = $b['city'] . ', ' . $b['landmark'];
-    echo $b['id'] === $slug ? '<span class="btn small">' . h($label) . '</span>' : '<a class="btn outline small" href="/admin/suratlar.php?filial=' . h(rawurlencode($b['id'])) . '">' . h($label) . '</a>';
+    echo $b['id'] === $slug ? '<span>' . h($label) . '</span>' : '<a href="/admin/suratlar.php?filial=' . h(rawurlencode($b['id'])) . '">' . h($label) . '</a>';
 }
-echo '</div><br>';
+echo '</div>';
 
 $prefs = isset($c['photos'][$slug]) ? $c['photos'][$slug] : array();
 $files = hs_branch_photo_files($slug);
 $order = isset($prefs['order']) ? $prefs['order'] : array();
-usort($files, function ($a, $b) use ($order) {
+// Saytdagi tartib bilan bir xil (lib/photos.ts): avval qo'lda berilgani, keyin tashqi, zal, jamoa, mijoz.
+$kindRank = array_flip(array_keys($KINDS));
+usort($files, function ($a, $b) use ($order, $kindRank) {
     $x = array_search($a['base'], $order, true);
     $y = array_search($b['base'], $order, true);
     $x = $x === false ? 999 : $x;
     $y = $y === false ? 999 : $y;
-    return $x - $y ?: strnatcmp($a['base'], $b['base']);
+    $ka = isset($kindRank[$a['kind']]) ? $kindRank[$a['kind']] : 9;
+    $kb = isset($kindRank[$b['kind']]) ? $kindRank[$b['kind']] : 9;
+    return ($x - $y) ?: (($ka - $kb) ?: strnatcmp($a['base'], $b['base']));
 });
 
 echo '<form class="card" method="post" action="/admin/suratlar.php" enctype="multipart/form-data">' . hs_csrf_field();
