@@ -53,11 +53,7 @@ export function LeadForm({ branchId }: { branchId?: string }) {
           <div>
             <p className="kicker">Ariza qoldiring</p>
             <h2 id="lead-title" className="display mt-3 text-4xl sm:text-5xl">
-              Sizga{" "}
-              <span className="relative z-0">
-                <span className="mark">o&apos;zimiz</span>
-              </span>{" "}
-              qo&apos;ng&apos;iroq qilamiz
+              Sizga o&apos;zimiz qo&apos;ng&apos;iroq qilamiz
             </h2>
             <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-2">
               Qo&apos;ng&apos;iroq qilishga vaqtingiz yo&apos;qmi? Ism va telefon raqamingizni

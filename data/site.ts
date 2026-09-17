@@ -8,10 +8,12 @@
  *    domain hamkorsavdo.uz, office address "Andijon, Shahrixon ko'chasi 14A".
  *  - Official Telegram channel t.me/hamkorsavdouz ("Hamkor Savdo | Rasmiy Kanali"):
  *    Andijon viloyati bo'ylab, 7000+ mahsulot, Tilla | Texnikalar | Mebellar,
- *    24 oygacha muddatli to'lov, pasport va plastik kifoya, BEPUL yetkazish/o'rnatish,
- *    phones (74) 342 08 80 and (33) 342 08 80, bot @hamkor_taklifbot.
+ *    24 oygacha muddatli to'lov (o'sha paytda), pasport va plastik kifoya, BEPUL
+ *    yetkazish/o'rnatish, phones (74) 342 08 80 and (33) 342 08 80, bot @hamkor_taklifbot.
  *  - Instagram bio @hamkorsavdo.uz: "Oilangizga ishonchli hamkor!", 41K followers.
  *  - Branch list supplied by the business owner (see data/branches.ts).
+ *  - Egasi tomonidan yangilandi (2026-09-17): muddatli to'lov endi faqat 12 oygacha
+ *    beriladi — shu sabab `installmentMonthsMax` 24 dan 12 ga tushirildi.
  *
  * Anything not published is `null` in `unpublished` — the UI degrades gracefully
  * and points at a phone number instead of inventing a value.
@@ -23,14 +25,17 @@ export const site = {
   tagline: "Oilangizga ishonchli hamkor!",
   domain: "hamkorsavdo.uz",
 
-  /** Main company number (printed on brand materials and the Telegram channel). */
-  phone: "+998743420880",
-  phoneDisplay: "+998 74 342 08 80",
+  /** Main company number (2026-09-17: Andijon filiali raqami, egasi ko'rsatmasi bilan). */
+  phone: "+998333420880",
+  phoneDisplay: "+998 33 342 08 80",
 
   instagram: "hamkorsavdo.uz",
   instagramUrl: "https://www.instagram.com/hamkorsavdo.uz/",
   telegram: "hamkorsavdouz",
   telegramUrl: "https://t.me/hamkorsavdouz",
+  /** Egasi tomonidan berildi (2026-09-17): mijozlar hikoyalari va sharhlari joylanadigan kanal. */
+  telegramCustomers: "hamkorsavdouz_mijozlari",
+  telegramCustomersUrl: "https://t.me/hamkorsavdouz_mijozlari",
   /** Feedback / suggestions bot listed on the official channel. */
   telegramBot: "hamkor_taklifbot",
   telegramBotUrl: "https://t.me/hamkor_taklifbot",
@@ -57,7 +62,7 @@ export const site = {
   facts: {
     productCount: "7000+",
     branchCount: 4,
-    installmentMonthsMax: 24,
+    installmentMonthsMax: 12,
     freeDelivery: true,
     freeInstallation: true,
     passportAndCardOnly: true,
@@ -66,7 +71,6 @@ export const site = {
 
   /** NOT published by the business. Fill in and the matching UI appears by itself. */
   unpublished: {
-    openingHours: null as string[] | null,
     warrantyMonths: null as number | null,
     yearFounded: null as number | null,
     companyStory: null as string | null,

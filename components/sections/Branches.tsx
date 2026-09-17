@@ -9,14 +9,10 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  * The branch finder. Every address, phone and map link is plain text and a real
  * link, readable with JavaScript and animation switched off entirely.
  *
- * [VERIFIED OPENING HOURS REQUIRED] — `site.unpublished.openingHours` is null,
- * so each card says so honestly and offers the phone instead of guessing.
- * Branch 04 has no direct line yet, so it falls back to the main company number
- * rather than displaying an invented one.
+ * Ish vaqti (2026-09-17, egasi): Andijon 9:00–22:00, qolgan uch filial 8:00–18:00
+ * — har biri `data/branches.ts`da o'zining `hours` maydonida.
  */
 export function Branches() {
-  const hours = site.unpublished.openingHours;
-
   return (
     <section id="filiallar" aria-labelledby="branches-title" className="bg-ground-2 py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -25,10 +21,7 @@ export function Branches() {
           kicker="Filiallar"
           title={
             <>
-              Bizga{" "}
-              <span className="relative z-0">
-                <span className="mark">kirib o&apos;ting</span>
-              </span>
+              Bizga kirib o&apos;ting
             </>
           }
           lead={`${site.facts.branchCount} ta filial — Shahrixon, Asaka va Andijonda. Mahsulotni jonli ko'rib, taqqoslab tanlaysiz.`}
@@ -42,10 +35,10 @@ export function Branches() {
           Boshqa viloyatdamisiz?{" "}
           <strong className="font-semibold text-ink">Filialga kelish shart emas</strong> —
           mahsulotni telefon orqali tanlab, rasmiylashtirasiz va{" "}
-          {site.deliveryArea.toLowerCase()} yetkazib beramiz.
+          {site.deliveryArea} yetkazib beramiz.
         </p>
 
-        <ul data-reveal className="mt-14 grid gap-5 sm:grid-cols-2">
+        <ul data-reveal className="mt-14 grid gap-5 lg:grid-cols-2">
           {branches.map((b) => {
             const phone = b.phone ?? site.phone;
             const phoneLabel = b.phoneDisplay ?? site.phoneDisplay;
@@ -64,19 +57,15 @@ export function Branches() {
                   </div>
                 </div>
 
-                <dl className="mt-6 space-y-4 border-t border-line pt-5 text-sm">
-                  <div className="flex gap-3">
-                    <dt className="w-24 shrink-0 font-semibold uppercase tracking-wider text-ink-3">
-                      Manzil
-                    </dt>
-                    <dd className="text-ink-2">{b.address}</dd>
+                <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-line pt-5 text-sm sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
+                  <div className="col-span-2 sm:col-span-1">
+                    <dt className="font-semibold uppercase tracking-wider text-ink-3">Manzil</dt>
+                    <dd className="mt-1 text-ink-2">{b.address}</dd>
                   </div>
 
-                  <div className="flex gap-3">
-                    <dt className="w-24 shrink-0 font-semibold uppercase tracking-wider text-ink-3">
-                      Telefon
-                    </dt>
-                    <dd>
+                  <div>
+                    <dt className="font-semibold uppercase tracking-wider text-ink-3">Telefon</dt>
+                    <dd className="mt-1">
                       <a
                         href={`tel:${phone}`}
                         className="font-semibold text-purple underline-offset-4 hover:underline"
@@ -91,14 +80,28 @@ export function Branches() {
                     </dd>
                   </div>
 
-                  <div className="flex gap-3">
-                    <dt className="w-24 shrink-0 font-semibold uppercase tracking-wider text-ink-3">
-                      Ish vaqti
-                    </dt>
-                    <dd className="text-ink-2">
-                      {hours ? hours.join(", ") : "Qo'ng'iroq orqali aniqlashtiring"}
-                    </dd>
+                  <div>
+                    <dt className="font-semibold uppercase tracking-wider text-ink-3">Ish vaqti</dt>
+                    <dd className="mt-1 text-ink-2">{b.hours}</dd>
                   </div>
+
+                  {b.instagram ? (
+                    <div>
+                      <dt className="font-semibold uppercase tracking-wider text-ink-3">
+                        Instagram
+                      </dt>
+                      <dd className="mt-1">
+                        <a
+                          href={b.instagramUrl!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-purple underline-offset-4 hover:underline"
+                        >
+                          @{b.instagram}
+                        </a>
+                      </dd>
+                    </div>
+                  ) : null}
                 </dl>
 
                 <div className="mt-auto flex flex-wrap gap-3 pt-7">

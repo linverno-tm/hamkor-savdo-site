@@ -84,12 +84,12 @@ export function Store() {
             <h3 className="display text-2xl sm:text-3xl">Mijozlarimiz — eng katta ishonch belgisi</h3>
             <p className="mt-3 leading-relaxed text-on-purple-2">
               O&apos;ylab topilgan sharhlar o&apos;rniga — haqiqiy mijozlarimizning hikoyalari.
-              Instagram sahifamizdagi &laquo;Mijozlarimiz&raquo; bo&apos;limida har kuni yangi
-              xaridlar va real lavhalar chiqib turadi.
+              Telegram&apos;dagi @{site.telegramCustomers} kanalida har kuni yangi xaridlar va
+              real lavhalar chiqib turadi.
             </p>
           </div>
           <a
-            href={site.instagramUrl}
+            href={site.telegramCustomersUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-yellow shrink-0"

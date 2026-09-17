@@ -22,7 +22,13 @@ export function Hero() {
     { value: site.facts.productCount, label: "mahsulot" },
     { value: `${site.facts.installmentMonthsMax} oy`, label: "muddatli to'lov" },
     { value: String(site.facts.branchCount), label: "filial" },
-    { value: "0 so'm", label: "yetkazish va o'rnatish" },
+    {
+      value: "0 so'm",
+      label: "yetkazish va o'rnatish",
+      // Bepul yetkazish/o'rnatish faqat Andijon viloyatida — pastdagi
+      // izohdagi shart shu yerda ham qisqacha eslatiladi.
+      note: `(${site.freeDeliveryArea}da)`,
+    },
   ];
 
   return (
@@ -45,9 +51,7 @@ export function Hero() {
             >
               Oilangizga <br className="hidden sm:block" />
               ishonchli{" "}
-              <span className="relative z-0 text-purple">
-                <span className="mark">hamkor</span>
-              </span>
+              <span className="text-purple">hamkor</span>
             </h1>
 
             <p
@@ -61,15 +65,28 @@ export function Hero() {
               , rasmiylashtirish uchun pasport va plastik kifoya.
             </p>
 
-            <div className="rise mt-9 flex flex-wrap gap-3" style={{ ["--i" as string]: 3 }}>
-              <a href="#filiallar" className="btn btn-primary">
-                Eng yaqin filialni toping
-              </a>
-              <a href={`tel:${site.phone}`} className="btn btn-outline">
-                {site.phoneDisplay}
+            <div className="rise mt-9 flex flex-col gap-3" style={{ ["--i" as string]: 3 }}>
+              <div className="flex flex-wrap gap-3">
+                <a href="#filiallar" className="btn btn-primary">
+                  Eng yaqin filialni toping
+                </a>
+                <a href="#ariza" className="btn btn-outline">
+                  Ariza qoldirish
+                </a>
+              </div>
+
+              <a
+                href="#maxsus-buyurtma"
+                className="tap flex max-w-md items-center gap-3 rounded-2xl border-2 border-yellow bg-yellow/10 px-4 py-3 transition-colors hover:bg-yellow/20"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow text-lg" aria-hidden="true">
+                  ✓
+                </span>
+                <span className="text-sm font-semibold leading-snug text-ink sm:text-base">
+                  Bizda yo&apos;qmi? Baribir <span className="text-purple">muddatli to&apos;lovga</span> olib beramiz →
+                </span>
               </a>
             </div>
-
           </div>
 
           {/* The shop, with the quick-answer panel overlapping its lower edge.
@@ -81,11 +98,11 @@ export function Hero() {
             <img
               src="/bosh/sarlavha-1024.webp"
               srcSet="/bosh/sarlavha-640.webp 640w, /bosh/sarlavha-1024.webp 1024w"
-              sizes="(max-width: 1024px) 100vw, 560px"
+              sizes="(max-width: 1024px) 100vw, 700px"
               width={1024}
               height={768}
               alt="HAMKOR SAVDO do'koni ichkarisi — jamoamiz mijozlarni kutib olmoqda"
-              className="block w-full rounded-[28px] object-cover"
+              className="block aspect-[4/2.7] w-full rounded-[28px] object-cover object-bottom"
               loading="eager"
               fetchPriority="high"
               decoding="async"
@@ -98,7 +115,10 @@ export function Hero() {
                   /* flex-col-reverse keeps <dt> before <dd> in the DOM (as the spec
                      requires) while showing the number above its label. */
                   <div key={f.label} className="flex flex-col-reverse gap-2">
-                    <dt className="text-sm leading-snug text-on-purple-2">{f.label}</dt>
+                    <dt className="text-sm leading-snug text-on-purple-2">
+                      {f.label}
+                      {f.note ? <span className="mt-0.5 block text-xs text-on-purple-2/70">{f.note}</span> : null}
+                    </dt>
                     <dd className="numeral text-4xl text-yellow sm:text-5xl">{f.value}</dd>
                   </div>
                 ))}
@@ -119,9 +139,10 @@ export function Hero() {
               {[
                 "TILLA",
                 "TEXNIKA",
+                "SKUTERLAR",
                 "MEBEL",
                 "MUDDATLI TO'LOV",
-                "BEPUL YETKAZISH",
+                "BEPUL YETKAZISH (ANDIJON)",
                 "BEPUL O'RNATISH",
                 "4 TA FILIAL",
               ].map((word) => (

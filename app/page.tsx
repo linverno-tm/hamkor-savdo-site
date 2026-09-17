@@ -17,6 +17,25 @@ import { LeadForm } from "@/components/sections/LeadForm";
 import { Contact } from "@/components/sections/Contact";
 import { FinalCta } from "@/components/sections/FinalCta";
 
+/** "8:00–18:00" -> {opens:"08:00", closes:"18:00"} — schema.org soat qatori uchun. */
+function parseHours(hours: string) {
+  const [opens, closes] = hours.split("–").map((t) => {
+    const [h, m = "00"] = t.trim().split(":");
+    return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+  });
+  return { opens, closes };
+}
+
+const ALL_DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 export default function Home() {
   /**
    * One Store node per real branch, each carrying the @id of its own page so a
@@ -25,22 +44,52 @@ export default function Home() {
    */
   const jsonLd = {
     "@context": "https://schema.org",
-    "@graph": branches.map((b) => ({
-      "@type": "Store",
-      "@id": absolute(`/filiallar/${b.id}`),
-      url: absolute(`/filiallar/${b.id}`),
-      name: `${site.name} — ${b.city}`,
-      slogan: site.tagline,
-      telephone: b.phone ?? site.phone,
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: b.landmark,
-        addressLocality: b.city,
-        addressRegion: "Andijon viloyati",
-        addressCountry: "UZ",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${absolute("/")}#organization`,
+        name: site.name,
+        url: absolute("/"),
+        logo: absolute("/icon.svg"),
+        sameAs: [site.instagramUrl, site.telegramUrl],
       },
-      sameAs: [site.instagramUrl, site.telegramUrl],
-    })),
+      {
+        "@type": "WebSite",
+        "@id": `${absolute("/")}#website`,
+        url: absolute("/"),
+        name: site.name,
+        inLanguage: "uz",
+      },
+      ...branches.map((b) => ({
+        "@type": "Store",
+        "@id": absolute(`/filiallar/${b.id}`),
+        url: absolute(`/filiallar/${b.id}`),
+        name: `${site.name} — ${b.city}, ${b.landmark}`,
+        slogan: site.tagline,
+        telephone: b.phone ?? site.phone,
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: b.landmark,
+          addressLocality: b.city,
+          addressRegion: "Andijon viloyati",
+          addressCountry: "UZ",
+        },
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: b.lat,
+          longitude: b.lng,
+        },
+        // Egasi faqat ochilish/yopilish soatini berdi, dam olish kuni
+        // aytilmadi — shuning uchun bu soat 7 kunga baravar qo'llanadi deb
+        // olindi (o'ylab topilgan qiymat emas, berilgan soatning o'zi).
+        openingHoursSpecification: {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ALL_DAYS,
+          ...parseHours(b.hours),
+        },
+        sameAs: [b.instagramUrl ?? site.instagramUrl, site.telegramUrl],
+      })),
+    ],
   };
 
   return (

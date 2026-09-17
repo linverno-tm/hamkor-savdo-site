@@ -10,16 +10,13 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 export function Categories() {
   return (
     <section id="yonalishlar" aria-labelledby="categories-title" className="bg-ground py-16 sm:py-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      <div className="mx-auto max-w-[96rem] px-5 sm:px-8 lg:px-12">
         <SectionHeading
           id="categories-title"
           kicker="Yo'nalishlar"
           title={
             <>
-              Bitta do&apos;konda{" "}
-              <span className="relative z-0">
-                <span className="mark">uch yo&apos;nalish</span>
-              </span>
+              Bitta do&apos;konda uch yo&apos;nalish
             </>
           }
           lead={`Uy uchun kerakli hamma narsa — ${site.facts.productCount} mahsulot orasidan tanlaysiz.`}
@@ -37,7 +34,7 @@ export function Categories() {
           ))}
         </nav>
 
-        <div data-reveal className="mt-10 grid gap-5 lg:grid-cols-3">
+        <div data-reveal className="mt-10 grid gap-6 lg:grid-cols-3 lg:gap-8">
           {categories.map((c) => (
             <article
               key={c.id}
@@ -51,7 +48,7 @@ export function Categories() {
                 <img
                   src={c.photo.src}
                   srcSet={`${c.photo.srcSmall} 480w, ${c.photo.src} 900w`}
-                  sizes="(max-width: 1024px) 100vw, 400px"
+                  sizes="(max-width: 1024px) 100vw, 560px"
                   width={900}
                   height={675}
                   alt={c.photo.alt}
@@ -67,6 +64,11 @@ export function Categories() {
                       {c.index}
                     </span>
                     <h3 className="numeral mt-1 text-5xl tracking-[0.04em] text-white">{c.name}</h3>
+                    {c.id === "texnika" ? (
+                      <span className="numeral mt-2 inline-block rounded-full bg-yellow px-3 py-1 text-xs tracking-[0.08em] text-ink">
+                        + Skuterlar ham bor
+                      </span>
+                    ) : null}
                   </div>
                   <span
                     aria-hidden="true"

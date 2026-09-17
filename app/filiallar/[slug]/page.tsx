@@ -64,11 +64,16 @@ export default async function BranchPage({
   const others = branches.filter((b) => b.id !== branch.id);
   const photos = branchPhotos(branch.id, branch.city);
 
+  const [hoursOpens, hoursCloses] = branch.hours.split("–").map((t) => {
+    const [h, m = "00"] = t.trim().split(":");
+    return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+  });
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Store",
     "@id": absolute(`/filiallar/${branch.id}`),
-    name: `${site.name} — ${branch.city}`,
+    name: `${site.name} — ${branch.city}, ${branch.landmark}`,
     slogan: site.tagline,
     telephone: phone,
     url: absolute(`/filiallar/${branch.id}`),
@@ -79,7 +84,28 @@ export default async function BranchPage({
       addressRegion: "Andijon viloyati",
       addressCountry: "UZ",
     },
-    sameAs: [site.instagramUrl, site.telegramUrl],
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: branch.lat,
+      longitude: branch.lng,
+    },
+    // Dam olish kuni aytilmagan, shuning uchun berilgan soat 7 kunga
+    // baravar qo'llaniladi deb olindi (app/page.tsx dagi bilan bir xil).
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: hoursOpens,
+      closes: hoursCloses,
+    },
+    sameAs: [branch.instagramUrl ?? site.instagramUrl, site.telegramUrl],
   };
 
   return (
@@ -113,7 +139,14 @@ export default async function BranchPage({
             </nav>
 
             <p className="kicker mt-8">Filial {branch.index}</p>
-            <h1 className="display mt-3 text-5xl sm:text-6xl lg:text-7xl">{branch.city}</h1>
+            {/* Vizual katta shahar nomi bilan qoladi (brend uslubi), lekin
+                <h1> matni ikkala Shahrixon sahifasida bir xil bo'lmasin deb
+                mo'ljal ko'rinmas holda qo'shiladi — qidiruv tizimi va ekran
+                o'quvchisi uchun ikkalasi endi aniq farqlanadi. */}
+            <h1 className="display mt-3 text-5xl sm:text-6xl lg:text-7xl">
+              {branch.city}
+              <span className="sr-only"> — {branch.landmark}</span>
+            </h1>
             <p className="mt-4 max-w-2xl text-xl text-ink-2">{branch.landmark}</p>
 
             <dl className="mt-10 grid max-w-3xl gap-6 sm:grid-cols-3">
@@ -142,12 +175,25 @@ export default async function BranchPage({
                 <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
                   Ish vaqti
                 </dt>
-                <dd className="mt-2 text-ink-2">
-                  {site.unpublished.openingHours
-                    ? site.unpublished.openingHours.join(", ")
-                    : "Qo'ng'iroq orqali aniqlashtiring"}
-                </dd>
+                <dd className="mt-2 text-ink-2">{branch.hours}</dd>
               </div>
+              {branch.instagram ? (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                    Instagram
+                  </dt>
+                  <dd className="mt-2">
+                    <a
+                      href={branch.instagramUrl!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-purple hover:underline"
+                    >
+                      @{branch.instagram}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
             </dl>
 
             <div className="mt-10 flex flex-wrap gap-3">

@@ -23,11 +23,7 @@ export function Installment() {
           kicker="Muddatli to'lov"
           title={
             <>
-              Bugun oling.{" "}
-              <span className="relative z-0">
-                <span className="mark">Qulay muddatda</span>
-              </span>{" "}
-              to&apos;lang.
+              Bugun oling. Qulay muddatda to&apos;lang.
             </>
           }
           lead={`${site.facts.installmentMonthsMax} oygacha muddatli to'lov. Rasmiylashtirish uchun pasport va plastik kartaning o'zi kifoya — kafil ham, ma'lumotnoma ham kerak emas.`}
