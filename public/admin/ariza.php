@@ -1,0 +1,78 @@
+<?php
+require __DIR__ . '/_lib/bootstrap.php';
+require_once __DIR__ . '/_lib/leads.php';
+
+$user = hs_require_login();
+$id = (int) ($_SERVER['REQUEST_METHOD'] === 'POST' ? hs_post('id') : hs_get('id'));
+
+$st = hs_db()->prepare('SELECT * FROM leads WHERE id = ?');
+$st->execute(array($id));
+$lead = $st->fetch();
+if (!$lead || !hs_can_see_lead($user, $lead)) {
+    http_response_code(404);
+    hs_page_start('Ariza topilmadi', $user);
+    echo '<div class="card"><p>Bunday ariza yo\'q.</p><a class="btn outline" href="/admin/arizalar.php">Arizalar</a></div>';
+    hs_page_end();
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    hs_require_post_csrf();
+    $action = hs_post('amal');
+    if ($action === 'saqlash') {
+        $status = hs_post('holat');
+        $note = mb_substr(hs_post('izoh'), 0, 2000);
+        if (!isset(hs_lead_statuses()[$status])) {
+            hs_flash("Holat noto'g'ri.", 'err');
+        } else {
+            $up = hs_db()->prepare('UPDATE leads SET status = ?, operator_note = ?, updated_at = ?, updated_by = ? WHERE id = ?');
+            $up->execute(array($status, $note, hs_now(), $user['login'], $id));
+            hs_audit($user['login'], 'ariza holati', "#{$id}: {$lead['status']} -> {$status}");
+            hs_flash('Saqlandi.');
+        }
+    } elseif ($action === 'ochirish' && hs_is_owner($user)) {
+        hs_db()->prepare('DELETE FROM leads WHERE id = ?')->execute(array($id));
+        hs_audit($user['login'], "ariza o'chirildi", "#{$id} ({$lead['phone']})");
+        hs_flash("Ariza #{$id} butunlay o'chirildi.");
+        hs_redirect('/admin/arizalar.php');
+    }
+    hs_redirect('/admin/ariza.php?id=' . $id);
+}
+
+$branches = hs_branch_names();
+hs_page_start('Ariza #' . $id, $user);
+
+echo '<div class="grid grid-2"><section class="card"><h2>Mijoz</h2><dl class="kv">';
+echo '<dt>Ism</dt><dd>' . h($lead['name']) . '</dd>';
+echo '<dt>Telefon</dt><dd><a class="btn small" href="tel:' . h($lead['phone']) . '">' . h($lead['phone']) . '</a></dd>';
+echo '<dt>Filial</dt><dd>' . h($lead['branch'] !== '' ? (isset($branches[$lead['branch']]) ? $branches[$lead['branch']] : $lead['branch']) : 'tanlanmagan') . '</dd>';
+echo '<dt>So\'rovi</dt><dd>' . ($lead['note'] !== '' ? nl2br(h($lead['note'])) : '—') . '</dd>';
+if ((int) $lead['special']) {
+    echo '<dt>Turi</dt><dd><span class="pill st-yangi">Do\'konda yo\'q mahsulot</span></dd>';
+}
+echo '<dt>Vaqt</dt><dd>' . h(date('d.m.Y H:i', strtotime($lead['created_at']))) . '</dd>';
+echo '<dt>Manba</dt><dd>' . h(hs_source_label($lead['source'])) . '</dd>';
+echo '<dt>Sahifa</dt><dd>' . h($lead['page'] !== '' ? $lead['page'] : '—') . '</dd>';
+echo '<dt>Telegram</dt><dd>' . ((int) $lead['telegram_sent'] ? '<span class="pill pill-ok">yuborilgan</span>' : '<span class="pill pill-err">yetib bormagan</span>') . '</dd>';
+echo '</dl></section>';
+
+echo '<form class="card" method="post" action="/admin/ariza.php">' . hs_csrf_field();
+echo '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="amal" value="saqlash">';
+echo '<h2>Ish jarayoni</h2><label for="holat">Holat</label><select id="holat" name="holat">';
+foreach (hs_lead_statuses() as $k => $v) {
+    echo '<option value="' . h($k) . '"' . ($lead['status'] === $k ? ' selected' : '') . '>' . h($v) . '</option>';
+}
+echo '</select><label for="izoh">Operator izohi</label><textarea id="izoh" name="izoh" maxlength="2000">' . h($lead['operator_note']) . '</textarea>';
+if ($lead['updated_at']) {
+    echo '<p class="hint">Oxirgi o\'zgarish: ' . h($lead['updated_by']) . ', ' . h(date('d.m.Y H:i', strtotime($lead['updated_at']))) . '</p>';
+}
+echo '<div class="actions"><button class="btn" type="submit">Saqlash</button><a class="btn outline" href="/admin/arizalar.php">Ro\'yxatga qaytish</a></div></form></div>';
+
+if (hs_is_owner($user)) {
+    echo '<form class="card" method="post" action="/admin/ariza.php" data-confirm="Ariza butunlay o\'chiriladi. Davom etasizmi?">' . hs_csrf_field();
+    echo '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="amal" value="ochirish">';
+    echo '<h2>Mijoz so\'rovi bilan o\'chirish</h2><p class="muted">Mijoz ma\'lumotlarini o\'chirishni so\'rasa (maxfiylik siyosati bo\'yicha).</p>';
+    echo '<button class="btn danger" type="submit">Arizani o\'chirish</button></form>';
+}
+
+hs_page_end();

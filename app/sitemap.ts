@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { branches } from "@/data/branches";
 import { absolute } from "@/lib/seo";
+import { content } from "@/lib/content";
 
 /** Required by `output: "export"` so this is emitted as a plain file. */
 export const dynamic = "force-static";
@@ -35,6 +36,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
       alternates: withUzKr(`/filiallar/${b.id}`),
     })),
+    ...(content.products.length > 0
+      ? [
+          {
+            url: absolute("/katalog"),
+            changeFrequency: "weekly" as const,
+            priority: 0.7,
+            alternates: withUzKr("/katalog"),
+          },
+        ]
+      : []),
     /* Maxfiylik sahifasi kam o'zgaradi va qidiruv uchun muhim emas, lekin
        formadagi havola unga ishora qiladi — indeksda bo'lgani ma'qul. */
     {

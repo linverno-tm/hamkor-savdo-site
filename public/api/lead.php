@@ -15,6 +15,8 @@
  * PHP 7.4 va undan yuqori versiyalarda ishlaydi.
  */
 
+date_default_timezone_set('Asia/Tashkent');
+
 $MAX_NAME = 80;
 $MAX_PHONE = 24;
 $MAX_NOTE = 500;
@@ -27,7 +29,9 @@ $PHONE_LINK = '+998333420880';
 
 /* Har bir filial uchun nom va xeshteg. Xeshteg call-center guruhida
    qidirish uchun: operator #asaka deb qidirsa, faqat o'z filialining
-   arizalarini ko'radi. */
+   arizalarini ko'radi.
+   Asosiy manba — build paytida yasalgan api/sayt.json (admin panelda
+   qo'shilgan filial ham shu yerga tushadi). Pastdagi ro'yxat — zaxira. */
 $FILIALLAR = array(
     'shahrixon-ozodbek'  => array("Shahrixon — Ozodbek savdo markazi", '#shahrixon_ozodbek'),
     'shahrixon-bog'      => array("Shahrixon — Markaziy istirohat bog'i yonida", '#shahrixon_bog'),
@@ -37,6 +41,19 @@ $FILIALLAR = array(
        Bunday arizada operator avval yetkazish shartlarini aytishi kerak. */
     'boshqa-viloyat'     => array('Boshqa viloyat — yetkazib berish', '#boshqa_viloyat'),
 );
+$saytJson = __DIR__ . '/sayt.json';
+if (is_file($saytJson)) {
+    $sayt = json_decode((string) file_get_contents($saytJson), true);
+    if (is_array($sayt) && !empty($sayt['branches'])) {
+        $fromSite = array();
+        foreach ($sayt['branches'] as $b) {
+            $tag = isset($FILIALLAR[$b['id']]) ? $FILIALLAR[$b['id']][1] : '#' . str_replace('-', '_', $b['id']);
+            $fromSite[$b['id']] = array($b['city'] . ' — ' . $b['landmark'], $tag);
+        }
+        $fromSite['boshqa-viloyat'] = $FILIALLAR['boshqa-viloyat'];
+        $FILIALLAR = $fromSite;
+    }
+}
 
 /** mbstring bo'lmasa ham ishlashi uchun. */
 function hs_cut($s, $len)
@@ -96,7 +113,9 @@ function hs_ok()
         echo json_encode(array('ok' => true), JSON_UNESCAPED_UNICODE);
         exit;
     }
-    header('Location: /rahmat/', true, 303);
+    // Kirill sahifadan kelgan odam kirill "rahmat" sahifasiga qaytsin.
+    $ref = isset($_SERVER['HTTP_REFERER']) ? (string) parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH) : '';
+    header('Location: ' . (strpos($ref, '/uz-kr') === 0 ? '/uz-kr/rahmat/' : '/rahmat/'), true, 303);
     exit;
 }
 
@@ -147,6 +166,10 @@ $phone  = hs_cut(trim(isset($_POST['phone']) ? $_POST['phone'] : ''), $MAX_PHONE
 $note   = hs_cut(trim(isset($_POST['note']) ? $_POST['note'] : ''), $MAX_NOTE);
 $branch = isset($_POST['branch']) ? $_POST['branch'] : '';
 $page   = hs_cut(trim(isset($_POST['page']) ? $_POST['page'] : ''), 200);
+/* Mijoz saytga qayerdan kelgan (instagram, google, telegram...) — brauzerdagi
+   kichik skript to'ldiradi. Faqat xavfsiz belgilar qoladi. */
+$source = isset($_POST['src']) ? strtolower(preg_replace('/[^a-z0-9._\-]/i', '', (string) $_POST['src'])) : '';
+$source = substr($source, 0, 60);
 
 if (hs_len($name) < 2) {
     hs_fail(422, "Ismingiz kiritilmagan. Iltimos, formani qayta to'ldiring.");
@@ -176,17 +199,32 @@ if (is_file($stamp) && (time() - (int) filemtime($stamp)) < $THROTTLE_SECONDS) {
 @touch($stamp);
 
 $configFile = __DIR__ . '/secrets.php';
-if (!is_file($configFile)) {
-    hs_fail(503, "Ariza qabul qilish vaqtincha ishlamayapti. Iltimos, telefon orqali bog'laning.");
-}
-$secrets = require $configFile;
+$secrets = is_file($configFile) ? require $configFile : array();
 $token = isset($secrets['token']) ? $secrets['token'] : '';
 $chatId = isset($secrets['chat_id']) ? $secrets['chat_id'] : '';
-if ($token === '' || $chatId === '') {
-    hs_fail(503, "Ariza qabul qilish vaqtincha ishlamayapti. Iltimos, telefon orqali bog'laning.");
-}
 
 $known = isset($FILIALLAR[$branch]);
+$special = isset($_POST['special']) && $_POST['special'] !== '';
+
+/* Ariza avval admin panel bazasiga yoziladi — Telegram ishlamay qolsa ham
+   yo'qolmasin. Baza bo'lmasa (masalan panel hali o'rnatilmagan), jimgina
+   faqat Telegram bilan davom etamiz. */
+$leadId = 0;
+$adminBoot = __DIR__ . '/../admin/_lib/bootstrap.php';
+if (is_file($adminBoot)) {
+    try {
+        require_once $adminBoot;
+        $ins = hs_db()->prepare('INSERT INTO leads(created_at, name, phone, branch, note, special, page, source) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
+        $ins->execute(array(date('Y-m-d H:i:s'), $name, $tel, $known ? $branch : '', $note, $special ? 1 : 0, $page, $source));
+        $leadId = (int) hs_db()->lastInsertId();
+    } catch (Throwable $e) {
+        error_log('HAMKOR SAVDO: ariza bazaga yozilmadi: ' . $e->getMessage());
+    }
+}
+
+if (($token === '' || $chatId === '') && $leadId === 0) {
+    hs_fail(503, "Ariza qabul qilish vaqtincha ishlamayapti. Iltimos, telefon orqali bog'laning.");
+}
 $filialNomi = $known ? $FILIALLAR[$branch][0] : 'tanlanmagan';
 $filialTag  = $known ? $FILIALLAR[$branch][1] : '#filial_tanlanmagan';
 
@@ -195,8 +233,6 @@ $filialTag  = $known ? $FILIALLAR[$branch][1] : '#filial_tanlanmagan';
 /* Do'konda yo'q mahsulot uchun kelgan ariza — boshqacha ish oqimi: operator
    avval mahsulotni va narxini aniqlashi kerak, faqat keyin shartlarni aytadi.
    Shuning uchun u birinchi qatorda, xeshteg bilan ajratiladi. */
-$special = isset($_POST['special']) && $_POST['special'] !== '';
-
 $sarlavha = '🟣 YANGI ARIZA — ' . $filialTag;
 if ($special) {
     $sarlavha = '🟡 BIZDA YO\'Q MAHSULOT — ' . $filialTag . ' #maxsus_buyurtma';
@@ -215,8 +251,14 @@ if ($special) {
 if ($note !== '') {
     $lines[] = "💬 So'rovi: " . $note;
 }
+if ($source !== '') {
+    $lines[] = '🧭 Qayerdan kelgan: ' . $source;
+}
 $lines[] = '';
 $lines[] = '🕒 ' . date('d.m.Y H:i') . ($page !== '' ? ' · ' . $page : '');
+if ($leadId > 0) {
+    $lines[] = '🗂 Admin panelda: https://hamkorsavdo.uz/admin/ariza.php?id=' . $leadId;
+}
 
 /* parse_mode berilmaydi — foydalanuvchi matni hech qachon belgilash sifatida
    talqin qilinmasin. */
@@ -229,7 +271,11 @@ $payload = http_build_query(array(
 $url = 'https://api.telegram.org/bot' . $token . '/sendMessage';
 $sent = false;
 
-if (function_exists('curl_init')) {
+if ($token === '' || $chatId === '') {
+    // Telegram sozlanmagan, lekin ariza bazada saqlandi.
+} elseif (getenv('HS_DRY_RUN') === '1') {
+    $sent = true;
+} elseif (function_exists('curl_init')) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
@@ -252,10 +298,19 @@ if (function_exists('curl_init')) {
     $sent = ($body !== false && strpos($body, '"ok":true') !== false);
 }
 
+if ($sent && $leadId > 0) {
+    try {
+        hs_db()->prepare('UPDATE leads SET telegram_sent = 1 WHERE id = ?')->execute(array($leadId));
+    } catch (Throwable $e) {
+    }
+}
+
 if (!$sent) {
     // Tokenni hech qachon logga yozmaymiz — Telegram javobi uni qaytarishi mumkin.
     error_log('HAMKOR SAVDO: Telegramga ariza yuborib bolmadi.');
-    hs_fail(502, "Ariza yuborilmadi. Iltimos, telefon orqali bog'laning.");
+    if ($leadId === 0) {
+        hs_fail(502, "Ariza yuborilmadi. Iltimos, telefon orqali bog'laning.");
+    }
 }
 
 hs_ok();

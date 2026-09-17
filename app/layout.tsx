@@ -89,7 +89,8 @@ localStorage.setItem('hs_lang', onCyr ? 'uz-kr' : 'uz');
  * - Kirillga avtomatik yo'naltirilganda asl manba (Instagram, Google)
  *   sessionStorage orqali uzatiladi, aks holda hammasi "o'z saytidan" bo'lib
  *   ko'rinadi.
- * - Maqsadlar: `phone_click` (har qanday tel: havola), `lead_sent` (JS'siz
+ * - Maqsadlar: `phone_click` (har qanday tel: havola), `telegram_click`
+ *   (t.me havolalari), `lead_sent` (JS'siz
  *   forma /rahmat/ ga tushadi; JS bilan yuborilsa LeadForm o'zi yuboradi).
  */
 const METRIKA_SCRIPT = `(function(){
@@ -104,11 +105,44 @@ k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNo
 (window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=${YM_ID}','ym');
 ym(${YM_ID}, 'init', {ssr:true, webvisor:true, clickmap:true, referrer:ref, url:location.href, accurateTrackBounce:true, trackLinks:true});
 document.addEventListener('click', function(ev){
-  var a = ev.target && ev.target.closest && ev.target.closest('a[href^="tel:"]');
-  if (a) ym(${YM_ID}, 'reachGoal', 'phone_click');
+  var a = ev.target && ev.target.closest && ev.target.closest('a[href]');
+  if (!a) return;
+  var href = a.getAttribute('href') || '';
+  if (href.indexOf('tel:') === 0) ym(${YM_ID}, 'reachGoal', 'phone_click');
+  else if (/^https:\\/\\/t\\.me\\//.test(href)) ym(${YM_ID}, 'reachGoal', 'telegram_click');
 }, true);
 if (location.pathname.indexOf('/rahmat') >= 0) ym(${YM_ID}, 'reachGoal', 'lead_sent');
 })();`;
+
+/**
+ * Mijoz saytga qayerdan kelgani — birinchi kirishda bir marta aniqlanadi
+ * (utm_source ustun), sessiya davomida eslab qolinadi va ariza yuborilganda
+ * formaning `src` maydoniga yoziladi. Admin panel "qaysi manba ariza
+ * keltiradi" hisobotini shundan tuzadi.
+ */
+const SOURCE_SCRIPT = `(function(){try{
+var src = sessionStorage.getItem('hs_src');
+if (!src) {
+  var q = /[?&]utm_source=([^&#]+)/.exec(location.search);
+  if (q) { src = decodeURIComponent(q[1]); }
+  else {
+    var r = sessionStorage.getItem('hs_ref'); if (r === null) r = document.referrer;
+    var host = ''; try { host = new URL(r).hostname.replace(/^www\\./, ''); } catch(e) {}
+    if (!host || host === location.hostname.replace(/^www\\./, '')) src = 'togridan';
+    else if (/instagram\\.com$/.test(host)) src = 'instagram';
+    else if (/(^|\\.)t\\.me$|telegram/.test(host)) src = 'telegram';
+    else if (/(^|\\.)google\\./.test(host)) src = 'google';
+    else if (/(^|\\.)yandex\\./.test(host) || /(^|\\.)ya\\.ru$/.test(host)) src = 'yandex';
+    else if (/facebook\\.com$/.test(host)) src = 'facebook';
+    else src = host;
+  }
+  sessionStorage.setItem('hs_src', String(src).toLowerCase().slice(0, 60));
+}
+document.addEventListener('submit', function(ev){
+  var f = ev.target && ev.target.querySelector && ev.target.querySelector('input[name="src"]');
+  if (f) f.value = sessionStorage.getItem('hs_src') || '';
+}, true);
+}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -117,6 +151,7 @@ export default function RootLayout({
     <html lang="uz" className={`${outfit.variable} ${bebas.variable}`}>
       <head>
         <script data-keep dangerouslySetInnerHTML={{ __html: LANG_DETECT_SCRIPT }} />
+        <script data-keep dangerouslySetInnerHTML={{ __html: SOURCE_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: METRIKA_SCRIPT }} />
       </head>
       <body>

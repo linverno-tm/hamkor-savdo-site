@@ -57,6 +57,13 @@ export function Branches() {
                   </div>
                 </div>
 
+                {b.closed ? (
+                  <p className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <strong className="font-semibold">Vaqtincha yopiq.</strong>
+                    {b.closedNote ? ` ${b.closedNote}` : null}
+                  </p>
+                ) : null}
+
                 <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-line pt-5 text-sm sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
                   <div className="col-span-2 sm:col-span-1">
                     <dt className="font-semibold uppercase tracking-wider text-ink-3">Manzil</dt>

@@ -48,10 +48,14 @@
   Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# --- Bot kalitlari hech qachon ochilmasin ---
-<Files "secrets.php">
+# --- Papkalar ro'yxati hech qachon ko'rinmasin (/api/, /bosh/ ...) ---
+Options -Indexes
+
+# --- Kalitlar va ichki ma'lumot fayllari hech qachon ochilmasin ---
+# sayt.json va manifest.json faqat serverdagi PHP uchun.
+<FilesMatch "^(secrets\.php|secrets\.example\.php|sayt\.json|manifest\.json|\.ftp-deploy-sync-state\.json)$">
   Require all denied
-</Files>
+</FilesMatch>
 
 AddDefaultCharset UTF-8
 ErrorDocument 404 /404.html

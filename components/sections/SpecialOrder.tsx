@@ -1,4 +1,5 @@
 import { site } from "@/data/site";
+import { content, Rich } from "@/lib/content";
 import { Logo } from "@/components/ui/Logo";
 
 /**
@@ -59,8 +60,7 @@ export function SpecialOrder() {
         </h2>
 
         <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-on-purple-2">
-          Boshqa do&apos;konda, bozorda yoki internetda ko&apos;rgan mahsulotingizni siz uchun
-          rasmiylashtirib beramiz. Naqd pul yig&apos;ib yurish shart emas.
+          <Rich text={content.texts.specialOrderLead} strongClass="font-semibold text-white" />
         </p>
 
         {/* Uch qadam — endi bitta jimgina qator. Ma'lumot saqlanadi, lekin

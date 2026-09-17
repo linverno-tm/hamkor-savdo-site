@@ -36,6 +36,10 @@ const yigiladi = [
     "Ariza yuborilgan sahifa manzili",
     "Qaysi bo'lim orqali murojaat qilganingizni bilish uchun. Bu texnik ma'lumot.",
   ],
+  [
+    "Saytga qayerdan kelganingiz",
+    "Masalan: Instagram, Google yoki Telegram. Qaysi reklama yoki kanal foydali ekanini bilish uchun.",
+  ],
 ];
 
 export default function PrivacyPage() {
@@ -75,20 +79,17 @@ export default function PrivacyPage() {
 
         <h2 className="display mt-12 text-2xl">Qayerga boradi</h2>
         <p className="mt-4 leading-relaxed text-ink-2">
-          Ariza to&apos;g&apos;ridan-to&apos;g&apos;ri {site.name} savdo bo&apos;limining
-          ichki Telegram guruhiga yuboriladi. Uni faqat mijozlar bilan ishlaydigan xodimlar
-          ko&apos;radi. Ma&apos;lumot uchinchi shaxslarga sotilmaydi, reklama uchun berilmaydi va
-          boshqa hech qayerga uzatilmaydi.
-        </p>
-        <p className="mt-4 leading-relaxed text-ink-2">
-          Saytning o&apos;zida ma&apos;lumotlar bazasi yo&apos;q — arizalar serverda
-          saqlanmaydi, faqat xabar sifatida yetkaziladi.
+          Ariza {site.name} savdo bo&apos;limining Telegram chatiga yuboriladi va saytning
+          himoyalangan ma&apos;lumotlar bazasida saqlanadi. Uni faqat parol bilan kiradigan,
+          mijozlar bilan ishlaydigan xodimlar ko&apos;radi; filial xodimi faqat o&apos;z
+          filialining arizalarini ko&apos;radi. Ma&apos;lumot uchinchi shaxslarga sotilmaydi,
+          reklama uchun berilmaydi va boshqa hech qayerga uzatilmaydi.
         </p>
 
         <h2 className="display mt-12 text-2xl">Qancha saqlanadi</h2>
         <p className="mt-4 leading-relaxed text-ink-2">
-          Ariza sizning so&apos;rovingiz hal bo&apos;lgunicha savdo bo&apos;limida saqlanadi.
-          Siz so&apos;rasangiz, undan oldin ham o&apos;chiriladi.
+          Ariza savdo bo&apos;limi ishi uchun zarur bo&apos;lgan muddat davomida saqlanadi. Siz
+          so&apos;rasangiz, istalgan vaqtda butunlay o&apos;chiriladi.
         </p>
 
         <h2 className="display mt-12 text-2xl">O&apos;chirishni so&apos;rash</h2>

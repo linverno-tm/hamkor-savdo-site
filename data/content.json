@@ -1,0 +1,126 @@
+{
+  "settings": {
+    "phone": "+998333420880",
+    "phoneDisplay": "+998 33 342 08 80",
+    "instagram": "hamkorsavdo.uz",
+    "telegram": "hamkorsavdouz",
+    "telegramCustomers": "hamkorsavdouz_mijozlari",
+    "telegramBot": "hamkor_taklifbot",
+    "productCount": "7000+",
+    "installmentMonthsMax": 12,
+    "instagramFollowers": "41 000+",
+    "freeDeliveryArea": "Andijon viloyati",
+    "deliveryArea": "O'zbekiston bo'ylab",
+    "warrantyMonths": null,
+    "yearFounded": null
+  },
+  "texts": {
+    "heroLead": "Tilla, texnika va mebel — {mahsulot} mahsulot bitta do'konda. **{oy} oygacha muddatli to'lov**, rasmiylashtirish uchun pasport va plastik kifoya.",
+    "aboutParagraphs": [
+      "HAMKOR SAVDO — Andijon viloyatidagi savdo do'konlari tarmog'i. Shahrixon, Asaka va Andijonda jami **{filial} ta filial** ishlaydi, ularda uch yo'nalish birlashgan: **tilla**, **texnika** va **mebel**.",
+      "Nomimiz bejiz emas. Katta xaridlar — sovchilik, ko'chish, uy jihozlash — bir kunda hal bo'lmaydi. Shuning uchun biz sotuvchi emas, **oilangizning hamkori** bo'lishga harakat qilamiz: mahsulotni bugun olib ketasiz, to'lovni esa {oy} oygacha bo'lib to'laysiz.",
+      "{bepul_hudud}da xaridingizni bepul yetkazib beramiz va bepul o'rnatib beramiz — ya'ni do'kondan chiqqaningizdan keyin ham yolg'iz qolmaysiz. Boshqa viloyatlarga ham yetkazamiz."
+    ],
+    "companyStory": "",
+    "specialOrderLead": "Boshqa do'konda, bozorda yoki internetda ko'rgan mahsulotingizni siz uchun rasmiylashtirib beramiz. Naqd pul yig'ib yurish shart emas.",
+    "finalCtaLead": "Keyingi xaridingizni HAMKOR SAVDO bilan boshlang — eng yaqin filialga keling yoki hoziroq qo'ng'iroq qiling."
+  },
+  "branches": [
+    {
+      "id": "shahrixon-ozodbek",
+      "city": "Shahrixon",
+      "address": "Shahrixon shahar, Ozodbek savdo markazi",
+      "landmark": "Ozodbek savdo markazi",
+      "phone": "+998552030880",
+      "phoneDisplay": "+998 55 203 08 80",
+      "instagram": "hamkorsavdo__shahrixon",
+      "hours": "8:00–18:00",
+      "mapQuery": "Ozodbek savdo markazi, Shahrixon, Andijon",
+      "lat": 40.7137304,
+      "lng": 72.0566577,
+      "closed": false,
+      "closedNote": ""
+    },
+    {
+      "id": "shahrixon-bog",
+      "city": "Shahrixon",
+      "address": "Shahrixon shahar, Shahrixon markaziy istirohat bog'i yonida",
+      "landmark": "Markaziy istirohat bog'i yonida",
+      "phone": "+998552020101",
+      "phoneDisplay": "+998 55 202 01 01",
+      "instagram": null,
+      "hours": "8:00–18:00",
+      "mapQuery": "Shahrixon markaziy istirohat bog'i, Shahrixon, Andijon",
+      "lat": 40.710138,
+      "lng": 72.057308,
+      "closed": false,
+      "closedNote": ""
+    },
+    {
+      "id": "asaka-umid",
+      "city": "Asaka",
+      "address": "Asaka shahar, Umid ko'chasi (Makro supermarketi 2-qavat)",
+      "landmark": "Makro supermarketi, 2-qavat",
+      "phone": "+998332323055",
+      "phoneDisplay": "+998 33 232 30 55",
+      "instagram": "fayzlixonadon",
+      "hours": "8:00–18:00",
+      "mapQuery": "Makro supermarket, Umid ko'chasi, Asaka, Andijon",
+      "lat": 40.6486808,
+      "lng": 72.2345559,
+      "closed": false,
+      "closedNote": ""
+    },
+    {
+      "id": "andijon-amir-temur",
+      "city": "Andijon",
+      "address": "Andijon shahar, Amir Temur shoh ko'chasi, 62",
+      "landmark": "Amir Temur shoh ko'chasi, 62",
+      "phone": "+998333420880",
+      "phoneDisplay": "+998 33 342 08 80",
+      "instagram": null,
+      "hours": "9:00–22:00",
+      "mapQuery": "Amir Temur shoh ko'chasi 62, Andijon",
+      "lat": 40.758604,
+      "lng": 72.3453139,
+      "closed": false,
+      "closedNote": ""
+    }
+  ],
+  "photos": {
+    "asaka-umid": {
+      "cover": "jamoa-1",
+      "order": [],
+      "labels": {
+        "tashqi-1": "Kirish — Makro binosi"
+      },
+      "alts": {
+        "tashqi-1": "Makro supermarketi binosi — HAMKOR SAVDO shu binoning 2-qavatida joylashgan"
+      }
+    }
+  },
+  "faq": [
+    {
+      "q": "Muddatli to'lov uchun qanday hujjatlar kerak?",
+      "a": "Pasport va plastik kartaning o'zi kifoya — kafil ham, ma'lumotnoma ham kerak emas."
+    },
+    {
+      "q": "Necha oygacha muddatli to'lovga olsa bo'ladi?",
+      "a": "{oy} oygacha. Oylik to'lov miqdori mahsulot narxi va tanlangan muddatga qarab hisoblanadi — aniq shartlarni qo'ng'iroqda aytamiz."
+    },
+    {
+      "q": "Yetkazib berish va o'rnatish bepulmi?",
+      "a": "{bepul_hudud}da yetkazish va o'rnatish bepul. Boshqa viloyatlarga ham yetkazib beramiz — shartlarini qo'ng'iroqda aytamiz."
+    },
+    {
+      "q": "Do'koningizda yo'q mahsulotni muddatli to'lovga olsam bo'ladimi?",
+      "a": "Ha. Boshqa joyda ko'rgan mahsulotingizning nomi va narxini ayting — uni ham muddatli to'lovga rasmiylashtirib beramiz."
+    },
+    {
+      "q": "Filialga kelmasdan xarid qilsam bo'ladimi?",
+      "a": "Ha. Ariza qoldiring yoki qo'ng'iroq qiling — mahsulotni telefon orqali tanlab, rasmiylashtirasiz va yetkazib beramiz."
+    }
+  ],
+  "promotions": [],
+  "products": []
+}

@@ -13,6 +13,13 @@ next-env.d.ts
 # Bot kaliti - hech qachon repozitoriyga tushmasin
 public/api/secrets.php
 
+# Admin panel ma'lumotlar bazasi va yuklamalar (faqat serverda)
+public/admin/_data/
+
+# Build oldidan yasaladi (tools/rasmlarni-tayyorlash.mjs, tools/api-malumot.mjs)
+public/rasm/
+public/api/sayt.json
+
 # Namoyish nusxasi tools/namoyish-yasash.py orqali qayta yasaladi
 preview/
 

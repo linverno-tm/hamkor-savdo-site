@@ -149,6 +149,13 @@ export default async function BranchPage({
             </h1>
             <p className="mt-4 max-w-2xl text-xl text-ink-2">{branch.landmark}</p>
 
+            {branch.closed ? (
+              <p className="mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
+                <strong className="font-semibold">Filial vaqtincha yopiq.</strong>
+                {branch.closedNote ? ` ${branch.closedNote}` : null}
+              </p>
+            ) : null}
+
             <dl className="mt-10 grid max-w-3xl gap-6 sm:grid-cols-3">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">

@@ -1,4 +1,5 @@
 import { site } from "@/data/site";
+import { content, Rich } from "@/lib/content";
 
 /** To'rtta filial-zali, "uch yo'nalish"ning barchasini ko'rsatadigan tartibda. */
 const ABOUT_PHOTOS = [
@@ -23,9 +24,8 @@ const ABOUT_PHOTOS = [
 /**
  * Scene 02 — "Ular nima qiladi?"
  *
- * [REAL COMPANY DESCRIPTION REQUIRED] — `site.unpublished.companyStory` is null
- * until the business supplies its own history; the copy below states only what
- * the guidebook, the official Telegram channel and the Instagram bio confirm.
+ * Matn admin paneldan (`content.json > texts.aboutParagraphs`). Kompaniya
+ * tarixi (`companyStory`) egasi yozmaguncha bo'sh va ko'rinmaydi.
  */
 export function About() {
   return (
@@ -66,31 +66,17 @@ export function About() {
         </div>
 
         <div data-reveal className="space-y-6 text-lg leading-relaxed text-ink-2">
-          <p>
-            HAMKOR SAVDO — Andijon viloyatidagi savdo do&apos;konlari tarmog&apos;i. Shahrixon,
-            Asaka va Andijonda jami{" "}
-            <strong className="font-semibold text-ink">
-              {site.facts.branchCount} ta filial
-            </strong>{" "}
-            ishlaydi, ularda uch yo&apos;nalish birlashgan:{" "}
-            <strong className="font-semibold text-ink">tilla</strong>,{" "}
-            <strong className="font-semibold text-ink">texnika</strong> va{" "}
-            <strong className="font-semibold text-ink">mebel</strong>.
-          </p>
-          <p>
-            Nomimiz bejiz emas. Katta xaridlar — sovchilik, ko&apos;chish, uy jihozlash — bir kunda
-            hal bo&apos;lmaydi. Shuning uchun biz sotuvchi emas,{" "}
-            <span className="font-semibold text-ink">oilangizning hamkori</span> bo&apos;lishga
-            harakat qilamiz: mahsulotni bugun olib ketasiz, to&apos;lovni esa{" "}
-            {site.facts.installmentMonthsMax} oygacha bo&apos;lib to&apos;laysiz.
-          </p>
-          <p>
-            {site.freeDeliveryArea}da xaridingizni bepul yetkazib beramiz va bepul o&apos;rnatib
-            beramiz — ya&apos;ni do&apos;kondan chiqqaningizdan keyin ham yolg&apos;iz qolmaysiz.
-            Boshqa viloyatlarga ham yetkazamiz.
-          </p>
+          {content.texts.aboutParagraphs.map((p, i) => (
+            <p key={i}>
+              <Rich text={p} />
+            </p>
+          ))}
 
-          {site.unpublished.companyStory ? <p>{site.unpublished.companyStory}</p> : null}
+          {site.unpublished.companyStory ? (
+            <p>
+              <Rich text={site.unpublished.companyStory} />
+            </p>
+          ) : null}
 
           <div className="flex flex-wrap gap-3 pt-2">
             <a href="#yonalishlar" className="btn btn-primary">
