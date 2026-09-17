@@ -6,7 +6,7 @@
  *
  * Nimaga tegadi: matn tugunlari, alt/aria-label/title/placeholder,
  * <title>, meta[name=description|og:title|og:description], <html lang>.
- * Nimaga tegmaydi: <script>, <style>, atribut qiymatlari (href, src, class),
+ * Nimaga tegmaydi: <script>, <style>, <noscript>, atribut qiymatlari (href, src, class),
  * raqamlar va lotin bo'lmagan matn (harflar tashqarisidagi hamma narsa).
  *
  * Ishlatish: `node tools/uz-kr-build.mjs` (npm run build dan keyin,
@@ -21,7 +21,8 @@ import { toUzbekCyrillic } from "../lib/translit.mjs";
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(ROOT, "..", "out");
 const TARGET_DIR = join(OUT_DIR, "uz-kr");
-const SKIP_TAGS = new Set(["script", "style"]);
+// noscript: parser ichini oddiy matn deb o'qiydi — o'girilsa HTML buziladi.
+const SKIP_TAGS = new Set(["script", "style", "noscript"]);
 const ATTRS_TO_TRANSLATE = ["alt", "aria-label", "title", "placeholder"];
 /** Ichki sahifa havolasi — nuqta bo'lmasa (fayl kengaytmasi yo'q). */
 const isPageHref = (href) =>

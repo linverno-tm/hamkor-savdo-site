@@ -3,6 +3,8 @@ import { Outfit, Bebas_Neue } from "next/font/google";
 import { site } from "@/data/site";
 import { SITE_URL, absolute } from "@/lib/seo";
 import { Reveal } from "@/components/ui/Reveal";
+import { MetrikaPageview } from "@/components/ui/MetrikaPageview";
+import { YM_ID } from "@/lib/metrika";
 import "./globals.css";
 
 /**
@@ -70,11 +72,43 @@ var onCyr = location.pathname.indexOf('/uz-kr') === 0;
 var saved = localStorage.getItem('hs_lang');
 if (!saved && !onCyr && /^ru\\b/i.test(navigator.language || '')) {
   localStorage.setItem('hs_lang', 'uz-kr');
+  window.__hsRedirecting = true;
+  sessionStorage.setItem('hs_ref', document.referrer);
   location.replace('/uz-kr' + location.pathname + location.search + location.hash);
   return;
 }
 localStorage.setItem('hs_lang', onCyr ? 'uz-kr' : 'uz');
 }catch(e){}})();`;
+
+/**
+ * Yandex Metrika. Oddiy <script> (Next <Script> emas) va `data-keep` —
+ * kirill nusxada React skriptlari olib tashlanadi, bu esa qolishi kerak.
+ *
+ * - Faqat haqiqiy domenda ishlaydi: localhost'dagi sinovlar statistikani
+ *   buzmasin. `?_ym_debug=1` bilan istalgan joyda yoqib tekshirish mumkin.
+ * - Kirillga avtomatik yo'naltirilganda asl manba (Instagram, Google)
+ *   sessionStorage orqali uzatiladi, aks holda hammasi "o'z saytidan" bo'lib
+ *   ko'rinadi.
+ * - Maqsadlar: `phone_click` (har qanday tel: havola), `lead_sent` (JS'siz
+ *   forma /rahmat/ ga tushadi; JS bilan yuborilsa LeadForm o'zi yuboradi).
+ */
+const METRIKA_SCRIPT = `(function(){
+if (window.__hsRedirecting) return;
+var h = location.hostname;
+if (h !== 'hamkorsavdo.uz' && h !== 'www.hamkorsavdo.uz' && location.search.indexOf('_ym_debug') < 0) return;
+var ref = document.referrer;
+try { var s = sessionStorage.getItem('hs_ref'); if (s !== null) { ref = s; sessionStorage.removeItem('hs_ref'); } } catch(e){}
+(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
+for (var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
+k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=${YM_ID}','ym');
+ym(${YM_ID}, 'init', {ssr:true, webvisor:true, clickmap:true, referrer:ref, url:location.href, accurateTrackBounce:true, trackLinks:true});
+document.addEventListener('click', function(ev){
+  var a = ev.target && ev.target.closest && ev.target.closest('a[href^="tel:"]');
+  if (a) ym(${YM_ID}, 'reachGoal', 'phone_click');
+}, true);
+if (location.pathname.indexOf('/rahmat') >= 0) ym(${YM_ID}, 'reachGoal', 'lead_sent');
+})();`;
 
 export default function RootLayout({
   children,
@@ -83,12 +117,23 @@ export default function RootLayout({
     <html lang="uz" className={`${outfit.variable} ${bebas.variable}`}>
       <head>
         <script data-keep dangerouslySetInnerHTML={{ __html: LANG_DETECT_SCRIPT }} />
+        <script data-keep dangerouslySetInnerHTML={{ __html: METRIKA_SCRIPT }} />
       </head>
       <body>
+        <noscript>
+          <div>
+            <img
+              src={`https://mc.yandex.ru/watch/${YM_ID}`}
+              style={{ position: "absolute", left: "-9999px" }}
+              alt=""
+            />
+          </div>
+        </noscript>
         {/* Reveal animations never gate content: the document ships fully
             visible and <Reveal> opts individual blocks into motion at runtime,
             so no-JS and older browsers simply read the page as-is. */}
         <Reveal />
+        <MetrikaPageview />
         {children}
       </body>
     </html>

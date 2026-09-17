@@ -22,7 +22,7 @@ import { ActionBar } from "@/components/layout/ActionBar";
 export const metadata: Metadata = {
   title: "Maxfiylik siyosati — HAMKOR SAVDO",
   description:
-    "Saytdagi ariza formasi qanday ma'lumot yig'adi, u qayerga boradi va qanday o'chiriladi.",
+    "Saytdagi ariza formasi qanday ma'lumot yig'adi, u qayerga boradi, qanday o'chiriladi va tashriflar statistikasi qanday yuritiladi.",
   alternates: { canonical: absolute("/maxfiylik") },
   robots: { index: true, follow: true },
 };
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
         <p className="mt-5 text-lg leading-relaxed text-ink-2">
           Saytda bitta forma bor — ariza qoldirish formasi. Quyida u nima yig&apos;ishi, bu
           ma&apos;lumot qayerga borishi va uni qanday o&apos;chirish mumkinligi yozilgan.
-          Boshqa hech qanday ma&apos;lumot yig&apos;ilmaydi.
+          Bundan tashqari sayt tashriflar statistikasini yuritadi — bu haqda sahifa oxirida.
         </p>
 
         <h2 className="display mt-12 text-2xl">Nima yig&apos;iladi</h2>
@@ -110,10 +110,25 @@ export default function PrivacyPage() {
           </a>
         </div>
 
-        <h2 className="display mt-12 text-2xl">Cookie va kuzatuv</h2>
+        <h2 className="display mt-12 text-2xl">Tashriflar statistikasi va cookie</h2>
         <p className="mt-4 leading-relaxed text-ink-2">
-          Sayt cookie ishlatmaydi va sizni kuzatadigan tashqi skriptlar
-          o&apos;rnatilmagan. Shu sababli cookie haqida so&apos;raydigan oyna ham yo&apos;q.
+          Saytni yaxshilash uchun Yandex Metrika xizmatidan foydalanamiz. U sayt nechta odam
+          ochganini, ular qaysi shahardan va qaysi manbadan (Google, Instagram, Telegram)
+          kelganini, qaysi qurilmadan kirganini hamda sahifada qanday harakat qilganini
+          (bosishlar, sahifani aylantirish) ko&apos;rsatadi. Buning uchun Yandex brauzeringizga
+          cookie fayllarini yozadi. Bu ma&apos;lumotlar umumlashgan holda ko&apos;riladi va sizning
+          ismingiz bilan bog&apos;lanmaydi.
+        </p>
+        <p className="mt-4 leading-relaxed text-ink-2">
+          Ariza formasiga yozgan ismingiz, telefon raqamingiz va so&apos;rovingiz matni
+          statistika xizmatiga yuborilmaydi — ular faqat yuqorida aytilgan yo&apos;l bilan
+          savdo bo&apos;limiga boradi.
+        </p>
+        <p className="mt-4 leading-relaxed text-ink-2">
+          Shuningdek, sayt siz tanlagan yozuvni (lotin yoki kirill) keyingi safar eslab qolish
+          uchun uni brauzeringizda saqlaydi. Statistikani to&apos;xtatish uchun brauzer
+          sozlamalarida cookie fayllarini o&apos;chirib qo&apos;yishingiz mumkin — sayt baribir
+          to&apos;liq ishlaydi.
         </p>
       </main>
       <Footer />
