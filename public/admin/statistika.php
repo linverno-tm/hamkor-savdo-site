@@ -109,19 +109,22 @@ if ($err !== '') {
     echo '<p class="flash flash-err">' . h($err) . '</p>';
 }
 
-echo '<div class="grid grid-4">';
+echo '<div class="kpis">';
 if ($ov) {
-    echo '<div class="stat"><b>' . $ov['visits'] . '</b><span>Tashriflar</span></div>';
-    echo '<div class="stat"><b>' . $ov['users'] . '</b><span>Odamlar</span></div>';
-    echo '<div class="stat"><b>' . h($ov['goals']['phone_click'] === null ? '—' : $ov['goals']['phone_click']) . '</b><span>"Qo\'ng\'iroq" bosildi</span></div>';
-    echo '<div class="stat"><b>' . h($ov['goals']['telegram_click'] === null ? '—' : $ov['goals']['telegram_click']) . '</b><span>Telegram\'ga o\'tishdi</span></div>';
+    $g = $ov['goals'];
+    echo hs_kpi('eye', $ov['visits'], 'Tashriflar', (int) $ov['users'] . ' ta odam');
+    echo hs_kpi('phone', $g['phone_click'] === null ? '—' : $g['phone_click'], '"Qo\'ng\'iroq" bosildi');
+    echo hs_kpi('send', $g['telegram_click'] === null ? '—' : $g['telegram_click'], 'Telegram\'ga o\'tishdi');
 }
-echo '<div class="stat"><b>' . $leadCount . '</b><span>Arizalar</span></div>';
-if ($ov && $ov['visits'] > 0) {
-    $conv = round((($leadCount + (int) $ov['goals']['phone_click']) / $ov['visits']) * 100, 1);
-    echo '<div class="stat"><b>' . $conv . '%</b><span>Konversiya (qo\'ng\'iroq + ariza / tashrif)</span></div>';
-}
+$conv = ($ov && $ov['visits'] > 0)
+    ? round((($leadCount + (int) $ov['goals']['phone_click']) / $ov['visits']) * 100, 1) . '% konversiya'
+    : '';
+echo hs_kpi('inbox', $leadCount, 'Arizalar', $conv, 'green');
 echo '</div>';
+
+if ($ov && $ov['visits'] === 0 && $p === 'bugun') {
+    echo '<p class="flash flash-warn">Hozircha tashrif yo\'q. Metrika faqat haqiqiy saytda — hamkorsavdo.uz da ishlaydi; sayt hostingga chiqqandan keyin raqamlar shu yerda paydo bo\'ladi.</p>';
+}
 
 if ($ov) {
     $missing = array_keys(array_filter($ov['goals'], 'is_null'));
