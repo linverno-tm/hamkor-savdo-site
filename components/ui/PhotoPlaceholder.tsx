@@ -25,7 +25,7 @@ export function PhotoPlaceholder({ className }: { className?: string }) {
     >
       {/* z-10: yorug'lik to'lqini shu mazmunning ostidan o'tadi. */}
       <span className="relative z-10 flex flex-col items-center gap-3">
-        <Logo variant="mark" className="h-10 w-auto text-purple-100" />
+        <Logo variant="mark" className="h-14 w-auto text-purple/35" />
         Suratlar tayyorlanmoqda
       </span>
     </span>

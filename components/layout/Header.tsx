@@ -20,27 +20,46 @@ export function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-ground">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-        <Link href="/" className="tap shrink-0 text-purple" aria-label="HAMKOR SAVDO — bosh sahifa">
+        <Link href="/#hero" className="tap shrink-0 text-purple" aria-label="HAMKOR SAVDO — bosh sahifa">
           <Logo className="h-8 w-auto sm:h-9" />
         </Link>
 
-        <nav aria-label="Asosiy menyu" className="hidden items-center gap-6 lg:flex">
+        {/* Kirill matn lotin matndan biroz kengroq bo'lgani uchun (masalan
+            "Muddatli to'lov" -> "Муддатли тўлов") bu qatorga oddiy 2xl (1536px)
+            yetmay qoldi — shuning uchun maxsus kengroq chegara (1700px) va
+            har bir band `whitespace-nowrap`: matn hech qachon o'z ichida
+            ikki qatorga bo'linib, chalkash ko'rinmaydi. */}
+        <nav aria-label="Asosiy menyu" className="hidden items-center gap-5 min-[1700px]:flex">
           {navigation.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-[0.95rem] font-medium text-ink-2 transition-colors hover:text-purple"
+              className="whitespace-nowrap text-[0.95rem] font-medium text-ink-2 transition-colors hover:text-purple"
             >
               {item.label}
             </Link>
           ))}
-          <a href={`tel:${site.phone}`} className="btn btn-primary !min-h-11 !px-5">
+          <a
+            href="/uz-kr/"
+            data-lang-link
+            className="lang-to-cyrl tap whitespace-nowrap rounded-full border border-line px-3 py-1.5 text-[0.95rem] font-medium text-ink-2 transition-colors hover:border-purple hover:text-purple"
+          >
+            Kirillcha
+          </a>
+          <a
+            href="/"
+            data-lang-link
+            className="lang-to-latin tap whitespace-nowrap rounded-full border border-line px-3 py-1.5 text-[0.95rem] font-medium text-ink-2 transition-colors hover:border-purple hover:text-purple"
+          >
+            Lotincha
+          </a>
+          <a href={`tel:${site.phone}`} className="btn btn-primary !min-h-11 whitespace-nowrap !px-5">
             {site.phoneDisplay}
           </a>
         </nav>
 
         {/* Mobile: native disclosure, works without JS */}
-        <details id="mobile-menu" className="mobile-menu lg:hidden">
+        <details id="mobile-menu" className="mobile-menu min-[1700px]:hidden">
           <summary
             className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-line text-purple"
             aria-label="Menyu"
@@ -93,6 +112,12 @@ export function Header() {
                 className="btn btn-outline"
               >
                 Telegram
+              </a>
+              <a href="/uz-kr/" data-lang-link className="lang-to-cyrl btn btn-outline">
+                Kirillcha
+              </a>
+              <a href="/" data-lang-link className="lang-to-latin btn btn-outline">
+                Lotincha
               </a>
             </div>
           </div>

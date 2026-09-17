@@ -66,6 +66,13 @@ export function Contact() {
       href: site.telegramUrl,
     },
     {
+      icon: "chat" as const,
+      label: "Mijozlar kanali",
+      value: `@${site.telegramCustomers}`,
+      note: "Haqiqiy mijozlarning xaridlari va sharhlari",
+      href: site.telegramCustomersUrl,
+    },
+    {
       icon: "instagram" as const,
       label: "Instagram",
       value: `@${site.instagram}`,
@@ -88,9 +95,17 @@ export function Contact() {
     },
   ];
 
+  /** Umumiy raqam qaysi filialning o'z raqami bilan bir xil bo'lsa, shuni
+      yorliqda aniq aytamiz — aks holda Andijon filiali ro'yxatda "yo'qolib"
+      qolganday tuyuladi. */
+  const mainIsBranch = branches.find((b) => b.phone === site.phone);
+  const mainLabel = mainIsBranch
+    ? `Umumiy raqam (${mainIsBranch.city} filiali)`
+    : "Umumiy raqam";
+
   /** Unique numbers across branches, main number first. */
   const phones = [
-    { label: "Umumiy raqam", phone: site.phone, display: site.phoneDisplay },
+    { label: mainLabel, phone: site.phone, display: site.phoneDisplay },
     ...branches
       .filter((b) => b.phone && b.phone !== site.phone)
       .map((b) => ({
@@ -108,10 +123,7 @@ export function Contact() {
           kicker="Aloqa"
           title={
             <>
-              Biz bilan{" "}
-              <span className="relative z-0">
-                <span className="mark">bog&apos;laning</span>
-              </span>
+              Biz bilan bog&apos;laning
             </>
           }
           lead="Savolingiz bormi? Qo'ng'iroq qiling yoki ijtimoiy tarmoqlarda yozing — javob beramiz."
@@ -137,9 +149,7 @@ export function Contact() {
               ))}
             </ul>
             <p className="mt-5 text-sm leading-relaxed text-ink-3">
-              {site.unpublished.openingHours
-                ? site.unpublished.openingHours.join(", ")
-                : "Ish vaqti hali e'lon qilinmagan — aniqlashtirish uchun qo'ng'iroq qiling."}
+              Andijon filiali: 9:00–22:00. Boshqa filiallar: 8:00–18:00.
             </p>
           </div>
 

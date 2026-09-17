@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Bebas_Neue } from "next/font/google";
 import { site } from "@/data/site";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, absolute } from "@/lib/seo";
 import { Reveal } from "@/components/ui/Reveal";
 import "./globals.css";
 
@@ -31,16 +31,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "HAMKOR SAVDO — Oilangizga ishonchli hamkor",
   description,
-  keywords: [
-    "Hamkor Savdo",
-    "muddatli to'lov",
-    "Shahrixon",
-    "Asaka",
-    "Andijon",
-    "mebel",
-    "texnika",
-    "tilla",
-  ],
+  // `keywords` meta tegini qidiruv tizimlari 2009-yildan beri e'tiborga
+  // olmaydi (Google buni ochiq e'lon qilgan) — shuning uchun olib tashlandi.
+  alternates: {
+    canonical: absolute("/"),
+    languages: {
+      uz: absolute("/"),
+      "uz-Cyrl": absolute("/uz-kr/"),
+    },
+  },
   openGraph: {
     title: "HAMKOR SAVDO — Oilangizga ishonchli hamkor",
     description,
@@ -54,11 +53,37 @@ export const viewport = {
   themeColor: "#5a3089",
 };
 
+/**
+ * Til aniqlash — Kirill (uz-kr) sahifa React'siz, sof HTML bo'lgani uchun
+ * (tools/uz-kr-build.mjs, hydration mos kelmasligining oldini olish uchun
+ * React skriptlarini olib tashlaydi) bu alohida, juda kichik, Next'ga
+ * bog'liq bo'lmagan skript — shuning uchun `data-keep` bilan belgilangan va
+ * shu skript ikkala variantda ham saqlanib qoladi.
+ *
+ * Qoida: ruscha qurilma -> Kirill, boshqa hamma narsa (jumladan ingliz) ->
+ * standart Lotin. Odam qaysi variantni ko'rib tursa, shuni "tanlov" sifatida
+ * eslab qoladi — keyingi safar ochilganda avtomatik almashtirmaydi, hatto
+ * ruscha brauzerda ham (ataylab Lotinni tanlagan bo'lishi mumkin).
+ */
+const LANG_DETECT_SCRIPT = `(function(){try{
+var onCyr = location.pathname.indexOf('/uz-kr') === 0;
+var saved = localStorage.getItem('hs_lang');
+if (!saved && !onCyr && /^ru\\b/i.test(navigator.language || '')) {
+  localStorage.setItem('hs_lang', 'uz-kr');
+  location.replace('/uz-kr' + location.pathname + location.search + location.hash);
+  return;
+}
+localStorage.setItem('hs_lang', onCyr ? 'uz-kr' : 'uz');
+}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="uz" className={`${outfit.variable} ${bebas.variable}`}>
+      <head>
+        <script data-keep dangerouslySetInnerHTML={{ __html: LANG_DETECT_SCRIPT }} />
+      </head>
       <body>
         {/* Reveal animations never gate content: the document ships fully
             visible and <Reveal> opts individual blocks into motion at runtime,

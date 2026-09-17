@@ -26,10 +26,10 @@ export const categories: Category[] = [
     id: "texnika",
     index: "01",
     name: "TEXNIKA",
-    /* VAQTINCHA: skuterlar shu bo'limda eslatilgan. Buyurtmachi ularni
-       alohida yo'nalish qilishni o'ylayapti — shunda sayt bo'ylab "uch
-       yo'nalish" degan 11 ta joy o'zgaradi va skuter surati kerak bo'ladi.
-       Qaror qabul qilinmaguncha shu qator yetarli. */
+    /* Qaror (2026-09-17, egasi): skuterlar alohida yo'nalish BO'LMAYDI —
+       "uch yo'nalish" sayt bo'ylab shunday qoladi. Buning o'rniga Texnika
+       kartochkasida sariq "+ Skuterlar ham bor" belgisi va marquee'da
+       alohida "SKUTERLAR" so'zi orqali ko'zga tashlanadi. */
     kicker: "Maishiy texnika va skuterlar",
     description:
       "Oshxonadan mehmonxonagacha — uy yumushlarini yengillashtiradigan maishiy texnika. Skuterlar ham shu bo'limda. Kerakli mahsulotni tanlashda do'kon jamoasi yordam beradi.",

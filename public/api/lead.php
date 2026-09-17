@@ -22,8 +22,8 @@ $PHONE_MIN_DIGITS = 9;
 /** Bitta IP dan shuncha soniyada bittadan ko'p ariza qabul qilinmaydi. */
 $THROTTLE_SECONDS = 20;
 
-$PHONE_DISPLAY = '+998 74 342 08 80';
-$PHONE_LINK = '+998743420880';
+$PHONE_DISPLAY = '+998 33 342 08 80';
+$PHONE_LINK = '+998333420880';
 
 /* Har bir filial uchun nom va xeshteg. Xeshteg call-center guruhida
    qidirish uchun: operator #asaka deb qidirsa, faqat o'z filialining

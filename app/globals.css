@@ -77,6 +77,10 @@ html {
   scroll-behavior: smooth;
   background: var(--ground);
   -webkit-text-size-adjust: 100%;
+  /* Butun sayt bo'yicha barcha rem-o'lchamlar (shrift, padding, gap, radius)
+     shu yerdan masshtablanadi — 100% brauzer zoom'ida ham sayt kattaroq
+     ko'rinishi uchun. */
+  font-size: 125%;
 }
 
 body {
@@ -137,29 +141,24 @@ section[id] {
   color: var(--yellow);
 }
 
-/* The guidebook's signature move: a yellow bar sitting under a key word. */
-.mark {
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
+/* ---------------- til almashtirish (uz-kr postbuild bilan birga) ---------------- */
+
+/* Ikkala havola ham shu manbada turadi (Header.tsx); qaysi biri ko'rinishi
+   sahifaning o'z <html lang> ga qarab CSS bilan hal qilinadi — JavaScript
+   kerak emas. tools/uz-kr-build.mjs Lotin sahifani o'qib Kirillga
+   o'giradi va <html lang="uz-Cyrl"> qo'yadi, shu payt bu qoida ishga
+   tushadi. */
+/* !important — bu ko'rinish/yashirish qoidasi boshqa hech qanday sinf
+   (masalan `.tap`, tegishli joyda o'qing) bilan tortishmasligi kerak: u
+   har doim g'olib chiqishi shart. */
+.lang-to-latin {
+  display: none !important;
 }
-.mark::after {
-  content: "";
-  position: absolute;
-  left: -0.06em;
-  right: -0.06em;
-  bottom: 0.06em;
-  height: 0.32em;
-  background: var(--yellow);
-  z-index: -1;
-  transform-origin: left;
+html[lang="uz-Cyrl"] .lang-to-latin {
+  display: inline-flex !important;
 }
-/* Drawn by default; only a block still waiting to be revealed starts empty. */
-.reveal:not(.is-in) .mark::after {
-  transform: scaleX(0);
-}
-.reveal.is-armed .mark::after {
-  transition: transform var(--dur-3) var(--ease) 240ms;
+html[lang="uz-Cyrl"] .lang-to-cyrl {
+  display: none !important;
 }
 
 /* ---------------- buttons ---------------- */
@@ -412,10 +411,12 @@ footer a:not(.btn) {
 }
 .action-bar .btn {
   min-height: 3rem;
-  padding-inline: 1rem;
+  padding-inline: 0.5rem;
+  white-space: nowrap;
+  font-size: 0.9rem;
 }
 
-@media (max-width: 1023.98px) {
+@media (max-width: 1699.98px) {
   .action-bar {
     display: flex;
   }
@@ -437,10 +438,13 @@ footer a:not(.btn) {
   transform: translateY(22px);
 }
 .reveal.is-armed > * {
+  /* Kartochka/aloqa bo'limlariga tez tushilganda ekran bo'm-bo'sh
+     turmasligi uchun --dur-3 (620ms, boshqa animatsiyalar bilan ham
+     ulashiladi) o'rniga shu bo'lim uchun alohida, qisqaroq muddat. */
   transition:
-    opacity var(--dur-3) var(--ease),
-    transform var(--dur-3) var(--ease);
-  transition-delay: calc(var(--i, 0) * 70ms);
+    opacity 380ms var(--ease),
+    transform 380ms var(--ease);
+  transition-delay: calc(var(--i, 0) * 60ms);
 }
 .reveal.is-in > * {
   opacity: 1;
@@ -521,6 +525,55 @@ footer a:not(.btn) {
   }
 }
 
+/* ---------------- about: rasm-almashish (JS yo'q) ---------------- */
+
+/* To'rtta <img> bir-birining ustida, navbat bilan ko'rinadi/yo'qoladi.
+   Har birida bir xil `about-cycle` keyframe, farqi faqat manfiy
+   `animation-delay` — shu manfiy kechikish tufayli 2-surat sahifa ochilgan
+   zahoti allaqachon o'z navbatini kutayotgan holatda boshlanadi, hammasi
+   bitta umumiy tsiklda sinxron aylanadi. Marquee'dagi bilan bir xil uslub:
+   kutubxonasiz, faqat CSS. */
+.photo-cycle {
+  position: relative;
+}
+.photo-cycle img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .photo-cycle img {
+    animation: about-cycle 20s infinite;
+  }
+  .photo-cycle img:nth-child(1) {
+    animation-delay: -0s;
+  }
+  .photo-cycle img:nth-child(2) {
+    animation-delay: -5s;
+  }
+  .photo-cycle img:nth-child(3) {
+    animation-delay: -10s;
+  }
+  .photo-cycle img:nth-child(4) {
+    animation-delay: -15s;
+  }
+}
+@keyframes about-cycle {
+  0%,
+  19% {
+    opacity: 1;
+  }
+  25%,
+  94% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /* ---------------- reduced motion ---------------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -538,8 +591,8 @@ footer a:not(.btn) {
     opacity: 1;
     transform: none;
   }
-  .reveal:not(.is-in) .mark::after {
-    transform: scaleX(1);
+  .photo-cycle img:first-child {
+    opacity: 1;
   }
 }
 
@@ -692,6 +745,46 @@ footer a:not(.btn) {
 }
 .lightbox-close:hover {
   background: rgba(255, 255, 255, 0.26);
+}
+
+/* Oldingi/keyingi — navbatdagi suratning ankoriga to'g'ridan-to'g'ri
+   havola, JavaScript'siz. Telefonda ekran torligi uchun kichikroq va
+   chetlarga yaqinroq turadi. */
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+.lightbox-prev {
+  left: 0.5rem;
+}
+.lightbox-next {
+  right: 0.5rem;
+}
+@media (min-width: 640px) {
+  .lightbox-prev {
+    left: 1.25rem;
+  }
+  .lightbox-next {
+    right: 1.25rem;
+  }
+}
+.lightbox-count {
+  color: var(--on-purple-2);
 }
 
 /* Sahifadan sahifaga o'tganda yumshoq kirish.

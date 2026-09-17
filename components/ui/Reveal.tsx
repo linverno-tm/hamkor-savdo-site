@@ -62,6 +62,39 @@ export function Reveal() {
     };
   }, []);
 
+  // Progressive enhancement for the `:target` photo lightbox
+  // (components/sections/BranchGallery.tsx), which already opens, closes and
+  // navigates between photos without JS via plain anchor links. This only
+  // adds what a CSS-only `:target` cannot: Escape to close, left/right arrow
+  // keys to move between photos, and locking the page behind the overlay.
+  useEffect(() => {
+    const openLightbox = () =>
+      document.querySelector<HTMLElement>(".lightbox:target");
+
+    const onHashChange = () => {
+      document.documentElement.style.overflow = openLightbox() ? "hidden" : "";
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const box = openLightbox();
+      if (!box) return;
+      if (e.key === "Escape") {
+        window.location.hash = "suratlar";
+      } else if (e.key === "ArrowLeft" && box.dataset.prevId) {
+        window.location.hash = box.dataset.prevId;
+      } else if (e.key === "ArrowRight" && box.dataset.nextId) {
+        window.location.hash = box.dataset.nextId;
+      }
+    };
+
+    onHashChange(); // to'g'ridan-to'g'ri #foto-... havolasi bilan ochilgan bo'lsa
+    window.addEventListener("hashchange", onHashChange);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const blocks = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
@@ -95,7 +128,10 @@ export function Reveal() {
           observer.unobserve(el);
         }
       },
-      { rootMargin: "0px 0px -10% 0px", threshold: 0.1 },
+      // Musbat pastki chegara — element ekranga hali to'liq kirmasdan turib
+      // (taxminan 20% oldinroq) reveal ishga tushadi, shunda anchor havola
+      // orqali tez tushilganda ekran bo'm-bo'sh turib qolmaydi.
+      { rootMargin: "0px 0px 20% 0px", threshold: 0.01 },
     );
 
     // Read phase — measure everything before touching the DOM, so the whole

@@ -140,21 +140,52 @@ export function BranchGallery({
         </div>
       </div>
 
-      {/* Lightboxes. Hidden until their id is the URL fragment. */}
-      {photos.map((p, i) => (
-        <div key={p.src} id={id(i)} className="lightbox" role="dialog" aria-label={p.alt}>
-          <a href="#suratlar" className="lightbox-close" aria-label="Yopish">
-            &times;
-          </a>
-          <a href="#suratlar" className="lightbox-scrim" tabIndex={-1} aria-hidden="true" />
-          <figure className="lightbox-figure">
-            <img src={p.src} alt={p.alt} width={960} height={720} decoding="async" />
-            <figcaption>
-              {p.label} — {city}
-            </figcaption>
-          </figure>
-        </div>
-      ))}
+      {/* Lightboxes. Hidden until their id is the URL fragment.
+          Oldingi/keyingi tugmalari qo'shni suratning ankoriga to'g'ridan-to'g'ri
+          havola — shuning uchun galereya ichida sakrab yurish uchun ham
+          JavaScript kerak emas, faqat hash o'zgaradi. */}
+      {photos.map((p, i) => {
+        const prev = photos.length > 1 ? (i - 1 + photos.length) % photos.length : null;
+        const next = photos.length > 1 ? (i + 1) % photos.length : null;
+        return (
+          <div
+            key={p.src}
+            id={id(i)}
+            className="lightbox"
+            role="dialog"
+            aria-label={p.alt}
+            data-prev-id={prev !== null ? id(prev) : undefined}
+            data-next-id={next !== null ? id(next) : undefined}
+          >
+            <a href="#suratlar" className="lightbox-close" aria-label="Yopish">
+              &times;
+            </a>
+            <a href="#suratlar" className="lightbox-scrim" tabIndex={-1} aria-hidden="true" />
+            {prev !== null ? (
+              <a href={`#${id(prev)}`} className="lightbox-nav lightbox-prev" aria-label="Oldingi surat">
+                &lsaquo;
+              </a>
+            ) : null}
+            {next !== null ? (
+              <a href={`#${id(next)}`} className="lightbox-nav lightbox-next" aria-label="Keyingi surat">
+                &rsaquo;
+              </a>
+            ) : null}
+            <figure className="lightbox-figure">
+              <img src={p.src} alt={p.alt} width={960} height={720} decoding="async" />
+              <figcaption>
+                {p.label} — {city}
+                {photos.length > 1 ? (
+                  <span className="lightbox-count">
+                    {" "}
+                    · {i + 1}/{photos.length}
+                  </span>
+                ) : null}
+              </figcaption>
+            </figure>
+          </div>
+        );
+      })}
     </section>
   );
 }
