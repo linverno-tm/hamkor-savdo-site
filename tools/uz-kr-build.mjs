@@ -54,11 +54,20 @@ const escapeHtmlText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").rep
 const escapeAttr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
 function walkText(node) {
+  // React `@{nom}` ni ikki matn tuguniga bo'ladi: "@" va "nom". Oldingi
+  // tugun "@" bilan tugagan bo'lsa, bu tugun boshidagi nom ham lotinda qoladi.
+  let afterAt = false;
   for (const child of node.childNodes) {
     if (child.nodeType === 3) {
       // matn tuguni
-      child.rawText = escapeHtmlText(toCyr(child.text));
-    } else if (child.nodeType === 1 && !SKIP_TAGS.has(child.tagName?.toLowerCase())) {
+      const text = child.text;
+      const handle = afterAt ? (/^[A-Za-z0-9_.]+/.exec(text) || [""])[0] : "";
+      child.rawText = escapeHtmlText(handle + toCyr(text.slice(handle.length)));
+      afterAt = /@$/.test(text);
+      continue;
+    }
+    afterAt = false;
+    if (child.nodeType === 1 && !SKIP_TAGS.has(child.tagName?.toLowerCase())) {
       for (const attr of ATTRS_TO_TRANSLATE) {
         const v = child.getAttribute(attr);
         if (v) child.setAttribute(attr, escapeAttr(toCyr(v)));
