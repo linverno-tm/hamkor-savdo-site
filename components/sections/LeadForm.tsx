@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { branches } from "@/data/branches";
 import { site } from "@/data/site";
+import { ym } from "@/lib/metrika";
 
 type Status = { kind: "idle" | "sending" | "ok" } | { kind: "error"; message: string };
 
@@ -30,6 +31,7 @@ export function LeadForm({ branchId }: { branchId?: string }) {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
+        ym("reachGoal", "lead_sent");
         setStatus({ kind: "ok" });
         form.reset();
       } else {
@@ -97,7 +99,8 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   minLength={2}
                   maxLength={80}
                   autoComplete="name"
-                  className="mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
+                  /* ym-disable-keys: Webvisor yozilgan matnni Yandex'ga yubormaydi. */
+                  className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
                   placeholder="Anvar"
                 />
               </div>
@@ -123,7 +126,7 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   pattern="[+]?[0-9()\-\s]{9,24}"
                   title="Telefon raqamini kiriting, masalan: +998 90 123 45 67"
                   aria-describedby="lead-phone-help"
-                  className="mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
+                  className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
                   placeholder="+998 90 123 45 67"
                 />
                 <p id="lead-phone-help" className="mt-2 text-xs text-ink-3">
@@ -165,7 +168,7 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   name="note"
                   rows={3}
                   maxLength={500}
-                  className="mt-2 w-full rounded-xl border border-line bg-ground p-4 text-ink outline-none transition-colors focus:border-purple"
+                  className="ym-disable-keys mt-2 w-full rounded-xl border border-line bg-ground p-4 text-ink outline-none transition-colors focus:border-purple"
                   placeholder="Masalan: muzlatgich, muddatli to'lov shartlari"
                 />
               </div>
