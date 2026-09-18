@@ -18,6 +18,31 @@
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !https
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # --- Next.js ning sahifa ma'lumot fayllari ---
+  #
+  # Brauzerdagi Next havolani oldindan yuklab qo'yish uchun shunday manzil
+  # so'raydi:   /filiallar/__next.filiallar.__PAGE__.txt
+  # `next build` esa faylni shunday yozadi: __next.filiallar/__PAGE__.txt
+  # ya'ni nuqta o'rniga papka. (Next 16.3.1, `output: "export"`.)
+  #
+  # Natijada har bir havola uchun 404 qaytardi va Apache uning o'rniga
+  # to'liq 404.html sahifasini (100 KB dan ortiq) yuborardi — sahifa
+  # ochilganda bir necha marta, bekorga. Bu qoida `__next.` dan keyingi
+  # nuqtalarni papkaga aylantiradi:
+  #
+  #   __next.filiallar.$d$slug.__PAGE__.txt
+  #     -> __next.filiallar/$d$slug.__PAGE__.txt   (1-o'tish)
+  #     -> __next.filiallar/$d$slug/__PAGE__.txt   (2-o'tish, [N] qayta yuradi)
+  #
+  # Bitta nuqta qolmaganda mos kelmay qoladi va takrorlanish to'xtaydi.
+  # Next tuzatilsa yoki nom sxemasi o'zgarsa, qoida shunchaki ishlamaydi —
+  # hozirgidan yomoni bo'lmaydi.
+  RewriteRule ^(.*__next\.(?:[^/.]+/)*[^/.]+)\.(.*__PAGE__\.txt)$ $1/$2 [N]
+</IfModule>
+
+<IfModule mod_setenvif.c>
+  SetEnvIf X-Forwarded-Proto "^https$" HS_HTTPS=1
 </IfModule>
 
 # --- Siqish. Sekin internetda eng sezilarli tejash shu yerda. ---
@@ -39,6 +64,10 @@
   ExpiresDefault "access plus 1 hour"
   ExpiresByType text/html "access plus 0 seconds"
   ExpiresByType application/json "access plus 0 seconds"
+  # Next'ning __next.*.txt fayllari ham sahifa matnini olib yuradi — HTML
+  # bilan bir qatorda turishi kerak, aks holda havola bosilganda eski matn
+  # chiqadi. (robots.txt ham shu turda, lekin u kichkina.)
+  ExpiresByType text/plain "access plus 0 seconds"
   ExpiresByType text/css "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
   ExpiresByType font/woff2 "access plus 1 year"
@@ -51,11 +80,48 @@
   <FilesMatch "\.(?:js|css|woff2)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
-  <FilesMatch "\.html$">
+  <FilesMatch "\.(?:html|txt)$">
     Header set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # --- Xavfsizlik sarlavhalari ---
+  #
+  # HSTS: brauzer bu domenga faqat https orqali kirsin. Faqat https so'rovda
+  # yuboriladi (env=HTTPS), shuning uchun sertifikat hali o'rnatilmagan
+  # bo'lsa hech narsa buzilmaydi.
+  # `includeSubDomains` ataylab yo'q: hosting keyinchalik webmail yoki
+  # cpanel kabi quyi domen yaratsa va unda sertifikat bo'lmasa, o'sha
+  # domen butunlay ochilmay qolardi.
+  # Muddat admin paneldagi qiymat bilan bir xil (_lib/bootstrap.php):
+  # HSTS butun domenga tegishli, ikki xil muddat berilsa brauzer ularni
+  # navbatma-navbat almashtirib turadi.
+  # Ikki qator: hosting to'g'ridan-to'g'ri https bersa `HTTPS` o'zgaruvchisi
+  # to'ladi, proksi orqasida tursa esa faqat X-Forwarded-Proto keladi
+  # (yuqoridagi yo'naltirish qoidasi ham shu ikkalasini hisobga oladi).
+  Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+  Header always set Strict-Transport-Security "max-age=31536000" env=HS_HTTPS
+
+  # Sayt oynasini boshqa saytning ichiga joylab bo'lmaydi — mijozga
+  # HAMKOR SAVDO ko'rinadi, aslida bosgan tugmasi begona saytga ketadi
+  # (clickjacking). frame-ancestors zamonaviy brauzerlar uchun, X-Frame-
+  # Options esa eskilari uchun — ikkalasi bir xil narsani aytadi.
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # CSP ning faqat buzilmaydigan qismi. `script-src` ataylab qo'yilmagan:
+  # Metrika va manba aniqlash skriptlari sahifa ichida yozilgan, ularni
+  # ruxsat etish uchun 'unsafe-inline' kerak bo'lardi — u esa CSP ning
+  # asosiy foydasini yo'qqa chiqaradi. Quyidagilar esa hech narsani
+  # buzmaydi va haqiqiy hujumlarni to'sadi:
+  #   form-action  — ariza formasini begona manzilga yuborib bo'lmaydi
+  #   base-uri     — <base> tegi qo'shib hamma havolani burib bo'lmaydi
+  #   object-src   — eski Flash/plugin orqali kod ishga tushmaydi
+  Header always set Content-Security-Policy "frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+
+  # Sayt bu imkoniyatlarning hech birini ishlatmaydi. Sahifaga begona kod
+  # tushib qolsa ham, brauzer kameraga yoki joylashuvga yo'l bermaydi.
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()"
 </IfModule>
 
 # --- Papkalar ro'yxati hech qachon ko'rinmasin (/api/, /bosh/ ...) ---

@@ -14,4 +14,17 @@ DirectoryIndex index.php
 <IfModule mod_headers.c>
   Header always set X-Robots-Tag "noindex, nofollow"
   Header always set X-Frame-Options "DENY"
+
+  # Panel PHP orqali ham aynan shu ikkitasini yuboradi
+  # (_lib/bootstrap.php -> hs_security_headers). Bu yerda takrorlanishining
+  # sababi: hujjat ildizidagi .htaccess saytga umumiy, yumshoqroq qiymat
+  # qo'yadi va u PHP yozganini almashtirib yuboradi. Quyi papkadagi qoida
+  # keyinroq qo'llanadi, shuning uchun oxirgi so'z panelniki bo'ladi.
+  # O'zgartirsangiz, ikkala joyda birga o'zgartiring.
+  # Referrer-Policy da `always` yo'q — ildizdagi qoida ham `always` siz
+  # yozilgan. Ikkalasi bir ro'yxatda bo'lsa, ichkaridagi tashqarisining
+  # o'rnini egallaydi; har xil ro'yxatda bo'lsa, javobga ikkita
+  # Referrer-Policy tushib, qaysi biri kuchga kirishi noaniq bo'lardi.
+  Header set Referrer-Policy "no-referrer"
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"
 </IfModule>

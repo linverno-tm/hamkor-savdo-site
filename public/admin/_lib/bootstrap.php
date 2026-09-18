@@ -120,6 +120,9 @@ function hs_security_headers()
     header('Referrer-Policy: no-referrer');
     header('X-Robots-Tag: noindex, nofollow');
     header('Cache-Control: no-store, max-age=0');
+    // Shu qator admin/.htaccess da ham bor — u yerda saytning umumiy
+    // sozlamasi buni almashtirib yubormasligi uchun. Birini o'zgartirsangiz,
+    // ikkinchisini ham o'zgartiring.
     header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'");
     if (hs_is_https()) {
         header('Strict-Transport-Security: max-age=31536000');
