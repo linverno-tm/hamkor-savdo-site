@@ -717,6 +717,60 @@ footer a:not(.btn) {
   }
 }
 
+/* Bosh sahifadagi suratlar navbat bilan almashadi — beshta kadr, har biri
+   5 soniya, o'tish silliq. "Biz haqimizda" bo'limidagi `photo-cycle` bilan
+   bir xil yondashuv: kutubxona ham, JavaScript ham yo'q, shuning uchun
+   kirillcha nusxada (u yerda skriptlar olib tashlanadi) ham bir xil ishlaydi.
+
+   Birinchi surat animatsiyadan tashqarida ham ko'rinadi — shuning uchun
+   sahifa ochilganda bo'sh joy yo'q, `prefers-reduced-motion` da esa u
+   shunchaki qimirlamay turaveradi. Qolganlari kechroq yuklanadi. */
+.hero-cycle {
+  position: relative;
+}
+.hero-cycle img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.hero-cycle img:first-child {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-cycle img,
+  .hero-cycle img:first-child {
+    opacity: 0;
+    animation: hero-fade 25s infinite;
+  }
+  .hero-cycle img:nth-child(2) {
+    animation-delay: -5s;
+  }
+  .hero-cycle img:nth-child(3) {
+    animation-delay: -10s;
+  }
+  .hero-cycle img:nth-child(4) {
+    animation-delay: -15s;
+  }
+  .hero-cycle img:nth-child(5) {
+    animation-delay: -20s;
+  }
+}
+@keyframes hero-fade {
+  0%,
+  16% {
+    opacity: 1;
+  }
+  20%,
+  96% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /* ---------------- reduced motion ---------------- */
 
 @media (prefers-reduced-motion: reduce) {

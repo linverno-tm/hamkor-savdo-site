@@ -33,6 +33,33 @@ export function Hero() {
     },
   ];
 
+  /* Bosh sahifada navbat bilan almashadigan suratlar. Beshtasi ataylab:
+     tilla, mebel, texnika va skuterlar — do'konning uchala yo'nalishi — va
+     oxirida haqiqiy mijozlar. Birinchisi eng kuchli kadr, chunki sahifa
+     ochilganda o'sha ko'rinadi (va LCP elementi ham o'sha). */
+  const heroPhotos = [
+    {
+      src: "/filiallar/andijon-amir-temur/zal-1",
+      alt: "HAMKOR SAVDO savdo zali — tilla buyumlari peshtaxtasi, orqasida mebel va maishiy texnika",
+    },
+    {
+      src: "/filiallar/shahrixon-ozodbek/zal-4",
+      alt: "Mebel bo'limi — yumshoq burchak va jurnal stoli",
+    },
+    {
+      src: "/filiallar/asaka-umid/zal-1",
+      alt: "Maishiy texnika bo'limi — muzlatgichlar, kir yuvish mashinalari va bolalar transporti",
+    },
+    {
+      src: "/filiallar/shahrixon-ozodbek/zal-1",
+      alt: "Zargarlik peshtaxtasi — tilla taqinchoqlar va quyma tilla",
+    },
+    {
+      src: "/filiallar/shahrixon-ozodbek/mijoz-1",
+      alt: "Mijozlar velosiped va bolalar aravachalari bo'limida tanlamoqda",
+    },
+  ];
+
   return (
     <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden pt-28 sm:pt-32">
       {/* Juda keng ekranlarda mazmun 1600px ustunda qolib, ikki chetda katta
@@ -121,28 +148,38 @@ export function Hero() {
               descendants, which is what once trapped the photo lightbox inside
               <main> instead of the viewport. */}
           <div className="rise relative" style={{ ["--i" as string]: 5 }}>
-            {/* Ilgari bu yerda menejerlar kompyuter oldida o'tirgan surat
-                turardi. U noto'g'ri gap aytardi: birinchi kadrda hujjat va
-                rasmiylashtirish ko'rinardi, mahsulot esa yo'q edi. Do'konga
-                odam tilla, texnika va mebel uchun keladi — shuning uchun
-                birinchi ko'rinadigan narsa ham o'sha bo'lishi kerak.
+            {/* Ilgari bu yerda menejerlar kompyuter oldida o'tirgan bitta
+                surat turardi. U noto'g'ri gap aytardi: birinchi kadrda hujjat
+                va rasmiylashtirish ko'rinardi, mahsulot esa yo'q edi.
 
-                Andijon filialining savdo zali: old planda tilla peshtaxtasi,
-                orqasida mebel, televizor, maishiy texnika va skuter. Uchala
-                yo'nalish bitta kadrda, brend esa ikki joyda — peshtaxta
-                yozuvida va orqa devordagi logotipda. */}
-            <img
-              src="/filiallar/andijon-amir-temur/zal-1-960.webp"
-              srcSet="/filiallar/andijon-amir-temur/zal-1-480.webp 480w, /filiallar/andijon-amir-temur/zal-1-960.webp 960w"
-              sizes="(max-width: 1024px) 100vw, 700px"
-              width={960}
-              height={720}
-              alt="HAMKOR SAVDO savdo zali — tilla buyumlari peshtaxtasi, orqasida mebel va maishiy texnika bo'limlari"
-              className="hero-parallax block aspect-[4/2.7] w-full rounded-[28px] object-cover object-center"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-            />
+                Endi beshta kadr navbat bilan almashadi — bitta surat butun
+                do'konni ko'rsata olmaydi. Nisbat 4/3, ya'ni suratlar qanday
+                olingan bo'lsa shundayligicha turadi: 4/2.7 ga kesilganda
+                peshtaxtaning pastki qismi qirqilib qolardi. */}
+            <div className="hero-parallax hero-cycle aspect-[4/3] w-full overflow-hidden rounded-[28px]">
+              {heroPhotos.map((p, i) => (
+                <img
+                  key={p.src}
+                  src={`${p.src}-960.webp`}
+                  srcSet={`${p.src}-480.webp 480w, ${p.src}-960.webp 960w`}
+                  sizes="(max-width: 1024px) 100vw, 700px"
+                  width={960}
+                  height={720}
+                  alt={p.alt}
+                  className="object-cover"
+                  /* Hech biri `lazy` emas: birinchisidan keyingisi 5 soniyada
+                     kerak bo'ladi, kechiktirilgan surat esa o'z navbatida
+                     bo'sh kadr bo'lib chiqadi — birinchi urinishda aynan
+                     shunday bo'ldi. Buning o'rniga birinchisi yuqori
+                     ustuvorlik bilan (u LCP elementi), qolganlari past
+                     ustuvorlik bilan yuklanadi: sahifaning ochilish tezligiga
+                     xalaqit bermaydi, lekin o'z vaqtida tayyor turadi. */
+                  loading="eager"
+                  fetchPriority={i === 0 ? "high" : "low"}
+                  decoding="async"
+                />
+              ))}
+            </div>
 
             <div className="stat-card on-purple relative z-10 -mt-12 rounded-[28px] bg-purple p-7 text-white sm:-mt-16 sm:ml-10 sm:p-9">
               <p className="kicker">Qisqacha</p>
