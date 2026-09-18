@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { branches, mapsUrl } from "@/data/branches";
+import { branches, cityList, mapsUrl } from "@/data/branches";
 import { site } from "@/data/site";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -24,7 +24,7 @@ export function Branches() {
               Bizga kirib o&apos;ting
             </>
           }
-          lead={`${site.facts.branchCount} ta filial — Shahrixon, Asaka va Andijonda. Mahsulotni jonli ko'rib, taqqoslab tanlaysiz.`}
+          lead={`${site.facts.branchCount} ta filial — ${cityList({ counts: false })}da. Mahsulotni jonli ko'rib, taqqoslab tanlaysiz.`}
         />
 
         {/* Yetkazib berish endi butun mamlakat bo'ylab, filiallar esa faqat

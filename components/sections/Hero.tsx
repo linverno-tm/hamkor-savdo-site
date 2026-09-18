@@ -114,7 +114,10 @@ export function Hero() {
                   <div key={f.label} className="flex flex-col-reverse gap-2">
                     <dt className="text-sm leading-snug text-on-purple-2">
                       {f.label}
-                      {f.note ? <span className="mt-0.5 block text-xs text-on-purple-2/70">{f.note}</span> : null}
+                      {/* Izoh ham to'liq `on-purple-2` rangda: 70% shaffoflikda
+                          binafsha fonga nisbatan kontrast 3.35:1 edi, ya'ni
+                          mayda matn uchun WCAG AA (4.5:1) dan past. */}
+                      {f.note ? <span className="mt-0.5 block text-xs text-on-purple-2">{f.note}</span> : null}
                     </dt>
                     <dd className="numeral text-4xl text-yellow sm:text-5xl">{f.value}</dd>
                   </div>
@@ -139,9 +142,12 @@ export function Hero() {
                 "SKUTERLAR",
                 "MEBEL",
                 "MUDDATLI TO'LOV",
-                "BEPUL YETKAZISH (ANDIJON)",
-                "BEPUL O'RNATISH",
-                "4 TA FILIAL",
+                /* Yetkazish va o'rnatish bitta bandda: "bepul" ikkalasiga
+                   ham faqat `freeDeliveryArea` ichida taalluqli, shuning
+                   uchun hudud har ikkalasi uchun bir marta yoziladi.
+                   Filial soni ham admin paneldagi ro'yxatdan sanaladi. */
+                `BEPUL YETKAZISH VA O'RNATISH — ${site.freeDeliveryArea.toUpperCase()}`,
+                `${site.facts.branchCount} TA FILIAL`,
               ].map((word) => (
                 <span key={word} className="flex shrink-0 items-center">
                   <span className="numeral px-6 text-2xl tracking-[0.12em] text-ink-3">{word}</span>

@@ -19,6 +19,10 @@ import { Logo } from "@/components/ui/Logo";
 export function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-ground">
+      {/* Sahifadagi birinchi fokuslanadigan element — uslubi globals.css da. */}
+      <a href="#asosiy" className="skip-link">
+        Asosiy qismga o&apos;tish
+      </a>
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link href="/#hero" className="tap shrink-0 text-purple" aria-label="HAMKOR SAVDO — bosh sahifa">
           <Logo className="h-8 w-auto sm:h-9" />
@@ -46,6 +50,13 @@ export function Header() {
           >
             Kirillcha
           </a>
+          {/* Til almashtirish — ataylab oddiy <a>, `next/link` emas.
+              Kirillcha nusxa (out/uz-kr/) Next yo'riqnomasida yo'q: u
+              postbuild skripti yozgan alohida statik fayllar to'plami.
+              `next/link` sahifani brauzer ichida almashtirar edi va React
+              yana lotincha matnni chizib qo'yardi — bu yerda haqiqiy
+              qayta yuklash kerak. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
             data-lang-link
@@ -116,6 +127,7 @@ export function Header() {
               <a href="/uz-kr/" data-lang-link className="lang-to-cyrl btn btn-outline">
                 Kirillcha
               </a>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/" data-lang-link className="lang-to-latin btn btn-outline">
                 Lotincha
               </a>

@@ -30,7 +30,7 @@ export default function NotFound() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-3xl px-5 pb-20 pt-36 sm:px-8 sm:pt-44">
+      <main id="asosiy" tabIndex={-1} className="mx-auto max-w-3xl px-5 pb-20 pt-36 sm:px-8 sm:pt-44">
         <p className="kicker">Xatolik 404</p>
         <h1 className="display mt-3 text-4xl leading-[1.05] sm:text-5xl">
           Bu sahifa topilmadi
@@ -64,7 +64,7 @@ export default function NotFound() {
         </ul>
       </main>
       <Footer />
-      <ActionBar />
+      <ActionBar href="/#ariza" />
     </>
   );
 }

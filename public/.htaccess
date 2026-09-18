@@ -29,9 +29,16 @@
 </IfModule>
 
 # --- Kesh. _next/static ichidagi fayllar nomida xesh bor, ular o'zgarmaydi. ---
+#
+# HTML esa aksincha — keshlanmaydi. Admin paneldan matn, narx yoki filial
+# o'zgartirilib sayt qayta yig'ilganda, mijoz brauzeri eski sahifani bir soat
+# ushlab turmasin: xodim "o'zgartirdim, lekin saytda ko'rinmayapti" degan
+# holatga tushadi. Fayllar kichik va serverda siqiladi, tejaladigan narsa oz.
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
   ExpiresByType text/css "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
   ExpiresByType font/woff2 "access plus 1 year"
@@ -43,6 +50,9 @@
 <IfModule mod_headers.c>
   <FilesMatch "\.(?:js|css|woff2)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
@@ -59,3 +69,17 @@ Options -Indexes
 
 AddDefaultCharset UTF-8
 ErrorDocument 404 /404.html
+
+# --- Kirillcha sahifada xato ham kirillcha bo'lsin ---
+#
+# /uz-kr/ ostidagi mavjud bo'lmagan manzil lotincha 404 sahifasini
+# ko'rsatardi: kirill o'qiydigan odam to'satdan boshqa alifboga tushib
+# qolardi. out/uz-kr/404.html ni postbuild skripti (tools/uz-kr-build.mjs)
+# boshqa sahifalar bilan birga yaratadi.
+#
+# <If> — Apache 2.4 direktivasi. Bu fayl yuqorida "Require all denied" ni ham
+# ishlatadi (u ham faqat 2.4 da bor), ya'ni sayt allaqachon 2.4 ni talab
+# qiladi; ahost.uz (cPanel) shu versiyada ishlaydi.
+<If "%{REQUEST_URI} =~ m#^/uz-kr/#">
+  ErrorDocument 404 /uz-kr/404.html
+</If>

@@ -10,6 +10,7 @@
  * bo'lsin — matnlar bo'ylab qidirib yurilmasin.
  */
 import { site } from "./site";
+import { cityList } from "./branches";
 
 
 export interface Advantage {
@@ -35,24 +36,23 @@ export const advantages: Advantage[] = [
     id: "delivery",
     title: "Bepul yetkazib berish",
     detail:
-      `Andijon viloyatida yetkazish bepul. ${site.deliveryArea} ham yetkazib beramiz — boshqa viloyatlar uchun shartlarni qo'ng'iroqda aytamiz.`,
+      `${site.freeDeliveryArea}da yetkazish bepul. ${site.deliveryArea} ham yetkazib beramiz — boshqa viloyatlar uchun shartlarni qo'ng'iroqda aytamiz.`,
   },
   {
     id: "installation",
     title: "Bepul o'rnatish",
     detail:
-      "Texnikani ustalarimiz bepul o'rnatib beradi. Xariddan keyin ham yolg'iz qolmaysiz.",
+      `Texnikani ustalarimiz ${site.freeDeliveryArea}da bepul o'rnatib beradi. Xariddan keyin ham yolg'iz qolmaysiz.`,
   },
   {
     id: "assortment",
-    title: "7000 dan ortiq mahsulot",
+    title: `${site.facts.productCount.replace("+", " dan ortiq")} mahsulot`,
     detail:
       "Tilla, texnika va mebel — uch yo'nalish, minglab mahsulot. Boshqa do'kon qidirish shart emas.",
   },
   {
     id: "branches",
-    title: "4 ta filial",
-    detail:
-      "Shahrixon, Asaka va Andijonda — sizga eng yaqin filialga kirib, mahsulotni jonli ko'rasiz.",
+    title: `${site.facts.branchCount} ta filial`,
+    detail: `${cityList({ counts: false })}da — sizga eng yaqin filialga kirib, mahsulotni jonli ko'rasiz.`,
   },
 ];

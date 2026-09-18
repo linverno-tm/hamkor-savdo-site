@@ -9,7 +9,7 @@
  * O'zgarmagan rasm qayta ishlanmaydi (fayl vaqti bo'yicha).
  */
 import { readdirSync, statSync, mkdirSync, existsSync, rmSync, writeFileSync } from "node:fs";
-import { join, dirname, relative, extname, basename } from "node:path";
+import { join, dirname, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 

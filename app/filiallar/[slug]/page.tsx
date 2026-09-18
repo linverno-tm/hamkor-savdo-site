@@ -40,7 +40,7 @@ export async function generateMetadata({
      yuboradi. Mo'ljal qidiruvda ham foydali — odam do'konni shu bo'yicha
      qidiradi. */
   const title = `${branch.city}, ${branch.landmark} — HAMKOR SAVDO`;
-  const description = `HAMKOR SAVDO ${branch.city} filiali — ${branch.address}. Tilla, texnika va mebel: ${site.facts.installmentMonthsMax} oygacha muddatli to'lov, bepul yetkazib berish va o'rnatish.`;
+  const description = `HAMKOR SAVDO ${branch.city} filiali — ${branch.address}. Tilla, texnika va mebel: ${site.facts.installmentMonthsMax} oygacha muddatli to'lov, ${site.freeDeliveryArea}da bepul yetkazib berish va o'rnatish.`;
 
   return {
     title,
@@ -108,14 +108,32 @@ export default async function BranchPage({
     sameAs: [branch.instagramUrl ?? site.instagramUrl, site.telegramUrl],
   };
 
+  /* Sahifadagi "Bosh sahifa / Filiallar / {shahar}" izidan nusxa. Qidiruv
+     natijasida manzil o'rniga shu iz ko'rinadi — u sahifadagi havolalar bilan
+     bir xil bo'lishi kerak, aks holda Google uni e'tiborsiz qoldiradi. */
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Bosh sahifa", item: absolute("/") },
+      { "@type": "ListItem", position: 2, name: "Filiallar", item: absolute("/filiallar") },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: branch.city,
+        item: absolute(`/filiallar/${branch.id}`),
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]) }}
       />
       <Header />
-      <main>
+      <main id="asosiy" tabIndex={-1}>
         <section className="relative overflow-hidden pt-28 sm:pt-32">
           <Logo
             variant="mark"
@@ -129,7 +147,11 @@ export default async function BranchPage({
               <span className="mx-2" aria-hidden="true">
                 /
               </span>
-              <Link href="/#filiallar" className="hover:text-purple">
+              {/* Bosh sahifadagi bo'limga emas, filiallar ro'yxatiga —
+                  "yuqoriga" bosgan odam shu sahifaning haqiqiy ota-sahifasiga
+                  tushsin (JSON-LD dagi BreadcrumbList ham shunga ishora
+                  qiladi). */}
+              <Link href="/filiallar" className="hover:text-purple">
                 Filiallar
               </Link>
               <span className="mx-2" aria-hidden="true">
@@ -238,9 +260,14 @@ export default async function BranchPage({
               <h3 className="display text-2xl sm:text-3xl">
                 {site.facts.installmentMonthsMax} oygacha muddatli to&apos;lov
               </h3>
+              {/* "Bepul" hech qachon yolg'iz turmasin: u faqat
+                  `freeDeliveryArea` ichida amal qiladi. Aks holda boshqa
+                  viloyatdagi mijoz bepul yetkazishni kutadi va qo'ng'iroqda
+                  boshqacha javob eshitadi. */}
               <p className="mt-3 max-w-2xl leading-relaxed text-on-purple-2">
-                Pasport va plastik kartaning o&apos;zi kifoya. Xaridingizni bepul yetkazib beramiz
-                va bepul o&apos;rnatib beramiz.
+                Pasport va plastik kartaning o&apos;zi kifoya. {site.freeDeliveryArea}da
+                xaridingizni bepul yetkazib beramiz va bepul o&apos;rnatib beramiz —{" "}
+                {site.deliveryArea} ham yetkazamiz.
               </p>
               <Link href="/#muddatli-tolov" className="btn btn-yellow mt-7">
                 Qanday ishlaydi?

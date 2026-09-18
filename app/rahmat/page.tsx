@@ -3,6 +3,7 @@ import Link from "next/link";
 import { site } from "@/data/site";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ActionBar } from "@/components/layout/ActionBar";
 import { Logo } from "@/components/ui/Logo";
 
 /**
@@ -22,7 +23,7 @@ export default function ThanksPage() {
   return (
     <>
       <Header />
-      <main>
+      <main id="asosiy" tabIndex={-1}>
         <section className="on-purple relative flex min-h-[70svh] items-center overflow-hidden bg-purple py-24 text-white">
           <Logo
             variant="mark"
@@ -56,6 +57,11 @@ export default function ThanksPage() {
         </section>
       </main>
       <Footer />
+      {/* Telefonda `body` ning pastki bo'shlig'i shu qator uchun ajratilgan
+          (globals.css) — qator bo'lmasa, futer tagida sababsiz bo'sh joy
+          qolar edi. Ariza endi yuborilgani uchun ikkinchi tugma formaga
+          emas, filiallar ro'yxatiga olib boradi. */}
+      <ActionBar href="/filiallar/" label="Filiallar" />
     </>
   );
 }

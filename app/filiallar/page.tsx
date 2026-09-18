@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { branches } from "@/data/branches";
+import { branches, cityList } from "@/data/branches";
 import { site } from "@/data/site";
 import { absolute } from "@/lib/seo";
 import { branchCover, branchPhotos } from "@/lib/photos";
@@ -22,8 +22,7 @@ import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
  */
 export const metadata: Metadata = {
   title: "Filiallar — HAMKOR SAVDO",
-  description:
-    "HAMKOR SAVDO filiallari: Shahrixon (2 ta), Asaka va Andijon. Har bir filialning manzili, telefoni va suratlari.",
+  description: `HAMKOR SAVDO filiallari: ${cityList()}. Har bir filialning manzili, telefoni va suratlari.`,
   alternates: { canonical: absolute("/filiallar") },
   openGraph: { title: "Filiallar — HAMKOR SAVDO", type: "website", locale: "uz_UZ" },
 };
@@ -50,7 +49,7 @@ export default function BranchIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Header />
-      <main className="mx-auto max-w-7xl px-5 pb-20 pt-32 sm:px-8 sm:pt-40">
+      <main id="asosiy" tabIndex={-1} className="mx-auto max-w-7xl px-5 pb-20 pt-32 sm:px-8 sm:pt-40">
         <nav aria-label="Yo'l" className="text-sm text-ink-3">
           <Link href="/" className="tap hover:text-purple">
             Bosh sahifa
@@ -108,7 +107,7 @@ export default function BranchIndexPage() {
         </ul>
       </main>
       <Footer />
-      <ActionBar />
+      <ActionBar href="/#ariza" />
     </>
   );
 }
