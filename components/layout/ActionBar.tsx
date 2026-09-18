@@ -20,18 +20,27 @@ import { site } from "@/data/site";
  *     bar would sit over the last rows of the footer.
  *
  * `#ariza` resolves to whichever form is on the current page: the general one
- * on the home page, the branch's own on a branch page.
+ * on the home page, the branch's own on a branch page. Sahifada forma
+ * bo'lmasa (filiallar ro'yxati, maxfiylik, 404, rahmat), o'sha langar hech
+ * qayerga olib bormaydi — shuning uchun ikkinchi tugmani sahifa o'zi
+ * belgilaydi va bunday sahifalar bosh sahifadagi formaga yo'naltiradi.
  *
  * No JavaScript: two links and a media query.
  */
-export function ActionBar() {
+export function ActionBar({
+  href = "#ariza",
+  label = "Ariza qoldirish",
+}: {
+  href?: string;
+  label?: string;
+}) {
   return (
     <div className="action-bar" aria-label="Tezkor amallar">
       <a href={`tel:${site.phone}`} className="btn btn-primary flex-1">
         Qo&apos;ng&apos;iroq
       </a>
-      <a href="#ariza" className="btn btn-outline flex-1">
-        Ariza qoldirish
+      <a href={href} className="btn btn-outline flex-1">
+        {label}
       </a>
     </div>
   );

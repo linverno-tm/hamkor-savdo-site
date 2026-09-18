@@ -108,7 +108,7 @@ export default function Home() {
         Asosiy mazmunga o&apos;tish
       </a>
       <Header />
-      <main>
+      <main id="asosiy" tabIndex={-1}>
         <Hero />
         <Promotions />
         <About />

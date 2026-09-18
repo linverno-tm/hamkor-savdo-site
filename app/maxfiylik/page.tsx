@@ -46,7 +46,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-3xl px-5 pb-20 pt-32 sm:px-8 sm:pt-40">
+      <main id="asosiy" tabIndex={-1} className="mx-auto max-w-3xl px-5 pb-20 pt-32 sm:px-8 sm:pt-40">
         <nav aria-label="Yo'l" className="text-sm text-ink-3">
           <Link href="/" className="tap hover:text-purple">
             Bosh sahifa
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
         </p>
       </main>
       <Footer />
-      <ActionBar />
+      <ActionBar href="/#ariza" />
     </>
   );
 }

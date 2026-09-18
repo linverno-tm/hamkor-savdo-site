@@ -2,6 +2,7 @@ import Link from "next/link";
 import { site } from "@/data/site";
 import { navigation } from "@/data/navigation";
 import { branches } from "@/data/branches";
+import { content } from "@/lib/content";
 import { Logo } from "@/components/ui/Logo";
 
 export function Footer() {
@@ -92,6 +93,13 @@ export function Footer() {
             <Link href="/filiallar" className="transition-colors hover:text-purple">
               Filiallar
             </Link>
+            {/* Katalog bo'sh bo'lsa, sahifa qidiruvdan ham yopilgan
+                (`robots: index: false`) — unga havola ham bermaymiz. */}
+            {content.products.length > 0 ? (
+              <Link href="/katalog" className="transition-colors hover:text-purple">
+                Katalog
+              </Link>
+            ) : null}
             <Link href="/maxfiylik" className="transition-colors hover:text-purple">
               Maxfiylik siyosati
             </Link>

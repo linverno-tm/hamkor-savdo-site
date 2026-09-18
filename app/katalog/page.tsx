@@ -29,7 +29,7 @@ export default function CatalogPage() {
   return (
     <>
       <Header />
-      <main>
+      <main id="asosiy" tabIndex={-1}>
         <section className="mx-auto max-w-7xl px-5 pb-16 pt-32 sm:px-8 sm:pt-40">
           <nav aria-label="Yo'l" className="text-sm text-ink-3">
             <Link href="/" className="tap hover:text-purple">

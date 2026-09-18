@@ -1,4 +1,5 @@
 import { site } from "@/data/site";
+import { cityList } from "@/data/branches";
 import { groupDigits } from "@/lib/format";
 
 interface Stat {
@@ -10,18 +11,25 @@ interface Stat {
   note: string;
 }
 
+/* "7000+" kabi qiymatni raqam va qo'shimchaga ajratamiz: sanoq animatsiyasiga
+   son kerak, "+" esa son sanab bo'lgandan keyin chiqadi. Qiymat admin panelda
+   o'zgarsa, shu yer ham o'zi bilan o'zgaradi — ilgari 7000 shu faylda qo'lda
+   yozilgan edi va `content.json` bilan ajralib qolishi mumkin edi. */
+const productMatch = /^(\d+)(.*)$/.exec(site.facts.productCount.trim());
+
 /** Verified numbers only — each traces to data/site.ts. */
 const stats: Stat[] = [
   {
-    count: 7000,
-    suffix: "+",
+    count: productMatch ? Number(productMatch[1]) : undefined,
+    suffix: productMatch ? productMatch[2] : undefined,
+    value: productMatch ? undefined : site.facts.productCount,
     label: "MAHSULOT",
     note: "Tilla, texnika va mebel bo'limlarida",
   },
   {
     count: site.facts.branchCount,
     label: "FILIAL",
-    note: "Shahrixon (2), Asaka va Andijonda",
+    note: `${cityList()}da`,
   },
   {
     count: site.facts.installmentMonthsMax,

@@ -48,7 +48,6 @@ export default async function Image() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={markUri} width={92} height={105} alt="" />
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: 46, letterSpacing: -1 }}>HAMKOR SAVDO</span>

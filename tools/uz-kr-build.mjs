@@ -29,11 +29,15 @@ const isPageHref = (href) =>
   href.startsWith("/") && !href.startsWith("/uz-kr") && !href.includes(".") && !href.startsWith("/api");
 
 /**
- * Kirillga o'girilmaydigan bo'laklar: @nomlar (Instagram/Telegram), veb
- * manzillar va domenlar. "@hamkorsavdo.uz" -> "@ҳамкорсавдо.уз" bo'lib
- * qolsa, mijoz sahifani qidirib topa olmaydi.
+ * Kirillga o'girilmaydigan bo'laklar: brend nomi, @nomlar
+ * (Instagram/Telegram), veb manzillar va domenlar.
+ *
+ * Brend nomi — logotipdagi yozuvning o'zi. "HAMKOR SAVDO" -> "ҲАМКОР САВДО"
+ * bo'lib qolsa, sahifadagi matn do'kon peshtaxtasidagi, chek va
+ * ijtimoiy tarmoqdagi nom bilan mos kelmaydi. Domen va @nomlar ham shu
+ * sababdan lotinda qoladi: "@ҳамкорсавдо.уз" ni mijoz qidirib topa olmaydi.
  */
-const KEEP_LATIN = /(@[A-Za-z0-9_.]+|https?:\/\/[^\s<>"]+|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:uz|com|ru|me|org|net)\b(?:\/[^\s<>"]*)?)/g;
+const KEEP_LATIN = /(HAMKOR\s+SAVDO|@[A-Za-z0-9_.]+|https?:\/\/[^\s<>"]+|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:uz|com|ru|me|org|net)\b(?:\/[^\s<>"]*)?)/g;
 const toCyr = (s) =>
   s
     .split(KEEP_LATIN)
