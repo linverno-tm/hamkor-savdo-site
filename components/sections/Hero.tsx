@@ -1,5 +1,6 @@
 import { site } from "@/data/site";
 import { content, Rich } from "@/lib/content";
+import { Logo } from "@/components/ui/Logo";
 
 /**
  * Scene 01 — "Bu kim va menga nima beradi?"
@@ -34,6 +35,24 @@ export function Hero() {
 
   return (
     <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden pt-28 sm:pt-32">
+      {/* Juda keng ekranlarda mazmun 1600px ustunda qolib, ikki chetda katta
+          oq maydon paydo bo'ladi. Ustunni kengaytirish yechim emas — matn
+          qatori uzayib o'qish qiyinlashadi. O'rniga chetga brend belgisi
+          qo'yiladi.
+          Chegara 2200px: aynan shundan keyin chetdagi bo'shliq 300px dan
+          oshadi va belgi butunlay sig'adi. Pastroq chegarada u yo mazmun
+          ostiga kirib qolardi, yo ekran chetidan kesilib, ataylab emas,
+          xato qo'yilgandek ko'rinardi. */}
+      <Logo
+        variant="mark"
+        aria-hidden="true"
+        className="pointer-events-none absolute left-12 top-64 hidden h-56 w-auto text-purple-50 min-[2200px]:block"
+      />
+      <Logo
+        variant="mark"
+        aria-hidden="true"
+        className="pointer-events-none absolute right-12 top-40 hidden h-40 w-auto text-purple-50 min-[2200px]:block"
+      />
       <div className="relative mx-auto max-w-7xl px-5 pb-20 sm:px-8 lg:pb-28">
         <div className="grid items-start gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div>
@@ -45,42 +64,52 @@ export function Hero() {
               {site.deliveryArea} yetkazamiz · {site.facts.branchCount} ta filial
             </p>
 
+            {/* Har bir qator o'z darchasidan ko'tarilib chiqadi (.line-mask).
+                Ilgari butun sarlavha birdan paydo bo'lardi; qatorlab chiqishi
+                sokinroq va qimmatroq ko'rinadi. Qatorlar endi blok bo'lgani
+                uchun <br> kerak emas — telefonda ham, kompyuterda ham
+                bir xil ikki qator. */}
             <h1
               id="hero-title"
-              className="rise display mt-6 text-[2.75rem] leading-[1.02] sm:text-6xl lg:text-7xl"
-              style={{ ["--i" as string]: 1 }}
+              className="display mt-6 text-[2.75rem] leading-[1.02] sm:text-6xl lg:text-7xl"
             >
-              Oilangizga <br className="hidden sm:block" />
-              ishonchli{" "}
-              <span className="text-purple">hamkor</span>
+              <span className="line-mask">
+                <span style={{ ["--i" as string]: 1 }}>Oilangizga</span>
+              </span>
+              <span className="line-mask">
+                <span style={{ ["--i" as string]: 2 }}>
+                  ishonchli <span className="text-purple">hamkor</span>
+                </span>
+              </span>
             </h1>
 
             <p
               className="rise mt-6 max-w-xl text-lg leading-relaxed text-ink-2 sm:text-xl"
-              style={{ ["--i" as string]: 2 }}
+              style={{ ["--i" as string]: 3 }}
             >
               <Rich text={content.texts.heroLead} />
             </p>
 
-            <div className="rise mt-9 flex flex-col gap-3" style={{ ["--i" as string]: 3 }}>
+            <div className="rise mt-9 flex flex-col gap-3" style={{ ["--i" as string]: 4 }}>
               <div className="flex flex-wrap gap-3">
-                <a href="#filiallar" className="btn btn-primary">
+                <a href="#filiallar" className="btn btn-primary btn-lift">
                   Eng yaqin filialni toping
+                  <span className="nudge" aria-hidden="true">&rarr;</span>
                 </a>
-                <a href="#ariza" className="btn btn-outline">
+                <a href="#ariza" className="btn btn-outline btn-lift">
                   Ariza qoldirish
                 </a>
               </div>
 
               <a
                 href="#maxsus-buyurtma"
-                className="tap flex max-w-md items-center gap-3 rounded-2xl border-2 border-yellow bg-yellow/10 px-4 py-3 transition-colors hover:bg-yellow/20"
+                className="group tap btn-lift flex max-w-md items-center gap-3 rounded-2xl border-2 border-yellow bg-yellow/10 px-4 py-3 hover:bg-yellow/20"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow text-lg" aria-hidden="true">
                   ✓
                 </span>
                 <span className="text-sm font-semibold leading-snug text-ink sm:text-base">
-                  Bizda yo&apos;qmi? Baribir <span className="text-purple">muddatli to&apos;lovga</span> olib beramiz →
+                  Bizda yo&apos;qmi? Baribir <span className="text-purple">muddatli to&apos;lovga</span> olib beramiz <span className="nudge" aria-hidden="true">&rarr;</span>
                 </span>
               </a>
             </div>
@@ -91,7 +120,7 @@ export function Hero() {
               element becomes the containing block for its `position: fixed`
               descendants, which is what once trapped the photo lightbox inside
               <main> instead of the viewport. */}
-          <div className="rise relative" style={{ ["--i" as string]: 3 }}>
+          <div className="rise relative" style={{ ["--i" as string]: 5 }}>
             <img
               src="/bosh/sarlavha-1024.webp"
               srcSet="/bosh/sarlavha-640.webp 640w, /bosh/sarlavha-1024.webp 1024w"
@@ -99,13 +128,13 @@ export function Hero() {
               width={1024}
               height={768}
               alt="HAMKOR SAVDO do'koni ichkarisi — jamoamiz mijozlarni kutib olmoqda"
-              className="block aspect-[4/2.7] w-full rounded-[28px] object-cover object-bottom"
+              className="hero-parallax block aspect-[4/2.7] w-full rounded-[28px] object-cover object-bottom"
               loading="eager"
               fetchPriority="high"
               decoding="async"
             />
 
-            <div className="on-purple relative z-10 -mt-12 rounded-[28px] bg-purple p-7 text-white sm:-mt-16 sm:ml-10 sm:p-9">
+            <div className="stat-card on-purple relative z-10 -mt-12 rounded-[28px] bg-purple p-7 text-white sm:-mt-16 sm:ml-10 sm:p-9">
               <p className="kicker">Qisqacha</p>
               <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-7">
                 {facts.map((f) => (
