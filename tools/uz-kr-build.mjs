@@ -105,6 +105,63 @@ function stripHydrationScripts(root) {
   }
 }
 
+/**
+ * Ikkala nusxaning qidiruv tizimiga aytadigan gapini to'g'rilaydi.
+ *
+ * Muammo shu edi: kirill nusxadagi `canonical` lotincha manzilga ishora
+ * qilardi. Google uchun bu "meni indekslamang, asli nusxa u yerda" degani —
+ * ya'ni kirill yozuvda qidiradigan mijoz saytni umuman topa olmasdi.
+ * Bundan tashqari `hreflang` juftligi faqat bosh sahifada bor edi: ichki
+ * sahifalar o'z `alternates.canonical` ini belgilaganda Next'ning til
+ * ro'yxati ular uchun butunlay yo'qolgan.
+ *
+ * To'g'ri tartib: har bir nusxa o'ziga `canonical` qo'yadi, ikkalasi esa
+ * bir xil `hreflang` juftligini ko'rsatadi. Shu ish bitta joyda — kirill
+ * nusxani yasaydigan skriptda — bajariladi, chunki lotin/kirill manzil
+ * bog'lanishini faqat shu skript biladi.
+ *
+ * Indekslanmaydigan sahifalar (404, rahmat) chetda qoladi: ularning
+ * `canonical` yozuvi umumiy sozlamadan kelib bosh sahifaga ishora qiladi,
+ * ya'ni ularni juftlashtirsak, 404 sahifa bosh sahifaning kirillcha
+ * muqobili deb e'lon qilingan bo'lardi.
+ *
+ * @returns {{latin: string, cyrl: string} | null}
+ */
+function pairUrls(root) {
+  const robots = root.querySelector('meta[name="robots"]');
+  if (robots && /noindex/i.test(robots.getAttribute("content") || "")) return null;
+  const canonical = root.querySelector('link[rel="canonical"]');
+  if (!canonical) return null;
+  const latin = canonical.getAttribute("href");
+  if (!latin) return null;
+  const u = new URL(latin);
+  return { latin, cyrl: `${u.origin}/uz-kr${u.pathname}` };
+}
+
+/* Mavjud hreflang havolalari (Next faqat bosh sahifaga qo'yadi) — skript
+   qayta ishga tushganda ikkilanib ketmasligi uchun avval olib tashlanadi.
+   `hreflang` atributi faqat shu havolalarda uchraydi. */
+const HREFLANG_TAG = /<link\b[^>]*\bhref[Ll]ang=[^>]*>/g;
+const CANONICAL_TAG = /<link\b[^>]*\brel="canonical"[^>]*>/i;
+
+/**
+ * Matn ustida ishlaydi, DOM emas: lotin nusxa React tomonidan gidratsiya
+ * qilinadi va undagi `<!--$-->` kabi belgilar muhim. Faylni qaytadan
+ * yig'ish o'rniga faqat kerakli teglarni almashtiramiz.
+ */
+function withSeoLinks(html, urls, canonicalHref) {
+  let out = html.replace(HREFLANG_TAG, "");
+  out = out.replace(CANONICAL_TAG, (tag) =>
+    tag.replace(/\bhref="[^"]*"/i, `href="${escapeAttr(canonicalHref)}"`),
+  );
+  const links =
+    `<link rel="alternate" hreflang="uz" href="${escapeAttr(urls.latin)}"/>` +
+    `<link rel="alternate" hreflang="uz-Cyrl" href="${escapeAttr(urls.cyrl)}"/>` +
+    // Til aniqlanmasa lotin nusxa ko'rsatiladi — sayt asli shunda yozilgan.
+    `<link rel="alternate" hreflang="x-default" href="${escapeAttr(urls.latin)}"/>`;
+  return out.replace("</head>", links + "</head>");
+}
+
 function processHtml(html) {
   const root = parse(html, { comment: false });
   const titleEl = root.querySelector("title");
@@ -139,16 +196,27 @@ function walkFiles(dir) {
 function main() {
   const files = walkFiles(OUT_DIR);
   let count = 0;
+  let paired = 0;
   for (const file of files) {
     const rel = relative(OUT_DIR, file);
     const html = readFileSync(file, "utf8");
-    const converted = processHtml(html);
+    const urls = pairUrls(parse(html, { comment: false }));
+
+    let converted = processHtml(html);
+    if (urls) {
+      // Lotin asl nusxaga ham juftlik havolalari qo'shiladi — ikkalasi
+      // bir-birini ko'rsatmasa, hreflang qidiruv tizimi uchun yaroqsiz.
+      writeFileSync(file, withSeoLinks(html, urls, urls.latin), "utf8");
+      converted = withSeoLinks(converted, urls, urls.cyrl);
+      paired++;
+    }
+
     const destPath = join(TARGET_DIR, rel);
     mkdirSync(dirname(destPath), { recursive: true });
     writeFileSync(destPath, converted, "utf8");
     count++;
   }
-  console.log(`uz-kr: ${count} ta sahifa yozildi -> out/uz-kr/`);
+  console.log(`uz-kr: ${count} ta sahifa yozildi -> out/uz-kr/ (${paired} tasi hreflang juftligi bilan)`);
 }
 
 main();

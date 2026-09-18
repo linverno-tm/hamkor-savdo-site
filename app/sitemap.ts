@@ -17,6 +17,8 @@ function withUzKr(path: string) {
     languages: {
       uz: absolute(path),
       "uz-Cyrl": absolute(`/uz-kr${path}`),
+      // Til aniqlanmasa lotin nusxa — sahifalardagi hreflang bilan bir xil.
+      "x-default": absolute(path),
     },
   };
 }
