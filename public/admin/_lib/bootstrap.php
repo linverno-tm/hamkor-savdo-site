@@ -65,10 +65,24 @@ function hs_site_url()
     return rtrim(hs_config('site_url', 'https://hamkorsavdo.uz'), '/');
 }
 
+/**
+ * So'rov https orqali kelganmi.
+ *
+ * Uchinchi shart — proksi uchun: hosting sertifikatni old tomonda ushlab,
+ * PHP ga oddiy http bilan uzatsa, birinchi ikkalasi bo'sh qoladi. O'shanda
+ * sessiya "cookie" si `Secure` belgisisiz qolar va HSTS yuborilmas edi.
+ * Saytning .htaccess fayli ham yo'naltirishda aynan shu sarlavhaga qaraydi.
+ *
+ * X-Forwarded-Proto ni soxtalashtirish mumkin, lekin bu yerda undan foyda
+ * yo'q: yolg'on "https" cookie ga `Secure` qo'shadi, ya'ni brauzer uni
+ * http orqali umuman yubormaydi — hujumchi o'z ishini buzadi.
+ */
 function hs_is_https()
 {
     return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+            && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
 }
 
 function h($s)
