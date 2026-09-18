@@ -121,14 +121,24 @@ export function Hero() {
               descendants, which is what once trapped the photo lightbox inside
               <main> instead of the viewport. */}
           <div className="rise relative" style={{ ["--i" as string]: 5 }}>
+            {/* Ilgari bu yerda menejerlar kompyuter oldida o'tirgan surat
+                turardi. U noto'g'ri gap aytardi: birinchi kadrda hujjat va
+                rasmiylashtirish ko'rinardi, mahsulot esa yo'q edi. Do'konga
+                odam tilla, texnika va mebel uchun keladi — shuning uchun
+                birinchi ko'rinadigan narsa ham o'sha bo'lishi kerak.
+
+                Andijon filialining savdo zali: old planda tilla peshtaxtasi,
+                orqasida mebel, televizor, maishiy texnika va skuter. Uchala
+                yo'nalish bitta kadrda, brend esa ikki joyda — peshtaxta
+                yozuvida va orqa devordagi logotipda. */}
             <img
-              src="/bosh/sarlavha-1024.webp"
-              srcSet="/bosh/sarlavha-640.webp 640w, /bosh/sarlavha-1024.webp 1024w"
+              src="/filiallar/andijon-amir-temur/zal-1-960.webp"
+              srcSet="/filiallar/andijon-amir-temur/zal-1-480.webp 480w, /filiallar/andijon-amir-temur/zal-1-960.webp 960w"
               sizes="(max-width: 1024px) 100vw, 700px"
-              width={1024}
-              height={768}
-              alt="HAMKOR SAVDO do'koni ichkarisi — jamoamiz mijozlarni kutib olmoqda"
-              className="hero-parallax block aspect-[4/2.7] w-full rounded-[28px] object-cover object-bottom"
+              width={960}
+              height={720}
+              alt="HAMKOR SAVDO savdo zali — tilla buyumlari peshtaxtasi, orqasida mebel va maishiy texnika bo'limlari"
+              className="hero-parallax block aspect-[4/2.7] w-full rounded-[28px] object-cover object-center"
               loading="eager"
               fetchPriority="high"
               decoding="async"
