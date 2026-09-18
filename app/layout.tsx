@@ -35,12 +35,12 @@ export const metadata: Metadata = {
   description,
   // `keywords` meta tegini qidiruv tizimlari 2009-yildan beri e'tiborga
   // olmaydi (Google buni ochiq e'lon qilgan) — shuning uchun olib tashlandi.
+  /* `languages` (hreflang) bu yerda emas: uni har bir sahifaga
+     `tools/uz-kr-build.mjs` qo'yadi. Sabab — sahifa o'z `alternates`
+     obyektini belgilasa, bu yerdagi til ro'yxati u uchun butunlay
+     yo'qolardi, natijada hreflang faqat bosh sahifada qolgan edi. */
   alternates: {
     canonical: absolute("/"),
-    languages: {
-      uz: absolute("/"),
-      "uz-Cyrl": absolute("/uz-kr/"),
-    },
   },
   openGraph: {
     title: "HAMKOR SAVDO — Oilangizga ishonchli hamkor",
