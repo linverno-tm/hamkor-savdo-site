@@ -67,8 +67,12 @@ function scan(dir: string, urlBase: string): { base: string; src: string; srcSma
 
 /**
  * Bosh sahifa kartochkasidagi surat. Odatda tashqi ko'rinish, lekin admin
- * boshqasini tanlashi mumkin (masalan Asaka: begona binoning tashqi surati
- * to'rtta kartochka qatorida eng tanib bo'lmaydigani).
+ * paneldan boshqasini tanlash mumkin — `content.json` dagi `photos.<slug>.cover`.
+ *
+ * Asakada tashqi surat boshqa brendlarning peshtaxtasi bilan chiqadi
+ * (do'kon Makro binosining 2-qavatida). Egasi baribir shuni tanladi: mijoz
+ * uchun binoni tanib olish "bu HAMKOR SAVDO" degan yozuvdan muhimroq.
+ * Kartochkadagi yozuv va alt matni qavatni aytib turadi.
  */
 export function branchCover(photos: Photo[], slug: string): Photo | null {
   const preferred = content.photos[slug]?.cover;
