@@ -89,7 +89,7 @@ export default function BranchIndexPage() {
                     className="block aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 ) : (
-                  <PhotoPlaceholder className="aspect-[16/10]" />
+                  <PhotoPlaceholder className="aspect-[16/10]" caption={branch.landmark} />
                 )}
                 <span className="flex flex-1 flex-col p-6">
                   <span className="numeral text-2xl tracking-[0.06em] text-purple">

@@ -57,10 +57,9 @@ export function Store() {
                   />
                 ) : (
                   /* Suratsiz filial ham kartochkasini yo'qotmaydi — manzili va
-                     telefoni baribir kerak. Bo'sh ramka o'rniga brend belgisi
-                     turadi: sahifa buzilgandek emas, tayyorlanayotgandek
-                     ko'rinsin. */
-                  <PhotoPlaceholder className="aspect-[16/10]" />
+                     telefoni baribir kerak. Bo'sh ramka o'rniga brend bloki
+                     turadi, mo'ljal esa uning ichida yoziladi. */
+                  <PhotoPlaceholder className="aspect-[16/10]" caption={branch.landmark} />
                 )}
                 <span className="flex flex-1 flex-col p-5">
                   <span className="numeral text-2xl tracking-[0.06em] text-purple">

@@ -26,7 +26,7 @@ export function ProductCard({ p }: { p: Product }) {
           className="block aspect-[4/3] w-full object-cover"
         />
       ) : (
-        <PhotoPlaceholder className="aspect-[4/3]" />
+        <PhotoPlaceholder className="aspect-[4/3]" caption="Surat tayyorlanmoqda" />
       )}
       <div className="flex flex-1 flex-col p-5">
         <span className="text-xs font-semibold uppercase tracking-wider text-ink-3">
