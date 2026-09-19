@@ -57,10 +57,12 @@ list($pLabel, $d1, $d2, $back) = $periods[$p];
 
 hs_page_start('Statistika', $user);
 
-echo '<div class="seg">';
+// Davr almashganda faqat shu qism yangilanadi (admin.js, data-swap) — butun sahifa emas.
+echo '<div id="stat-body" aria-live="polite">';
+echo '<div class="seg" role="tablist" aria-label="Davr">';
 foreach ($periods as $k => $v) {
     // '7' va '30' kalitlari PHP'da int bo'lib qoladi — string bilan solishtiramiz.
-    echo (string) $k === $p ? '<span>' . h($v[0]) . '</span>' : '<a href="/admin/statistika.php?davr=' . h($k) . '">' . h($v[0]) . '</a>';
+    echo (string) $k === $p ? '<span>' . h($v[0]) . '</span>' : '<a href="/admin/statistika.php?davr=' . h($k) . '" data-swap="stat-body">' . h($v[0]) . '</a>';
 }
 echo '</div>';
 
@@ -90,6 +92,10 @@ $names = hs_branch_names();
    yo'q edi. Endi token sinovdan o'tmasa, forma qaytadi: yangisini
    qo'yish eskisining ustiga yozadi. */
 $err = '';
+// 8 ta Metrika so'rovi ketma-ket emas, bir vaqtda — sahifa 5–10 soniya qotib turmasin.
+if (hs_metrika_ready()) {
+    hs_metrika_prefetch_page($d1, $d2);
+}
 $ov = hs_metrika_ready() ? hs_metrika_overview($d1, $d2, $err) : null;
 $tokenYaroqsiz = hs_metrika_ready() && $err !== '';
 if ($err !== '') {
@@ -236,4 +242,5 @@ echo '</div>';
 if ((string) hs_setting('metrika_token', '') !== '') {
     echo '<form method="post" action="/admin/statistika.php" data-confirm="Metrika uzilsinmi? Statistika ko\'rinmay qoladi.">' . hs_csrf_field() . '<input type="hidden" name="amal" value="metrika_uzish"><button class="btn danger small" type="submit">Metrika\'ni uzish</button></form>';
 }
+echo '</div>';
 hs_page_end();

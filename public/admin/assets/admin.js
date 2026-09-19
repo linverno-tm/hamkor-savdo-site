@@ -84,6 +84,64 @@ document.addEventListener("input", function (ev) {
   if (btn) btn.classList.toggle("is-hidden", el.value === el.defaultValue);
 });
 
+/* ---------- sahifaning bir qismini yangilash (statistika davrlari) ----------
+   `data-swap="ID"` havola: butun sahifa qayta yuklanmaydi, faqat shu ID li
+   blok almashadi. Tugma darhol tanlangan ko'rinadi, eski raqamlar xiralashib
+   turadi. Sichqoncha tugmaga kelganda sahifa oldindan so'rab qo'yiladi —
+   bosilganda ko'pincha tayyor bo'ladi. JS'siz — oddiy havola. */
+var hsSwapCache = {};
+function hsFetchPage(url) {
+  var c = hsSwapCache[url];
+  if (c && Date.now() - c.t < 60000) return c.p;
+  var p = fetch(url, { credentials: "same-origin" }).then(function (r) {
+    if (!r.ok || r.redirected) throw new Error("http");
+    return r.text();
+  });
+  hsSwapCache[url] = { t: Date.now(), p: p };
+  p.catch(function () { delete hsSwapCache[url]; });
+  return p;
+}
+function hsSwap(url, id, link, push) {
+  var root = document.getElementById(id);
+  if (!root) { location.href = url; return; }
+  root.classList.add("is-loading");
+  if (link) {
+    var seg = link.closest(".seg");
+    if (seg) seg.querySelectorAll(".pending").forEach(function (x) { x.classList.remove("pending"); });
+    link.classList.add("pending");
+  }
+  hsFetchPage(url).then(function (html) {
+    var doc = new DOMParser().parseFromString(html, "text/html");
+    var fresh = doc.getElementById(id);
+    if (!fresh) throw new Error("no-root");
+    root.innerHTML = fresh.innerHTML;
+    root.classList.remove("is-loading");
+    if (doc.title) document.title = doc.title;
+    if (push) history.pushState({ swap: id }, "", url);
+    delete hsSwapCache[url];
+  }).catch(function () {
+    location.href = url;
+  });
+}
+document.addEventListener("click", function (ev) {
+  var a = ev.target.closest && ev.target.closest("a[data-swap]");
+  if (!a || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button !== 0) return;
+  ev.preventDefault();
+  hsSwap(a.href, a.getAttribute("data-swap"), a, true);
+});
+["mouseover", "touchstart", "focusin"].forEach(function (type) {
+  document.addEventListener(type, function (ev) {
+    var a = ev.target.closest && ev.target.closest("a[data-swap]");
+    if (a) hsFetchPage(a.href);
+  }, { passive: true });
+});
+window.addEventListener("popstate", function (ev) {
+  if (ev.state && ev.state.swap) hsSwap(location.href, ev.state.swap, null, false);
+});
+if (document.getElementById("stat-body") && history.replaceState) {
+  history.replaceState({ swap: "stat-body" }, "", location.href);
+}
+
 /* ---------- mavzu (yorug' / qorong'i) ---------- */
 function hsIsDark() {
   var t = document.documentElement.getAttribute("data-theme");
