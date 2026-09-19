@@ -33,3 +33,7 @@ if (is_array($update)) {
     }
 }
 echo '{"ok":true}';
+
+// Cron bo'lmasa ham eslatma va zaxira vaqtida ketsin: botga har voqea kelganda tekshiriladi.
+require_once __DIR__ . '/../admin/_lib/tasks.php';
+hs_tasks_maybe_run();

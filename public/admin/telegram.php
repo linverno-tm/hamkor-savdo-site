@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/_lib/bootstrap.php';
 require_once __DIR__ . '/_lib/tgchats.php';
+require_once __DIR__ . '/_lib/tasks.php';
 
 $user = hs_require_login(true);
 hs_tg_seed();
@@ -40,6 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_tg_api('sendMessage', array('chat_id' => $id, 'text' => "⭐ Siz HAMKOR SAVDO botining boshqaruvchisisiz.\n\nKimdir botga yozsa yoki botni guruhga qo'shsa, sizga ruxsat so'rovi keladi — tugmani bosib hal qilasiz.\n\n/royxat — hamma chatlar, bosib yoqish/o'chirish."));
         }
         hs_flash($on ? "«{$row['title']}» endi boshqaruvchi: ruxsat so'rovlari unga Telegram'da keladi." : "«{$row['title']}» boshqaruvchilikdan olindi.");
+    } elseif ($action === 'vazifalar') {
+        $int = function ($k, $min, $max) {
+            return (string) max($min, min($max, (int) hs_post($k)));
+        };
+        hs_set_setting('task_remind_on', hs_post('remind_on') === '1' ? '1' : '0');
+        hs_set_setting('task_remind_m1', $int('remind_m1', 1, 240));
+        hs_set_setting('task_remind_m2', (string) max((int) hs_setting('task_remind_m1') + 1, (int) $int('remind_m2', 2, 480)));
+        hs_set_setting('task_work_from', $int('work_from', 0, 23));
+        hs_set_setting('task_work_to', (string) max((int) hs_setting('task_work_from') + 1, (int) $int('work_to', 1, 24)));
+        hs_set_setting('task_backup_on', hs_post('backup_on') === '1' ? '1' : '0');
+        hs_set_setting('task_backup_hour', $int('backup_hour', 0, 23));
+        hs_audit($user['login'], 'eslatma va zaxira sozlamasi');
+        hs_flash('Saqlandi.');
+    } elseif ($action === 'zaxira') {
+        $ok = hs_tasks_backup(true);
+        hs_audit($user['login'], 'zaxira qo\'lda yuborildi', $ok ? 'ok' : 'xato');
+        hs_flash($ok ? "Zaxira fayli boshqaruvchiga Telegram'da yuborildi." : "Yuborilmadi — boshqaruvchi tanlanganini va bot ishlayotganini tekshiring.", $ok ? 'ok' : 'err');
     } elseif ($action === 'sinov' && $row) {
         $ok = hs_tg_send_to($id, "🧪 Sinov xabari — HAMKOR SAVDO admin paneli\n\nBu chat ro'yxatda. " . ((int) $row['leads'] ? 'Saytdan kelgan arizalar shu yerga keladi.' : "Arizalar hozircha o'chirilgan — panelda yoqing."));
         hs_flash($ok ? "Sinov xabari «{$row['title']}» ga yuborildi." : "Yuborilmadi. Bot bu chatdan chiqarilgan yoki odam botni to'xtatgan bo'lishi mumkin.", $ok ? 'ok' : 'err');
@@ -191,6 +209,52 @@ if (!$chats) {
     echo '</div>';
 }
 echo '</section>';
+
+/* ---- eslatma va zaxira ---- */
+$cronAt = (int) hs_setting('tasks_last_cron', '0');
+$cronOk = $cronAt > time() - 20 * 60;
+$cronCmd = 'php ' . str_replace('\\', '/', realpath(__DIR__ . '/cron/vazifalar.php'));
+$checked = function ($k) {
+    return hs_task_setting($k) === '1' ? ' checked' : '';
+};
+$hourOpts = function ($name, $cur, $from, $to) {
+    $h = '<select id="t-' . $name . '" name="' . $name . '">';
+    for ($i = $from; $i <= $to; $i++) {
+        $h .= '<option value="' . $i . '"' . ((int) $cur === $i ? ' selected' : '') . '>' . sprintf('%02d:00', $i % 24) . '</option>';
+    }
+    return $h . '</select>';
+};
+echo '<form class="card" method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="vazifalar">';
+echo '<div class="part-head"><span class="part-ico">' . hs_icon('clock') . '</span><div><h2>Eslatma va zaxira</h2><p class="muted">Ariza javobsiz qolmasin, ma\'lumot yo\'qolmasin</p></div></div>';
+
+echo '<label class="switch toggle-row"><input type="hidden" name="remind_on" value="0"><input type="checkbox" name="remind_on" value="1"' . $checked('remind_on') . '><span class="switch-ui" aria-hidden="true"></span><span>Javobsiz ariza eslatmasi</span></label>';
+echo '<div class="grid grid-4">';
+echo '<div><label for="t-remind_m1">1-eslatma (daqiqa)</label><input id="t-remind_m1" type="number" name="remind_m1" min="1" max="240" value="' . h(hs_task_setting('remind_m1')) . '"><p class="hint">Ariza kelgan chatlarga: "hali hech kim olmadi".</p></div>';
+echo '<div><label for="t-remind_m2">2-eslatma (daqiqa)</label><input id="t-remind_m2" type="number" name="remind_m2" min="2" max="480" value="' . h(hs_task_setting('remind_m2')) . '"><p class="hint">Boshqaruvchiga: "hali javob yo\'q".</p></div>';
+echo '<div><label for="t-work_from">Ish boshlanishi</label>' . $hourOpts('work_from', hs_task_setting('work_from'), 0, 23) . '</div>';
+echo '<div><label for="t-work_to">Ish tugashi</label>' . $hourOpts('work_to', hs_task_setting('work_to'), 1, 24) . '<p class="hint">Kechasi eslatma yuborilmaydi; tungi ariza ertalab hisoblanadi.</p></div>';
+echo '</div>';
+
+echo '<label class="switch toggle-row"><input type="hidden" name="backup_on" value="0"><input type="checkbox" name="backup_on" value="1"' . $checked('backup_on') . '><span class="switch-ui" aria-hidden="true"></span><span>Har kuni arizalar zaxirasini yuborish</span></label>';
+echo '<div class="grid grid-4"><div><label for="t-backup_hour">Soat</label>' . $hourOpts('backup_hour', hs_task_setting('backup_hour'), 0, 23) . '</div>';
+echo '<div class="span-3"><p class="hint">Boshqaruvchiga Telegram\'da Excel\'da ochiladigan fayl keladi — hamma arizalar, holati va izohlari bilan. Parol va kalitlar faylga kirmaydi.'
+    . (hs_setting('backup_last_at', '') !== '' ? ' Oxirgi zaxira: ' . h(date('d.m.Y H:i', strtotime(hs_setting('backup_last_at')))) . '.' : '') . '</p></div></div>';
+echo '<div class="actions"><button class="btn" type="submit">Saqlash</button></div></form>';
+
+echo '<div class="card cron-card' . ($cronOk ? ' ok' : '') . '"><div class="part-head"><span class="part-ico' . ($cronOk ? '' : ' warn') . '">' . hs_icon($cronOk ? 'check' : 'clock') . '</span><div>';
+if ($cronOk) {
+    echo '<h2>Vaqt bo\'yicha vazifalar ishlayapti</h2><p class="muted">Oxirgi tekshiruv: ' . h(date('H:i', $cronAt)) . '. Eslatma va zaxira vaqtida ketadi.</p>';
+} else {
+    echo '<h2>Hostingda Cron sozlanmagan</h2><p class="muted">Hozir eslatmalar faqat panel ochilganda yoki botga kimdir yozganda tekshiriladi — tunda va jim paytlarda kechikadi.</p>';
+}
+echo '</div></div>';
+if (!$cronOk) {
+    echo '<ol class="steps"><li>ahost panelida <b>Cron Jobs</b> (Cron vazifalari) bo\'limini oching.</li>'
+        . '<li>Vaqt: <b>har 5 daqiqada</b> (<span class="code">*/5 * * * *</span>).</li>'
+        . '<li>Buyruq (to\'liq nusxalang):<br><span class="code">' . h($cronCmd) . '</span></li>'
+        . '<li>Saqlang. 5 daqiqadan keyin bu karta yashil bo\'ladi.</li></ol>';
+}
+echo '<form method="post" action="/admin/telegram.php" class="actions">' . hs_csrf_field() . '<input type="hidden" name="amal" value="zaxira"><button class="btn outline small" type="submit">💾 Zaxirani hozir yuborish</button></form></div>';
 
 /* ---- qanday qo'shiladi ---- */
 $botLink = $botName !== '' ? '<a href="https://t.me/' . h($botName) . '" target="_blank" rel="noopener noreferrer">@' . h($botName) . '</a>' : 'botni';

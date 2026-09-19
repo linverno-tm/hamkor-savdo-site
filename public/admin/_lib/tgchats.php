@@ -333,6 +333,9 @@ function hs_tg_lead_text($lead, $note = '')
     $status = isset($st[$lead['status']]) ? $st[$lead['status']] : $lead['status'];
     $by = (string) $lead['updated_by'];
     $lines[] = '📌 Holat: ' . $status . ($lead['status'] !== 'yangi' && $by !== '' ? ' — ' . $by . ($lead['updated_at'] ? ', ' . date('d.m H:i', strtotime($lead['updated_at'])) : '') : '');
+    if (!empty($lead['claimed_by'])) {
+        $lines[] = '🙋 Oldi: ' . $lead['claimed_by'] . (!empty($lead['claimed_at']) ? ', ' . date('d.m H:i', strtotime($lead['claimed_at'])) : '');
+    }
     return implode("\n", $lines);
 }
 
@@ -351,6 +354,9 @@ function hs_tg_lead_keyboard($lead)
         }
     }
     $rows = array($row1, $row2);
+    if (empty($lead['claimed_by']) && $lead['status'] === 'yangi') {
+        array_unshift($rows, array(array('text' => '🙋 Men oldim', 'callback_data' => 'm:' . (int) $lead['id'])));
+    }
     // Telegram faqat https havolani tugma qiladi (mahalliy sinovda http — tugmasiz).
     if (strpos(hs_site_url(), 'https://') === 0) {
         $rows[] = array(array('text' => '🗂 Panelda ochish', 'url' => hs_site_url() . '/admin/ariza.php?id=' . (int) $lead['id']));
@@ -450,16 +456,53 @@ function hs_tg_sync_lead($leadId)
  * chatdagi har kim (filial rahbari, operator, guruh a'zosi) holatni belgilay
  * oladi. Tekshiruv: xabar aynan biz shu arizani yuborgan chat va xabar bo'lsin.
  */
+function hs_tg_is_lead_message($q, $leadId)
+{
+    $chatId = isset($q['message']['chat']['id']) ? (string) $q['message']['chat']['id'] : '';
+    $msgId = isset($q['message']['message_id']) ? (int) $q['message']['message_id'] : 0;
+    $st = hs_db()->prepare('SELECT COUNT(*) FROM tg_lead_msgs WHERE lead_id = ? AND chat_id = ? AND message_id = ?');
+    $st->execute(array((int) $leadId, $chatId, $msgId));
+    return (int) $st->fetchColumn() > 0;
+}
+
+function hs_tg_presser($q)
+{
+    return isset($q['from']['username']) ? '@' . $q['from']['username'] : hs_tg_chat_title($q['from']);
+}
+
+/**
+ * "Men oldim": ariza shu odamniki bo'ladi, boshqalar ikkinchi marta qo'ng'iroq
+ * qilmaydi. Ikki kishi bir vaqtda bossa — birinchisi yutadi (UPDATE ... WHERE claimed_by = '').
+ */
+function hs_tg_handle_claim($q, $leadId)
+{
+    $answer = function ($text) use ($q) {
+        hs_tg_api('answerCallbackQuery', array('callback_query_id' => $q['id'], 'text' => $text, 'show_alert' => 'false'));
+    };
+    if (!hs_tg_is_lead_message($q, $leadId)) {
+        $answer('Bu xabar eskirgan — arizani paneldan oling.');
+        return;
+    }
+    $who = hs_tg_presser($q);
+    $st = hs_db()->prepare("UPDATE leads SET claimed_by = ?, claimed_at = ? WHERE id = ? AND claimed_by = ''");
+    $st->execute(array($who, hs_now(), (int) $leadId));
+    if ($st->rowCount() === 0) {
+        $lead = hs_tg_get_lead($leadId);
+        $answer($lead ? 'Bu arizani ' . $lead['claimed_by'] . ' allaqachon olgan.' : 'Ariza topilmadi.');
+        hs_tg_sync_lead($leadId);
+        return;
+    }
+    hs_audit('telegram ' . $who, 'ariza olindi (botdan)', "#{$leadId}");
+    hs_tg_sync_lead($leadId);
+    $answer('🙋 Ariza sizniki. Mijozga qo\'ng\'iroq qiling!');
+}
+
 function hs_tg_handle_status($q, $leadId, $code)
 {
     $answer = function ($text) use ($q) {
         hs_tg_api('answerCallbackQuery', array('callback_query_id' => $q['id'], 'text' => $text));
     };
-    $chatId = isset($q['message']['chat']['id']) ? (string) $q['message']['chat']['id'] : '';
-    $msgId = isset($q['message']['message_id']) ? (int) $q['message']['message_id'] : 0;
-    $st = hs_db()->prepare('SELECT COUNT(*) FROM tg_lead_msgs WHERE lead_id = ? AND chat_id = ? AND message_id = ?');
-    $st->execute(array((int) $leadId, $chatId, $msgId));
-    if ((int) $st->fetchColumn() === 0) {
+    if (!hs_tg_is_lead_message($q, $leadId)) {
         $answer('Bu xabar eskirgan — arizani paneldan o\'zgartiring.');
         return;
     }
@@ -480,6 +523,7 @@ function hs_tg_handle_status($q, $leadId, $code)
     $from = $q['from'];
     $who = isset($from['username']) ? '@' . $from['username'] : hs_tg_chat_title($from);
     hs_db()->prepare('UPDATE leads SET status = ?, updated_at = ?, updated_by = ? WHERE id = ?')->execute(array($new, hs_now(), $who, (int) $leadId));
+    hs_db()->prepare("UPDATE leads SET claimed_by = ?, claimed_at = ? WHERE id = ? AND claimed_by = ''")->execute(array($who, hs_now(), (int) $leadId));
     hs_audit('telegram ' . $who, 'ariza holati (botdan)', "#{$leadId}: {$lead['status']} -> {$new}");
     hs_tg_sync_lead($leadId);
     $answer(hs_lead_statuses()[$new]);
@@ -496,6 +540,10 @@ function hs_tg_handle_callback($q)
     // Ariza holati — ariza kelgan chatdagi har kim.
     if (preg_match('/^s:(\d+):([a-z])$/', $data, $m)) {
         hs_tg_handle_status($q, (int) $m[1], $m[2]);
+        return;
+    }
+    if (preg_match('/^m:(\d+)$/', $data, $m)) {
+        hs_tg_handle_claim($q, (int) $m[1]);
         return;
     }
     // Qolgani — faqat boshqaruvchi.
