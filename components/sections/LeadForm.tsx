@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { branches } from "@/data/branches";
 import { site } from "@/data/site";
-import { ym } from "@/lib/metrika";
-
-type Status = { kind: "idle" | "sending" | "ok" } | { kind: "error"; message: string };
+import { useLeadSubmit } from "@/lib/lead";
 
 /**
  * "Ariza qoldirish" — the low-friction path for visitors who will not phone.
@@ -17,36 +14,9 @@ type Status = { kind: "idle" | "sending" | "ok" } | { kind: "error"; message: st
  * result inline instead, without losing the page.
  */
 export function LeadForm({ branchId }: { branchId?: string }) {
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    setStatus({ kind: "sending" });
-    try {
-      const res = await fetch(form.action, {
-        method: "POST",
-        body: new FormData(form),
-        headers: { accept: "application/json" },
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.ok) {
-        ym("reachGoal", "lead_sent");
-        setStatus({ kind: "ok" });
-        form.reset();
-      } else {
-        setStatus({
-          kind: "error",
-          message: data.message ?? "Ariza yuborilmadi. Telefon orqali bog'laning.",
-        });
-      }
-    } catch {
-      setStatus({
-        kind: "error",
-        message: "Internet aloqasida muammo. Telefon orqali bog'laning.",
-      });
-    }
-  }
+  /* Yuborish mantiqi `lib/lead.ts` da — bosh qismdagi qisqa forma ham
+     aynan shuni ishlatadi, shunda ikkalasi hech qachon ajralib ketmaydi. */
+  const { status, onSubmit } = useLeadSubmit();
 
   return (
     <section id="ariza" aria-labelledby="lead-title" className="bg-ground py-16 sm:py-24">
