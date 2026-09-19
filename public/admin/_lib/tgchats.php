@@ -23,7 +23,7 @@ function hs_tg_api($method, $params = array())
         @file_put_contents(hs_data_dir() . '/telegram.log', '[' . hs_now() . "] {$method} " . json_encode($params, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
         $fake = array(
             'getMe' => array('id' => 1, 'is_bot' => true, 'username' => 'sinov_bot'),
-            'getWebhookInfo' => array('url' => hs_setting('tg_webhook_secret', '') !== '' ? hs_tg_webhook_url() : ''),
+            'getWebhookInfo' => array('url' => hs_setting('tg_webhook_secret', '') !== '' ? hs_tg_webhook_url() : '', 'allowed_updates' => array('message', 'channel_post', 'my_chat_member', 'callback_query')),
             'getChat' => array('id' => isset($params['chat_id']) ? $params['chat_id'] : 0, 'type' => 'supergroup', 'title' => 'Sinov guruhi'),
         );
         return array(true, isset($fake[$method]) ? $fake[$method] : array(), array('ok' => true));
@@ -110,9 +110,176 @@ function hs_tg_migrate($oldId, $newId)
         ->execute(array((string) $newId, hs_now(), (string) $oldId));
 }
 
+/**
+ * Boshqaruvchilar: ruxsat so'rovlari shularga boradi va faqat ular
+ * botdagi tugmalarni bosib chatlarni yoqa oladi. Panelda hech kim
+ * belgilanmagan bo'lsa — secrets.php dagi chat (eskicha).
+ */
+function hs_tg_admin_ids()
+{
+    $ids = hs_db()->query("SELECT chat_id FROM tg_chats WHERE admin = 1 AND type = 'private' AND status = 'member'")->fetchAll(PDO::FETCH_COLUMN);
+    if (!$ids) {
+        $fallback = trim((string) hs_config('admin_chat_id', hs_config('chat_id', '')));
+        if ($fallback !== '' && strpos($fallback, '-') !== 0) {
+            $ids = array($fallback);
+        }
+    }
+    return array_map('strval', $ids);
+}
+
+function hs_tg_is_admin($userId)
+{
+    return in_array((string) $userId, hs_tg_admin_ids(), true);
+}
+
+function hs_tg_get_chat($id)
+{
+    $st = hs_db()->prepare('SELECT * FROM tg_chats WHERE chat_id = ?');
+    $st->execute(array((string) $id));
+    return $st->fetch() ?: null;
+}
+
+/** Filial nomi qisqa: "Asaka" yoki "Shahrixon · Ozodbek...". */
+function hs_tg_branch_short($id)
+{
+    if ($id === '') {
+        return 'Barcha filiallar';
+    }
+    $names = hs_branch_names();
+    return isset($names[$id]) ? $names[$id] : $id;
+}
+
+/** Ruxsat so'rovi tugmalari: hammasi / bitta filial / rad etish. */
+function hs_tg_request_keyboard($chatId)
+{
+    $rows = array(array(array('text' => '✅ Ruxsat — barcha filiallar', 'callback_data' => 'a:' . $chatId . ':')));
+    // Tugmada qisqa nom: shahar; bir shaharda ikki filial bo'lsa — mo'ljalning boshi ham.
+    $names = hs_branch_names();
+    unset($names['boshqa-viloyat']);
+    $cities = array();
+    foreach ($names as $bname) {
+        $city = preg_replace('/\s—.*$/u', '', $bname);
+        $cities[$city] = isset($cities[$city]) ? $cities[$city] + 1 : 1;
+    }
+    $pair = array();
+    foreach ($names as $bid => $bname) {
+        $city = preg_replace('/\s—.*$/u', '', $bname);
+        $label = $cities[$city] > 1 ? $city . ' · ' . preg_replace('/[\s,].*$/u', '', trim(preg_replace('/^.*—\s*/u', '', $bname))) : $city;
+        $pair[] = array('text' => 'Faqat: ' . $label, 'callback_data' => 'a:' . $chatId . ':' . $bid);
+        if (count($pair) === 2) {
+            $rows[] = $pair;
+            $pair = array();
+        }
+    }
+    if ($pair) {
+        $rows[] = $pair;
+    }
+    $rows[] = array(array('text' => '❌ Rad etish', 'callback_data' => 'r:' . $chatId));
+    return json_encode(array('inline_keyboard' => $rows), JSON_UNESCAPED_UNICODE);
+}
+
+/** Barcha chatlar ro'yxati tugma ko'rinishida (/royxat). Bosilsa yoqiladi/o'chiriladi. */
+function hs_tg_list_keyboard()
+{
+    $rows = array();
+    foreach (hs_db()->query("SELECT * FROM tg_chats WHERE status = 'member' ORDER BY leads DESC, title")->fetchAll() as $c) {
+        $label = ((int) $c['leads'] ? '🟢 ' : '⚪ ') . mb_substr($c['title'], 0, 28) . ($c['type'] !== 'private' ? ' 👥' : '') . ($c['branch'] !== '' ? ' · ' . mb_substr(preg_replace('/\s—.*$/u', '', hs_tg_branch_short($c['branch'])), 0, 12) : '');
+        $rows[] = array(array('text' => $label, 'callback_data' => 't:' . $c['chat_id']));
+    }
+    return json_encode(array('inline_keyboard' => $rows), JSON_UNESCAPED_UNICODE);
+}
+
+function hs_tg_list_text()
+{
+    return "📋 Arizalar kimga boradi\n\n🟢 — arizalar boradi\n⚪ — bormaydi\n👥 — guruh\n\nBosib yoqing yoki o'chiring. Filialni tanlash: " . hs_site_url() . '/admin/telegram.php';
+}
+
+/** Yangi chat haqida boshqaruvchilarga tugmali so'rov. */
+function hs_tg_ask_admins($chat, $by = '')
+{
+    $isGroup = $chat['type'] !== 'private';
+    $text = ($isGroup ? "👥 Bot yangi guruhga qo'shildi\n\n" : "👤 Botga yangi odam yozdi\n\n")
+        . hs_tg_chat_title($chat) . (isset($chat['username']) ? ' (@' . $chat['username'] . ')' : '')
+        . ($by !== '' ? "\nQo'shgan: " . $by : '')
+        . "\n\nSaytdan kelgan arizalar bu " . ($isGroup ? 'guruhga' : 'odamga') . " ham yuborilsinmi?";
+    foreach (hs_tg_admin_ids() as $aid) {
+        if ((string) $aid === (string) $chat['id']) {
+            continue;
+        }
+        hs_tg_api('sendMessage', array('chat_id' => $aid, 'text' => $text, 'reply_markup' => hs_tg_request_keyboard($chat['id'])));
+    }
+}
+
+/** Boshqaruvchi tugmani bosdi. */
+function hs_tg_handle_callback($q)
+{
+    $from = isset($q['from']['id']) ? (string) $q['from']['id'] : '';
+    $data = isset($q['data']) ? (string) $q['data'] : '';
+    $answer = function ($text) use ($q) {
+        hs_tg_api('answerCallbackQuery', array('callback_query_id' => $q['id'], 'text' => $text));
+    };
+    if (!hs_tg_is_admin($from)) {
+        $answer("Bu tugmani faqat boshqaruvchi bosa oladi.");
+        return;
+    }
+    $who = isset($q['from']['username']) ? '@' . $q['from']['username'] : hs_tg_chat_title($q['from']);
+    $msgChat = isset($q['message']['chat']['id']) ? $q['message']['chat']['id'] : null;
+    $msgId = isset($q['message']['message_id']) ? $q['message']['message_id'] : null;
+    $db = hs_db();
+
+    if (preg_match('/^a:(-?\d+):([a-z0-9-]*)$/', $data, $m) || preg_match('/^r:(-?\d+)$/', $data, $m)) {
+        $row = hs_tg_get_chat($m[1]);
+        if (!$row) {
+            $answer("Bu chat ro'yxatda yo'q (panelda o'chirilgan).");
+            return;
+        }
+        $approve = $data[0] === 'a';
+        $branch = $approve ? $m[2] : $row['branch'];
+        if ($branch !== '' && !isset(hs_branch_names()[$branch])) {
+            $branch = '';
+        }
+        $db->prepare('UPDATE tg_chats SET leads = ?, branch = ?, updated_at = ? WHERE chat_id = ?')->execute(array($approve ? 1 : 0, $branch, hs_now(), $row['chat_id']));
+        hs_audit('telegram ' . $who, $approve ? 'telegram: arizalar yoqildi (botdan)' : 'telegram: rad etildi (botdan)', $row['title'] . ' (' . $row['chat_id'] . ')' . ($approve ? ', ' . hs_tg_branch_short($branch) : ''));
+        $result = $approve ? '✅ Ruxsat berildi — ' . hs_tg_branch_short($branch) : '❌ Rad etildi';
+        if ($msgChat !== null && $msgId !== null) {
+            hs_tg_api('editMessageText', array(
+                'chat_id' => $msgChat,
+                'message_id' => $msgId,
+                'text' => (isset($q['message']['text']) ? preg_replace('/\n\nSaytdan kelgan arizalar.*$/su', '', $q['message']['text']) : $row['title']) . "\n\n" . $result . "\n(" . $who . ', ' . date('d.m H:i') . ")",
+            ));
+        }
+        if ($approve) {
+            hs_tg_api('sendMessage', array('chat_id' => $row['chat_id'], 'text' => "✅ Ruxsat berildi. Saytdan kelgan arizalar endi shu yerga keladi" . ($branch !== '' ? ' (faqat ' . hs_tg_branch_short($branch) . ')' : '') . '.'));
+        }
+        $answer($result);
+        return;
+    }
+
+    if (preg_match('/^t:(-?\d+)$/', $data, $m)) {
+        $row = hs_tg_get_chat($m[1]);
+        if (!$row) {
+            $answer("Bu chat ro'yxatda yo'q.");
+            return;
+        }
+        $on = (int) $row['leads'] ? 0 : 1;
+        $db->prepare('UPDATE tg_chats SET leads = ?, updated_at = ? WHERE chat_id = ?')->execute(array($on, hs_now(), $row['chat_id']));
+        hs_audit('telegram ' . $who, $on ? 'telegram: arizalar yoqildi (botdan)' : "telegram: arizalar o'chirildi (botdan)", $row['title'] . ' (' . $row['chat_id'] . ')');
+        if ($msgChat !== null && $msgId !== null) {
+            hs_tg_api('editMessageReplyMarkup', array('chat_id' => $msgChat, 'message_id' => $msgId, 'reply_markup' => hs_tg_list_keyboard()));
+        }
+        $answer(($on ? '🟢 Yoqildi: ' : '⚪ O\'chirildi: ') . $row['title']);
+        return;
+    }
+    $answer('Eskirgan tugma.');
+}
+
 /** Webhook'dan kelgan bitta voqea. */
 function hs_tg_handle_update($u)
 {
+    if (isset($u['callback_query']['id'])) {
+        hs_tg_handle_callback($u['callback_query']);
+        return;
+    }
     // Bot guruh/kanalga qo'shildi, chiqarildi yoki shaxsiy chatda bloklandi.
     if (isset($u['my_chat_member']['chat'])) {
         $chat = $u['my_chat_member']['chat'];
@@ -120,9 +287,9 @@ function hs_tg_handle_update($u)
         $in = in_array($new, array('member', 'administrator', 'creator', 'restricted'), true);
         $isNew = hs_tg_upsert($chat, $in ? 'member' : 'left');
         if ($in && $isNew && $chat['type'] !== 'private') {
-            $who = isset($u['my_chat_member']['from']) ? hs_tg_chat_title($u['my_chat_member']['from']) : "noma'lum";
-            hs_telegram_send("🤖 Bot yangi chatga qo'shildi\n\n" . hs_tg_chat_title($chat) . "\nQo'shgan: {$who}\n\nArizalar bu yerga faqat admin panelda yoqilgandan keyin keladi:\n" . hs_site_url() . '/admin/telegram.php');
-            hs_tg_api('sendMessage', array('chat_id' => $chat['id'], 'text' => "Salom! HAMKOR SAVDO boti ulandi.\nAdmin panelda ruxsat berilgach, saytdan kelgan arizalar shu yerga yuboriladi."));
+            $who = isset($u['my_chat_member']['from']) ? hs_tg_chat_title($u['my_chat_member']['from']) : '';
+            hs_tg_ask_admins($chat, $who);
+            hs_tg_api('sendMessage', array('chat_id' => $chat['id'], 'text' => "Salom! HAMKOR SAVDO boti ulandi.\nBoshqaruvchi ruxsat bergach, saytdan kelgan arizalar shu yerga yuboriladi."));
         }
         return;
     }
@@ -135,23 +302,35 @@ function hs_tg_handle_update($u)
         return;
     }
     $chat = $msg['chat'];
-    $text = isset($msg['text']) ? (string) $msg['text'] : '';
+    $text = isset($msg['text']) ? trim((string) $msg['text']) : '';
+    $private = $chat['type'] === 'private';
+
+    // Boshqaruvchi buyruqlari: /royxat — hamma chatlar tugma bilan.
+    if ($private && hs_tg_is_admin($chat['id']) && preg_match('#^/(royxat|ro\'yxat|chatlar|list)\b#iu', $text)) {
+        hs_tg_api('sendMessage', array('chat_id' => $chat['id'], 'text' => hs_tg_list_text(), 'reply_markup' => hs_tg_list_keyboard()));
+        return;
+    }
+
     // Bot avvaldan turgan guruhni ro'yxatga olish: /start yoki /start@bot_nomi.
-    if (preg_match('#^/start(@\w+)?(\s|$)#', $text) || $chat['type'] === 'private') {
+    if (preg_match('#^/start(@\w+)?(\s|$)#', $text) || $private) {
         $isNew = hs_tg_upsert($chat, 'member');
-        if (preg_match('#^/start#', $text)) {
-            $st = hs_db()->prepare('SELECT leads FROM tg_chats WHERE chat_id = ?');
-            $st->execute(array((string) $chat['id']));
-            $on = (int) $st->fetchColumn() === 1;
-            hs_tg_api('sendMessage', array(
-                'chat_id' => $chat['id'],
-                'text' => $on
-                    ? "✅ Bu chat ro'yxatda, arizalar shu yerga kelyapti."
-                    : "👋 Chat ro'yxatga olindi.\nAdmin panelda ruxsat berilgach, saytdan kelgan arizalar shu yerga yuboriladi.",
-            ));
-            if ($isNew && $chat['type'] === 'private') {
-                hs_telegram_send("👤 Botga yangi odam yozdi: " . hs_tg_chat_title($chat) . (isset($chat['username']) ? ' (@' . $chat['username'] . ')' : '') . "\n\nUnga arizalar yuborish uchun panelda yoqing:\n" . hs_site_url() . '/admin/telegram.php');
-            }
+        if (!preg_match('#^/start#', $text)) {
+            return;
+        }
+        if ($private && hs_tg_is_admin($chat['id'])) {
+            hs_tg_api('sendMessage', array('chat_id' => $chat['id'], 'text' => "👋 Siz boshqaruvchisiz.\n\nKimdir botga yozsa yoki botni guruhga qo'shsa, sizga ruxsat so'rovi keladi.\n\n/royxat — hamma chatlar, bosib yoqish/o'chirish."));
+            return;
+        }
+        $row = hs_tg_get_chat($chat['id']);
+        $on = $row && (int) $row['leads'] === 1;
+        hs_tg_api('sendMessage', array(
+            'chat_id' => $chat['id'],
+            'text' => $on
+                ? "✅ Bu chat ro'yxatda, arizalar shu yerga kelyapti."
+                : "👋 So'rovingiz boshqaruvchiga yuborildi.\nRuxsat berilgach, saytdan kelgan arizalar shu yerga keladi.",
+        ));
+        if ($isNew) {
+            hs_tg_ask_admins($chat);
         }
     }
 }
@@ -258,7 +437,7 @@ function hs_tg_connect_webhook()
     return hs_tg_api('setWebhook', array(
         'url' => hs_tg_webhook_url(),
         'secret_token' => hs_tg_webhook_secret(),
-        'allowed_updates' => json_encode(array('message', 'channel_post', 'my_chat_member')),
+        'allowed_updates' => json_encode(array('message', 'channel_post', 'my_chat_member', 'callback_query')),
         // Oxirgi 24 soatdagi voqealar ham kelsin: bot yaqinda qo'shilgan guruhlar ro'yxatga tushadi.
         'drop_pending_updates' => 'false',
     ));

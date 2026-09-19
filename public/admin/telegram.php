@@ -32,6 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->prepare('UPDATE tg_chats SET branch = ?, updated_at = ? WHERE chat_id = ?')->execute(array($b, hs_now(), $id));
         hs_audit($user['login'], 'telegram: filial filtri', $row['title'] . ': ' . ($b !== '' ? $b : 'hammasi'));
         hs_flash('Saqlandi.');
+    } elseif ($action === 'admin' && $row && $row['type'] === 'private') {
+        $on = hs_post('admin') === '1' ? 1 : 0;
+        $db->prepare('UPDATE tg_chats SET admin = ?, updated_at = ? WHERE chat_id = ?')->execute(array($on, hs_now(), $id));
+        hs_audit($user['login'], $on ? 'telegram: boshqaruvchi qilindi' : 'telegram: boshqaruvchilikdan olindi', $row['title'] . " ({$id})");
+        if ($on) {
+            hs_tg_api('sendMessage', array('chat_id' => $id, 'text' => "⭐ Siz HAMKOR SAVDO botining boshqaruvchisisiz.\n\nKimdir botga yozsa yoki botni guruhga qo'shsa, sizga ruxsat so'rovi keladi — tugmani bosib hal qilasiz.\n\n/royxat — hamma chatlar, bosib yoqish/o'chirish."));
+        }
+        hs_flash($on ? "«{$row['title']}» endi boshqaruvchi: ruxsat so'rovlari unga Telegram'da keladi." : "«{$row['title']}» boshqaruvchilikdan olindi.");
     } elseif ($action === 'sinov' && $row) {
         $ok = hs_tg_send_to($id, "🧪 Sinov xabari — HAMKOR SAVDO admin paneli\n\nBu chat ro'yxatda. " . ((int) $row['leads'] ? 'Saytdan kelgan arizalar shu yerga keladi.' : "Arizalar hozircha o'chirilgan — panelda yoqing."));
         hs_flash($ok ? "Sinov xabari «{$row['title']}» ga yuborildi." : "Yuborilmadi. Bot bu chatdan chiqarilgan yoki odam botni to'xtatgan bo'lishi mumkin.", $ok ? 'ok' : 'err');
@@ -73,6 +81,13 @@ $botName = $info['me'] && !empty($info['me']['username']) ? $info['me']['usernam
 $wh = $info['wh'];
 $connected = $wh && isset($wh['url']) && $wh['url'] === hs_tg_webhook_url();
 $otherHook = $wh && !empty($wh['url']) && !$connected;
+if ($connected && (empty($wh['allowed_updates']) || !in_array('callback_query', $wh['allowed_updates'], true))) {
+    list($upOk) = hs_tg_connect_webhook();
+    hs_db()->prepare('DELETE FROM cache WHERE key = ?')->execute(array('tg:info'));
+    if ($upOk) {
+        hs_flash("Bot yangilandi: endi ruxsat so'rovlarini Telegram'dagi tugmalar bilan hal qilasiz.");
+    }
+}
 
 $chats = hs_db()->query("SELECT * FROM tg_chats ORDER BY leads DESC, status = 'member' DESC, added_at")->fetchAll();
 $active = 0;
@@ -103,6 +118,16 @@ if (!$info['me']) {
         echo '<li><span class="state off">' . hs_icon('x') . '</span><div><b>Telegram oxirgi marta yetkaza olmadi</b><small>'
             . h($wh['last_error_message']) . (!empty($wh['last_error_date']) ? ' · ' . h(date('d.m H:i', (int) $wh['last_error_date'])) : '') . '</small></div></li>';
     }
+    $adminNames = array();
+    foreach ($chats as $c) {
+        if ((int) $c['admin'] === 1 && $c['status'] === 'member') {
+            $adminNames[] = $c['title'];
+        }
+    }
+    echo '<li><span class="state ' . ($adminNames ? 'on' : 'off') . '">' . hs_icon($adminNames ? 'check' : 'clock') . '</span><div><b>'
+        . ($adminNames ? 'Boshqaruvchi: ' . h(implode(', ', $adminNames)) : 'Boshqaruvchi tanlanmagan') . '</b><small>'
+        . ($adminNames ? 'Yangi odam yoki guruh qo\'shilsa, Telegram\'da tugmali so\'rov keladi. Botga /royxat yozsangiz — hamma chatlarni o\'sha yerda yoqib-o\'chirasiz.' : 'So\'rovlar hozircha secrets.php dagi chatga boradi. Pastdagi ro\'yxatdan o\'zingizni "★ Boshqaruvchi" qiling.')
+        . '</small></div></li>';
     echo '<li><span class="state ' . ($active ? 'on' : 'off') . '">' . hs_icon($active ? 'check' : 'clock') . '</span><div><b>Arizalar '
         . ($active ? $active . ' ta chatga boradi' : 'hech kimga bormayapti') . '</b><small>'
         . ($active ? 'Pastdagi ro\'yxatda yoqilganlar.' : 'Ariza baribir panelda saqlanadi, lekin Telegram\'ga xabar ketmaydi. Pastda kamida bitta chatni yoqing.') . '</small></div></li>';
@@ -128,6 +153,9 @@ if (!$chats) {
         if ($left) {
             echo ' <span class="pill pill-err">bot chiqarilgan</span>';
         }
+        if ((int) $c['admin'] === 1) {
+            echo ' <span class="pill admin-pill">★ Boshqaruvchi</span>';
+        }
         echo '</div><small>' . ($c['username'] !== '' ? '@' . h($c['username']) . ' · ' : '') . 'ID ' . $cid
             . ($c['last_sent_at'] ? ' · oxirgi xabar ' . h(date('d.m H:i', strtotime($c['last_sent_at']))) : '') . '</small>';
         if ($c['last_error'] !== '') {
@@ -151,6 +179,11 @@ if (!$chats) {
         echo '</select><button class="btn outline small js-hide" type="submit">OK</button></form>';
 
         echo '<div class="actions tight">';
+        if ($c['type'] === 'private' && !$left) {
+            $isAdm = (int) $c['admin'] === 1;
+            echo '<form class="inline-form" method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="admin"><input type="hidden" name="id" value="' . $cid . '"><input type="hidden" name="admin" value="' . ($isAdm ? '0' : '1') . '">'
+                . '<button class="btn outline small" type="submit" title="' . ($isAdm ? 'Ruxsat so\'rovlari endi unga kelmaydi' : 'Ruxsat so\'rovlari Telegram\'da shu odamga keladi') . '">' . ($isAdm ? '☆ Boshqaruvchilikdan olish' : '★ Boshqaruvchi') . '</button></form>';
+        }
         echo '<form class="inline-form" method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sinov"><input type="hidden" name="id" value="' . $cid . '"><button class="btn outline small" type="submit"' . ($left ? ' disabled' : '') . '>Sinov xabari</button></form>';
         echo '<form class="inline-form" method="post" action="/admin/telegram.php" data-confirm="«' . h($c['title']) . '» ro\'yxatdan olib tashlansinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . $cid . '"><button class="btn danger small" type="submit">O\'chirish</button></form>';
         echo '</div></div></div>';
@@ -163,10 +196,11 @@ echo '</section>';
 $botLink = $botName !== '' ? '<a href="https://t.me/' . h($botName) . '" target="_blank" rel="noopener noreferrer">@' . h($botName) . '</a>' : 'botni';
 echo '<div class="grid grid-2">';
 echo '<section class="card"><h2>Qanday qo\'shiladi</h2><ol class="steps">';
-echo '<li><b>Odam (operator, menejer).</b> U Telegram\'da ' . $botLink . ' ni ochib <b>Start</b> ni bossin. Ro\'yxatda paydo bo\'ladi — keyin "Arizalar" ni yoqasiz.</li>';
+echo '<li><b>Odam (operator, menejer).</b> U Telegram\'da ' . $botLink . ' ni ochib <b>Start</b> ni bossin. Sizga Telegram\'da tugmali so\'rov keladi — "✅ Ruxsat" ni bossangiz bo\'ldi, saytga kirish shart emas.</li>';
 echo '<li><b>Guruh (yopiq bo\'lsa ham).</b> Botni guruhga a\'zo qilib qo\'shing. Guruh shu yerda o\'zi chiqadi, sizga Telegram\'da xabar ham keladi.</li>';
 echo '<li><b>Bot avvaldan turgan guruh.</b> Ro\'yxatda ko\'rinmasa, guruhga <span class="code">/start' . ($botName !== '' ? '@' . h($botName) : '') . '</span> deb yozing.</li>';
 echo '<li><b>Filial guruhi.</b> "Barcha filiallar" o\'rniga filialni tanlang — guruhga faqat o\'sha filial arizalari boradi.</li>';
+echo '<li><b>Botning o\'zidan boshqarish.</b> Botga <span class="code">/royxat</span> deb yozing — hamma chatlar tugma bo\'lib chiqadi, bosib yoqasiz yoki o\'chirasiz. Bu faqat boshqaruvchilarda ishlaydi.</li>';
 echo '</ol><p class="hint">Yangi chat avtomatik yoqilmaydi: botni kimdir begona guruhga qo\'shsa ham, mijozlar raqami u yerga ketmaydi.</p></section>';
 
 echo '<form class="card" method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="qoshish">';

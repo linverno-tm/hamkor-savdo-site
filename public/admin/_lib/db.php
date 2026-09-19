@@ -121,6 +121,10 @@ function hs_db_migrate(PDO $pdo)
                 last_error TEXT NOT NULL DEFAULT ''
             )",
         ),
+        // Boshqaruvchi: botdan kelgan ruxsat so'rovlarini tasdiqlay oladigan odam.
+        3 => array(
+            "ALTER TABLE tg_chats ADD COLUMN admin INTEGER NOT NULL DEFAULT 0",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {
