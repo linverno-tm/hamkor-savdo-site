@@ -21,11 +21,67 @@ window.addEventListener("pageshow", function (ev) {
   }
 });
 
+function hsRenumberPhotos(list) {
+  list.querySelectorAll("[data-photo]").forEach(function (p, i) {
+    var o = p.querySelector("[data-order]");
+    if (o) o.value = String(i + 1);
+    var n = p.querySelector("[data-photo-no]");
+    if (n) n.textContent = String(i + 1);
+  });
+}
+
 // Holat tanlanishi bilan saqlanadi (JS'siz "OK" tugmasi ko'rinadi).
 document.addEventListener("change", function (ev) {
-  if (ev.target.hasAttribute && ev.target.hasAttribute("data-autosubmit")) {
-    ev.target.form.submit();
+  var el = ev.target;
+  if (el.hasAttribute && el.hasAttribute("data-autosubmit")) {
+    el.form.submit();
+    return;
   }
+  // Rasm: olib tashlanadigani xiralashadi, asosiysi belgilanadi.
+  if (el.hasAttribute && el.hasAttribute("data-remove")) {
+    el.closest("[data-photo]").classList.toggle("is-removed", el.checked);
+    return;
+  }
+  if (el.name === "muqova") {
+    document.querySelectorAll("[data-photo]").forEach(function (p) {
+      var r = p.querySelector('input[name="muqova"]');
+      p.classList.toggle("is-cover", !!(r && r.checked));
+    });
+    return;
+  }
+  // Tanlangan rasmlarni yuklashdan oldin ko'rsatish (data: URL — CSP blob: ga ruxsat bermaydi).
+  var pv = el.getAttribute && el.getAttribute("data-preview");
+  if (pv && el.files) {
+    var box = document.getElementById(pv);
+    if (!box) return;
+    box.innerHTML = "";
+    var files = Array.prototype.slice.call(el.files, 0, 10);
+    if (el.files.length > 10) {
+      box.insertAdjacentHTML("beforeend", '<p class="flash flash-err">10 tadan ko\'p tanlandi — faqat 10 tasi yuklanadi, qolganini keyin qo\'shing.</p>');
+    }
+    files.forEach(function (f) {
+      var fig = document.createElement("figure");
+      var img = document.createElement("img");
+      var cap = document.createElement("figcaption");
+      cap.textContent = (f.size / 1048576).toFixed(1) + " MB";
+      fig.appendChild(img);
+      fig.appendChild(cap);
+      box.appendChild(fig);
+      var rd = new FileReader();
+      rd.onload = function () { img.src = rd.result; };
+      rd.readAsDataURL(f);
+    });
+    var zone = document.querySelector('label[for="' + el.id + '"] b');
+    if (zone) zone.textContent = files.length ? files.length + " ta rasm tanlandi — boshqasini tanlash uchun bosing" : "Rasm tanlash uchun bosing";
+  }
+});
+
+// Ro'yxatdagi tez telefon: "Saqlash" faqat raqam o'zgarganda chiqadi.
+document.addEventListener("input", function (ev) {
+  var el = ev.target;
+  if (!el.hasAttribute || !el.hasAttribute("data-dirty-watch")) return;
+  var btn = el.form && el.form.querySelector("[data-dirty-show]");
+  if (btn) btn.classList.toggle("is-hidden", el.value === el.defaultValue);
 });
 
 /* ---------- mavzu (yorug' / qorong'i) ---------- */
@@ -94,6 +150,37 @@ document.addEventListener("click", function (ev) {
     return;
   }
 
+  // Ish vaqti: tez tanlash tugmalari.
+  var chip = t.closest("[data-hours]");
+  if (chip) {
+    var form = chip.closest("form");
+    var inp = form && form.querySelector("[data-hours-input]");
+    if (inp) {
+      inp.value = chip.getAttribute("data-hours");
+      form.querySelectorAll("[data-hours]").forEach(function (c) { c.classList.toggle("on", c === chip); });
+      inp.focus();
+    }
+    return;
+  }
+
+  // Rasmni oldinga/orqaga surish: DOM'da joyini almashtiradi, tartib raqamlari qayta yoziladi.
+  var mv = t.closest("[data-move]");
+  if (mv) {
+    var item = mv.closest("[data-photo]");
+    var list = item && item.parentNode;
+    if (!list) return;
+    var dir = Number(mv.getAttribute("data-move"));
+    var sib = dir < 0 ? item.previousElementSibling : item.nextElementSibling;
+    if (!sib) return;
+    if (dir < 0) list.insertBefore(item, sib); else list.insertBefore(sib, item);
+    hsRenumberPhotos(list);
+    item.classList.remove("moved");
+    void item.offsetWidth;
+    item.classList.add("moved");
+    mv.focus();
+    return;
+  }
+
   // Ochiq menyu va popover'lar tashqariga bosilganda yopiladi.
   document.querySelectorAll("details.mobile-menu[open], details.inline-details[open]").forEach(function (d) {
     if (!d.contains(t)) d.removeAttribute("open");
@@ -115,6 +202,16 @@ document.addEventListener("DOMContentLoaded", function () {
   if (window.matchMedia && window.matchMedia("(min-width: 760px)").matches) {
     document.querySelectorAll("details.filter-box").forEach(function (d) { d.setAttribute("open", ""); });
   }
+  document.querySelectorAll("[data-dirty-show]").forEach(function (b) { b.classList.add("is-hidden"); });
+  // Tanlangan filial tugmasi ko'rinib tursin (telefonda ro'yxat yonga suriladi).
+  document.querySelectorAll(".seg > span").forEach(function (s) {
+    var seg = s.parentNode;
+    if (seg.scrollWidth > seg.clientWidth) seg.scrollLeft = s.getBoundingClientRect().left - seg.getBoundingClientRect().left - 8;
+  });
+  document.querySelectorAll("[data-photo]").forEach(function (p) {
+    var r = p.querySelector('input[name="muqova"]');
+    if (r && r.checked) p.classList.add("is-cover");
+  });
   // Popover ochilganda birinchi maydonga fokus.
   document.querySelectorAll("details.inline-details").forEach(function (d) {
     d.addEventListener("toggle", function () {
