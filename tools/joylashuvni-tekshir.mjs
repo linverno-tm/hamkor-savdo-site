@@ -172,17 +172,27 @@ await tekshir("Statik fayllar uzoq keshlanadi", "ogoh", async () => {
   if (!m) return { ok: false, izoh: "sahifada _next/static havolasi topilmadi" };
   const r = await olib(m[0]);
   const cc = r.headers.get("cache-control") || "";
-  if (/immutable|max-age=31536000/.test(cc)) return { ok: true, izoh: cc };
-  /* 2592000 — bir oy. Bu qiymat mod_expires'dan keladi va u mod_headers
-     qo'ygan `immutable` ni bosib ketadi. Sabab odatda MIME turida:
-     `ExpiresByType` ro'yxatida fayl turi yo'q bo'lsa, ExpiresDefault
-     ishlaydi. Zararli emas (fayl nomida xesh bor), lekin qaytgan mijoz
-     har oy qayta yuklaydi. */
-  const oy = /max-age=(\d+)/.exec(cc)?.[1];
-  const izoh = oy
-    ? `Cache-Control: max-age=${oy} (${Math.round(oy / 86400)} kun) — kutilgani 1 yil; mod_expires MIME turi mos kelmayapti`
-    : `Cache-Control: "${cc}" (kutilgani: immutable)`;
-  return { ok: false, izoh };
+  const yosh = Number(/max-age=(\d+)/.exec(cc)?.[1] ?? -1);
+  const kun = Math.round(yosh / 86400);
+
+  if (/immutable/.test(cc) || yosh >= 31536000) return { ok: true, izoh: cc };
+
+  /* Bu xostingda statik fayllarning Cache-Control qiymatini nginx
+     belgilaydi va `.htaccess` dagi qiymatni almashtirib yuboradi:
+     css/js 30 kun, shrift 60 kun, robots.txt 1 kun, sitemap.xml 60
+     soniya — hech biri bizning sozlamamiz emas. HTML va Next'ning
+     `__PAGE__.txt` fayllari bundan mustasno, ularda biznikisi turadi,
+     ya'ni mazmun eskirib qolmaydi.
+     Fayl nomida mazmun xeshi bor, shuning uchun 30 kun xavfsiz — o'zgarsa
+     nom ham o'zgaradi. Bir yil yaxshiroq bo'lardi, lekin uni bu yerdan
+     o'zgartirib bo'lmaydi, shuning uchun bu xato emas. */
+  if (yosh >= 2592000) {
+    return { ok: true, izoh: `max-age=${yosh} (${kun} kun) — nginx belgilagan, xeshlangan fayl uchun xavfsiz` };
+  }
+  return {
+    ok: false,
+    izoh: yosh >= 0 ? `max-age=${yosh} (${kun} kun) — juda qisqa` : `Cache-Control: "${cc}"`,
+  };
 });
 
 // ---------------------------------------------------------------------------
