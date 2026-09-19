@@ -174,7 +174,7 @@ if (!$chats) {
             . '<input type="hidden" name="amal" value="filial"><input type="hidden" name="id" value="' . $cid . '">'
             . '<select name="filial" data-autosubmit aria-label="' . h($c['title']) . ' — qaysi filial arizalari"><option value="">Barcha filiallar</option>';
         foreach ($branches as $k => $v) {
-            echo '<option value="' . h($k) . '"' . ((string) $c['branch'] === (string) $k ? ' selected' : '') . '>Faqat: ' . h($v) . '</option>';
+            echo '<option value="' . h($k) . '"' . ((string) $c['branch'] === (string) $k ? ' selected' : '') . '>📍 Filial rahbari: ' . h($v) . '</option>';
         }
         echo '</select><button class="btn outline small js-hide" type="submit">OK</button></form>';
 

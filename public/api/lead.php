@@ -175,6 +175,11 @@ $page   = hs_cut(hs_field('page'), 200);
 /* Mijoz saytga qayerdan kelgan (instagram, google, telegram...) — brauzerdagi
    kichik skript to'ldiradi. Faqat xavfsiz belgilar qoladi. */
 $source = substr(strtolower(preg_replace('/[^a-z0-9._\-]/i', '', hs_field('src'))), 0, 60);
+/* Batafsil manba (utm, reklama belgisi, qaysi sahifadan kelgani, birinchi
+   ochilgan sahifa) va Metrika ClientID — saytdagi skript to'ldiradi.
+   Boshqaruv belgilari olib tashlanadi, uzunligi cheklanadi. */
+$sourceDetail = hs_cut(preg_replace('/[\x00-\x1F\x7F]/u', '', hs_field('src_info')), 300);
+$ymClient = substr(preg_replace('/\D/', '', hs_field('ym_cid')), 0, 30);
 
 if (hs_len($name) < 2) {
     hs_fail(422, "Ismingiz kiritilmagan. Iltimos, formani qayta to'ldiring.");
@@ -219,8 +224,8 @@ $adminBoot = __DIR__ . '/../admin/_lib/bootstrap.php';
 if (is_file($adminBoot)) {
     try {
         require_once $adminBoot;
-        $ins = hs_db()->prepare('INSERT INTO leads(created_at, name, phone, branch, note, special, page, source) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
-        $ins->execute(array(date('Y-m-d H:i:s'), $name, $tel, $known ? $branch : '', $note, $special ? 1 : 0, $page, $source));
+        $ins = hs_db()->prepare('INSERT INTO leads(created_at, name, phone, branch, note, special, page, source, source_detail, ym_client) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $ins->execute(array(date('Y-m-d H:i:s'), $name, $tel, $known ? $branch : '', $note, $special ? 1 : 0, $page, $source, $sourceDetail, $ymClient));
         $leadId = (int) hs_db()->lastInsertId();
     } catch (Throwable $e) {
         error_log('HAMKOR SAVDO: ariza bazaga yozilmadi: ' . $e->getMessage());
@@ -283,7 +288,8 @@ $multi = false;
 if ($leadId > 0 && $token !== '' && is_file(__DIR__ . '/../admin/_lib/tgchats.php')) {
     try {
         require_once __DIR__ . '/../admin/_lib/tgchats.php';
-        $sent = hs_tg_send_lead(implode("\n", $lines), $known ? $branch : '') > 0;
+        // Xabar holat tugmalari bilan ketadi; filial rahbarlari va "farqi yo'q" qoidasi shu funksiyada.
+        $sent = hs_tg_deliver_lead($leadId) > 0;
         $multi = true;
     } catch (Throwable $e) {
         error_log('HAMKOR SAVDO: qabul qiluvchilar ro\'yxati ishlamadi, eski usulga o\'tildi: ' . $e->getMessage());
