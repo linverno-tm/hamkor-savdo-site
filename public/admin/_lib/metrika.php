@@ -10,13 +10,25 @@ function hs_metrika_counter()
 }
 
 /**
- * Token ikki joydan: secrets.php (ustun) yoki paneldagi "Metrika'ni ulash"
- * formasi (bazadagi settings). Baza veb orqali ochilmaydi.
+ * Token ikki joydan: paneldagi "Metrika'ni ulash" formasi (bazadagi
+ * settings, ustun) yoki secrets.php. Baza veb orqali ochilmaydi.
+ *
+ * Ilgari secrets.php ustun edi. Natijada paneldan kiritilgan yangi token
+ * tekshiruvdan o'tib saqlanardi, lekin so'rovlar baribir secrets.php dagi
+ * eski (bekor qilingan) token bilan ketib, 403 qaytarardi. secrets.php
+ * deploy'da yozilmaydi, ya'ni serverdagi eski qiymat o'zicha yo'qolmaydi.
+ * Paneldan kiritish — egasining oxirgi aniq harakati, shuning uchun u yutadi.
  */
 function hs_metrika_token()
 {
-    $t = (string) hs_config('metrika_token', '');
-    return $t !== '' ? $t : (string) hs_setting('metrika_token', '');
+    $t = (string) hs_setting('metrika_token', '');
+    return $t !== '' ? $t : (string) hs_config('metrika_token', '');
+}
+
+/** Xato xabarida qaysi token ishlatilganini aytish uchun. */
+function hs_metrika_token_source()
+{
+    return (string) hs_setting('metrika_token', '') !== '' ? 'panel' : 'secrets.php';
 }
 
 function hs_metrika_ready()
@@ -27,20 +39,53 @@ function hs_metrika_ready()
 /** Tokenni saqlashdan oldin tekshirish: hisoblagichni o'qiy oladimi. */
 function hs_metrika_check_token($token)
 {
-    list($code, $body) = hs_http(
-        'GET',
-        'https://api-metrika.yandex.net/management/v1/counter/' . hs_metrika_counter(),
-        array('Authorization: OAuth ' . $token, 'Accept: application/json'),
-        null,
-        20
+    /* Sahifa ishlatadigan uchala so'rovni ham sinaymiz. Ilgari faqat
+       birinchisi tekshirilardi: u 200 berib token saqlanardi, sahifadagi
+       /goals yoki /stat esa 403 qaytarardi — sabab ko'rinmasdi. */
+    $id = hs_metrika_counter();
+    $checks = array(
+        '/management/v1/counter/' . $id,
+        '/management/v1/counter/' . $id . '/goals',
+        '/stat/v1/data?' . http_build_query(array('ids' => $id, 'metrics' => 'ym:s:visits', 'date1' => 'today', 'date2' => 'today')),
     );
-    if ($code === 200) {
-        return null;
+    foreach ($checks as $i => $path) {
+        list($code, $body) = hs_http(
+            'GET',
+            'https://api-metrika.yandex.net' . $path,
+            array('Authorization: OAuth ' . $token, 'Accept: application/json'),
+            null,
+            20
+        );
+        if ($code === 200) {
+            continue;
+        }
+        if ($code === 0) {
+            return "Yandex'ga ulanib bo'lmadi (internet yoki serverda curl yo'q).";
+        }
+        $sabab = hs_metrika_error_message($body);
+        $nom = strtok($path, '?') . ($sabab !== '' ? ' — ' . $sabab : '');
+        if ($i === 0 && ($code === 401 || $code === 403)) {
+            return "Token qabul qilinmadi: u noto'liq nusxalangan yoki boshqa Yandex akkauntdan olingan. Tokenni Metrika (hisoblagich {$id}) ochilgan akkaunt bilan qaytadan oling. (HTTP {$code}: {$nom})";
+        }
+        return "Token hisoblagichni ko'radi, lekin statistikani o'qiy olmayapti (HTTP {$code}): {$nom}";
     }
-    if ($code === 401 || $code === 403) {
-        return "Token qabul qilinmadi: u noto'liq nusxalangan yoki boshqa Yandex akkauntdan olingan. Tokenni Metrika (hisoblagich " . hs_metrika_counter() . ") ochilgan akkaunt bilan qaytadan oling.";
+    return null;
+}
+
+/** Yandex xato javobidagi sabab matni. */
+function hs_metrika_error_message($body)
+{
+    $j = json_decode((string) $body, true);
+    if (!is_array($j)) {
+        return '';
     }
-    return $code === 0 ? "Yandex'ga ulanib bo'lmadi (internet yoki serverda curl yo'q)." : "Yandex javob bermadi (HTTP {$code}).";
+    if (!empty($j['message'])) {
+        return mb_substr((string) $j['message'], 0, 160);
+    }
+    if (!empty($j['errors'][0]['message'])) {
+        return mb_substr((string) $j['errors'][0]['message'], 0, 160);
+    }
+    return '';
 }
 
 function hs_metrika_request($endpoint, $params, &$error = null)
@@ -60,16 +105,8 @@ function hs_metrika_request($endpoint, $params, &$error = null)
            Endpoint har xil — biri /management, ikkinchisi /stat — ruxsat
            talablari ham har xil bo'lishi mumkin. Yandex javobining
            sababi `message` maydonida keladi. */
-        $sabab = '';
-        $j = json_decode($body, true);
-        if (is_array($j)) {
-            if (!empty($j['message'])) {
-                $sabab = (string) $j['message'];
-            } elseif (!empty($j['errors'][0]['message'])) {
-                $sabab = (string) $j['errors'][0]['message'];
-            }
-        }
-        $quyruq = $endpoint . ($sabab !== '' ? ' — ' . mb_substr($sabab, 0, 160) : '');
+        $sabab = hs_metrika_error_message($body);
+        $quyruq = $endpoint . ($sabab !== '' ? ' — ' . $sabab : '') . ' [token: ' . hs_metrika_token_source() . ']';
         $error = $code === 401 || $code === 403
             ? "Metrika tokeni yaroqsiz yoki ruxsati yetmaydi (HTTP {$code}): {$quyruq}"
             : "Metrika'dan ma'lumot olinmadi (HTTP {$code}): {$quyruq}";
