@@ -102,6 +102,9 @@ if ($lead['ym_client'] !== '') {
     echo '<dt>Metrika ID</dt><dd><span class="code">' . h($lead['ym_client']) . '</span><p class="hint">Metrika\'da Vebvizor yoki "Посетители" hisobotida shu ID bo\'yicha qidirsangiz, mijoz saytda nima qilganini ko\'rasiz.</p></dd>';
 }
 echo '<dt>Sahifa</dt><dd>' . h($lead['page'] !== '' ? $lead['page'] : '—') . '</dd>';
+if ($lead['claimed_by'] !== '') {
+    echo '<dt>Kim oldi</dt><dd>🙋 ' . h($lead['claimed_by']) . ($lead['claimed_at'] ? ', ' . h(date('d.m H:i', strtotime($lead['claimed_at']))) : '') . '</dd>';
+}
 echo '<dt>Telegram</dt><dd>' . ((int) $lead['telegram_sent'] ? '<span class="pill pill-ok">yuborilgan</span>' : '<span class="pill pill-err">yetib bormagan</span>') . '</dd>';
 echo '</dl></section>';
 

@@ -137,6 +137,15 @@ function hs_db_migrate(PDO $pdo)
                 PRIMARY KEY (lead_id, chat_id)
             )",
         ),
+        // "Men oldim" va javobsiz ariza eslatmasi.
+        5 => array(
+            "ALTER TABLE leads ADD COLUMN claimed_by TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE leads ADD COLUMN claimed_at TEXT",
+            "ALTER TABLE leads ADD COLUMN remind_level INTEGER NOT NULL DEFAULT 0",
+            // Mavjud arizalar uchun eslatma yubormaymiz — aks holda yangilangan
+            // zahoti eski "Yangi" arizalar bo'yicha xabarlar yog'ilib ketadi.
+            "UPDATE leads SET remind_level = 2",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

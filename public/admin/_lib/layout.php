@@ -164,6 +164,12 @@ function hs_page_start($title, $user = null, $subtitle = null)
     hs_head($title . ' — HAMKOR SAVDO admin');
     echo '<body>';
 
+    // Vaqt bo'yicha vazifalar (eslatma, zaxira) — Cron bo'lmasa panel ochilganda ham tekshiriladi.
+    if ($user) {
+        require_once __DIR__ . '/tasks.php';
+        hs_tasks_maybe_run();
+    }
+
     if (!$user) {
         echo '<main class="wrap">';
         return;
