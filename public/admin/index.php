@@ -70,11 +70,13 @@ if ($owner) {
 }
 echo '</div>';
 
-echo '<div class="grid grid-2">';
+echo '<div class="grid grid-2 stretch">';
 echo '<section class="card"><div class="card-head"><h2>Arizalar — oxirgi 7 kun</h2><span class="muted">' . array_sum($days) . ' ta</span></div>' . hs_bar_chart($leadChart, 'Kunlik arizalar') . '</section>';
 if ($m && !empty($m['daily7'])) {
     echo '<section class="card"><div class="card-head"><h2>Tashriflar — oxirgi 7 kun</h2><a class="btn outline small" href="/admin/statistika.php">Batafsil</a></div>' . hs_bar_chart($m['daily7'], 'Kunlik tashriflar') . '</section>';
 }
+echo '</div>';
+
 if ($owner) {
     // Sozlash holati — nima ishlayapti, nima qolgan. Hammasi ulangach yashiriladi.
     $checks = array(
@@ -90,7 +92,7 @@ if ($owner) {
         $done += $c[0] ? 1 : 0;
     }
     if ($done < count($checks)) {
-        echo '<section class="card"><div class="card-head"><h2>Sozlash holati</h2><span class="muted">' . $done . ' / ' . count($checks) . '</span></div><ul class="checklist">';
+        echo '<section class="card"><div class="card-head"><h2>Sozlash holati</h2><span class="muted">' . $done . ' / ' . count($checks) . '</span></div><ul class="checklist cols">';
         foreach ($checks as $c) {
             $title = $c[3] !== '' && !$c[0] ? '<a href="' . h($c[3]) . '">' . h($c[1]) . '</a>' : h($c[1]);
             echo '<li><span class="state ' . ($c[0] ? 'on' : 'off') . '">' . hs_icon($c[0] ? 'check' : 'clock') . '</span><div><b>' . $title . '</b><small>' . h($c[2]) . '</small></div></li>';
@@ -98,7 +100,6 @@ if ($owner) {
         echo '</ul></section>';
     }
 }
-echo '</div>';
 
 echo '<section class="card"><div class="card-head"><h2>Oxirgi arizalar</h2><a class="btn outline small" href="/admin/arizalar.php">Barchasi</a></div>';
 hs_render_leads_table($latest);

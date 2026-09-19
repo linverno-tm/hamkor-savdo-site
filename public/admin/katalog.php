@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $up = hs_read_upload($files[0]);
             if (!$up['ok']) {
                 hs_flash($up['error'], 'err');
-                hs_redirect('/admin/katalog.php');
+                hs_redirect('/admin/katalog.php' . ($isNew ? '' : '?id=' . rawurlencode($id)) . '#forma');
             }
             $name = hs_new_image_name('mahsulot');
             $extra[] = array('path' => "rasmlar/katalog/{$name}.{$up['ext']}", 'content' => $up['bytes']);

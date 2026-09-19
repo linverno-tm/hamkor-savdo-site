@@ -121,14 +121,14 @@ echo '<label for="report_hour">Soat (Toshkent vaqti)</label><select id="report_h
 for ($i = 0; $i < 24; $i++) {
     echo '<option value="' . $i . '"' . ($i === $hour ? ' selected' : '') . '>' . sprintf('%02d:00', $i) . '</option>';
 }
-echo '</select><label>Hisobotda nimalar bo\'lsin</label>';
+echo '</select><fieldset><legend class="label">Hisobotda nimalar bo\'lsin</legend>';
 foreach (hs_report_parts() as $k => $v) {
     echo '<label class="inline"><input type="checkbox" name="parts[]" value="' . h($k) . '"' . (in_array($k, $parts, true) ? ' checked' : '') . '> ' . h($v) . '</label>';
 }
-echo '<p class="hint">Hostingda Cron har soatda <span class="code">php …/public_html/admin/cron/hisobot.php</span> ni ishga tushirishi kerak.</p>';
+echo '</fieldset><p class="hint">Hostingda Cron har soatda <span class="code">php …/public_html/admin/cron/hisobot.php</span> ni ishga tushirishi kerak.</p>';
 echo '<div class="actions"><button class="btn" type="submit">Saqlash</button></div></form>';
 
-echo '<form class="card" method="post" action="/admin/sozlamalar.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="parol">';
+echo '<form id="parol" class="card" method="post" action="/admin/sozlamalar.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="parol">';
 echo '<div class="card-head"><h2>Mening parolim</h2><span class="muted">' . h($user['login']) . '</span></div>';
 echo '<div class="grid grid-3">';
 echo '<div><label for="joriy">Joriy parol</label><input id="joriy" type="password" name="joriy" required autocomplete="current-password"></div>';

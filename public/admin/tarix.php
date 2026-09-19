@@ -20,12 +20,8 @@ if (!$rows) {
     echo '<tr><td colspan="4" class="muted">Hozircha yozuv yo\'q.</td></tr>';
 }
 echo '</tbody></table></div>';
-if ($pages > 1) {
-    echo '<div class="pager">';
-    for ($i = 1; $i <= $pages; $i++) {
-        echo $i === $min ? '<strong>' . $i . '</strong>' : '<a href="/admin/tarix.php?sahifa=' . $i . '">' . $i . '</a>';
-    }
-    echo '</div>';
-}
+echo hs_pager($min, $pages, function ($i) {
+    return '/admin/tarix.php?sahifa=' . $i;
+});
 echo '</section>';
 hs_page_end();

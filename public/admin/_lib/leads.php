@@ -53,25 +53,25 @@ function hs_render_leads_table($rows, $inline = false)
     }
     $branches = hs_branch_names();
     $back = isset($_SERVER['REQUEST_URI']) ? hs_safe_return((string) $_SERVER['REQUEST_URI'], '/admin/arizalar.php') : '/admin/arizalar.php';
-    echo '<div class="table-wrap"><table class="leads"><thead><tr><th>#</th><th>Vaqt</th><th>Mijoz</th><th>Telefon</th><th>Filial</th><th>Manba</th><th>Holat</th></tr></thead><tbody>';
+    echo '<div class="table-wrap leads-wrap"><table class="leads"><thead><tr><th>#</th><th>Vaqt</th><th>Mijoz</th><th>Telefon</th><th>Filial</th><th>Manba</th><th>Holat</th></tr></thead><tbody>';
     foreach ($rows as $r) {
         $id = (int) $r['id'];
         $branch = $r['branch'] !== '' ? (isset($branches[$r['branch']]) ? $branches[$r['branch']] : $r['branch']) : '—';
         $note = trim($r['note']);
         $preview = $note !== '' ? mb_substr($note, 0, 70) . (mb_strlen($note) > 70 ? '…' : '') : '';
         echo '<tr class="' . ($r['status'] === 'yangi' ? 'is-new' : '') . '">';
-        echo '<td><a href="/admin/ariza.php?id=' . $id . '">' . $id . '</a></td>';
-        echo '<td class="nowrap">' . h(date('d.m H:i', strtotime($r['created_at']))) . '</td>';
-        echo '<td><a href="/admin/ariza.php?id=' . $id . '"><b>' . h($r['name']) . '</b></a>' . ((int) $r['special'] ? ' <span class="pill st-yangi">yo\'q mahsulot</span>' : '');
+        echo '<td class="c-id"><a href="/admin/ariza.php?id=' . $id . '">#' . $id . '</a></td>';
+        echo '<td class="nowrap c-time">' . h(date('d.m H:i', strtotime($r['created_at']))) . '</td>';
+        echo '<td class="c-name"><a href="/admin/ariza.php?id=' . $id . '"><b>' . h($r['name']) . '</b></a>' . ((int) $r['special'] ? ' <span class="pill st-yangi">yo\'q mahsulot</span>' : '');
         if ($preview !== '') {
             echo '<small class="note-preview">' . h($preview) . '</small>';
         }
         echo '</td>';
-        echo '<td class="nowrap"><a href="tel:' . h($r['phone']) . '">' . h($r['phone']) . '</a></td>';
-        echo '<td>' . h($branch) . '</td>';
-        echo '<td>' . h(hs_source_label($r['source'])) . '</td>';
+        echo '<td class="nowrap" data-label="Telefon"><a href="tel:' . h($r['phone']) . '">' . h($r['phone']) . '</a></td>';
+        echo '<td data-label="Filial">' . h($branch) . '</td>';
+        echo '<td data-label="Manba">' . h(hs_source_label($r['source'])) . '</td>';
         if ($inline) {
-            echo '<td><form method="post" action="/admin/ariza.php" class="status-form">' . hs_csrf_field()
+            echo '<td class="c-status"><form method="post" action="/admin/ariza.php" class="status-form">' . hs_csrf_field()
                 . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="qayt" value="' . h($back) . '">'
                 . '<select name="holat" data-autosubmit aria-label="Ariza #' . $id . ' holati" class="st-select st-' . h($r['status']) . '">';
             foreach (hs_lead_statuses() as $k => $v) {
@@ -79,7 +79,7 @@ function hs_render_leads_table($rows, $inline = false)
             }
             echo '</select><button type="submit" class="btn outline small js-hide">OK</button></form></td>';
         } else {
-            echo '<td>' . hs_status_pill($r['status']) . '</td>';
+            echo '<td class="c-status">' . hs_status_pill($r['status']) . '</td>';
         }
         echo '</tr>';
     }

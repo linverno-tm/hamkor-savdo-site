@@ -177,15 +177,16 @@ foreach ($c['branches'] as $b) {
     echo '</div>';
     echo '<div>' . (!empty($b['closed']) ? '<span class="pill pill-err">Vaqtincha yopiq</span>' : '<span class="pill pill-ok">Ishlayapti</span>') . '</div>';
     echo '<div class="branch-actions">';
+    // "Tahrirlash" birinchi: telefonda popover ochilganda tugmalar joyidan sakramaydi.
+    echo '<a class="btn outline small" href="/admin/filiallar.php?id=' . h(rawurlencode($b['id'])) . '">Tahrirlash</a>';
     if (empty($b['closed'])) {
         echo '<details class="inline-details"><summary class="btn outline small">Vaqtincha yopish</summary><form method="post" action="/admin/filiallar.php" class="popover">' . hs_csrf_field()
             . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="1">'
-            . '<label>Saytda ko\'rinadigan izoh (ixtiyoriy)</label><input type="text" name="closedNote" maxlength="200" placeholder="masalan: 25-sentabrgacha ta\'mirlanmoqda">'
+            . '<label for="yopiq-' . h($b['id']) . '">Saytda ko\'rinadigan izoh (ixtiyoriy)</label><input id="yopiq-' . h($b['id']) . '" type="text" name="closedNote" maxlength="200" placeholder="masalan: 25-sentabrgacha ta\'mirlanmoqda">'
             . '<div class="actions"><button class="btn danger small" type="submit">Yopish</button></div></form></details>';
     } else {
         echo '<form class="inline-form" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="0"><button class="btn small" type="submit">Qayta ochish</button></form>';
     }
-    echo '<a class="btn outline small" href="/admin/filiallar.php?id=' . h(rawurlencode($b['id'])) . '">Tahrirlash</a>';
     echo '</div></div>';
 }
 echo '</div></div>';

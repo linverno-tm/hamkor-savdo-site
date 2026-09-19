@@ -21,7 +21,11 @@ $sources = hs_db()->query("SELECT DISTINCT source FROM leads WHERE source != '' 
 
 hs_page_start('Arizalar', $user);
 
-echo '<form class="card filters" method="get" action="/admin/arizalar.php">';
+// Telefonda filtrlar yig'iq turadi (kompyuterda admin.js ochib qo'yadi). Faol filtr bo'lsa — doim ochiq.
+$active = count(array_filter($f, 'strlen'));
+echo '<details class="card filter-box"' . ($active ? ' open' : '') . '><summary>' . hs_icon('filter') . ' Filtrlar'
+    . ($active ? ' <span class="pill st-qongiroq count">' . $active . '</span>' : '') . '</summary>';
+echo '<form class="filters" method="get" action="/admin/arizalar.php">';
 echo '<div><label for="q">Qidirish</label><input id="q" type="search" name="q" value="' . h($f['q']) . '" placeholder="Ism, telefon, izoh"></div>';
 echo '<div><label for="holat">Holat</label><select id="holat" name="holat"><option value="">Hammasi</option>';
 foreach (hs_lead_statuses() as $k => $v) {
@@ -43,20 +47,15 @@ echo '</select></div>';
 echo '<div><label for="dan">Sanadan</label><input id="dan" type="date" name="dan" value="' . h($f['dan']) . '"></div>';
 echo '<div><label for="gacha">Sanagacha</label><input id="gacha" type="date" name="gacha" value="' . h($f['gacha']) . '"></div>';
 echo '<div class="actions"><button class="btn" type="submit">Ko\'rsatish</button><a class="btn outline" href="/admin/arizalar.php">Tozalash</a></div>';
-echo '</form>';
+echo '</form></details>';
 
 $query = http_build_query(array_filter($f, 'strlen'));
-echo '<section class="card"><div class="actions"><strong>' . $total . ' ta ariza</strong>';
+echo '<section class="card"><div class="card-head"><h2>' . $total . ' ta ariza</h2>';
 echo '<a class="btn outline small" href="/admin/eksport.php' . ($query ? '?' . h($query) : '') . '">Excel\'ga yuklab olish</a></div>';
 hs_render_leads_table($rows, true);
-if ($pages > 1) {
-    echo '<div class="pager">';
-    for ($i = 1; $i <= $pages; $i++) {
-        $q = http_build_query(array_merge(array_filter($f, 'strlen'), array('sahifa' => $i)));
-        echo $i === $page ? '<strong>' . $i . '</strong>' : '<a href="/admin/arizalar.php?' . h($q) . '">' . $i . '</a>';
-    }
-    echo '</div>';
-}
+echo hs_pager($page, $pages, function ($i) use ($f) {
+    return '/admin/arizalar.php?' . http_build_query(array_merge(array_filter($f, 'strlen'), array('sahifa' => $i)));
+});
 echo '</section>';
 
 hs_page_end();
