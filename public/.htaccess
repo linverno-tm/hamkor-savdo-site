@@ -38,6 +38,22 @@
   # Bitta nuqta qolmaganda mos kelmay qoladi va takrorlanish to'xtaydi.
   # Next tuzatilsa yoki nom sxemasi o'zgarsa, qoida shunchaki ishlamaydi —
   # hozirgidan yomoni bo'lmaydi.
+  #
+  # `!-f` sharti majburiy, va u nima uchun kerakligi darhol ko'rinmaydi.
+  # Yuqoridagi papkali joylashuv — Windows'dagi build natijasi. Linux'da
+  # (ya'ni GitHub Actions'da, ya'ni hostingga ketadigan nusxada) Next aynan
+  # brauzer so'ragan nomda, nuqtalari bilan tekis fayl yozadi:
+  #
+  #   out/filiallar/andijon-amir-temur/__next.filiallar.$d$slug.__PAGE__.txt
+  #
+  # Ya'ni serverda hech qanday aylantirish kerak emas — fayl allaqachon
+  # joyida. Shartsiz qoida esa uni tutib olib, mavjud bo'lmagan papka
+  # yo'liga o'girardi va har bir havolada 404 qaytarardi: tuzatish uchun
+  # yozilgan qoida aynan o'sha nosozlikni keltirib chiqarardi.
+  #
+  # `!-f` bilan ikkalasi ham ishlaydi: fayl bor bo'lsa shunchaki beriladi,
+  # bo'lmasa (Windows'dagi papkali nusxa) aylantiriladi.
+  RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^(.*__next\.(?:[^/.]+/)*[^/.]+)\.(.*__PAGE__\.txt)$ $1/$2 [N]
 </IfModule>
 
