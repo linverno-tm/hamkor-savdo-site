@@ -69,6 +69,12 @@
   # chiqadi. (robots.txt ham shu turda, lekin u kichkina.)
   ExpiresByType text/plain "access plus 0 seconds"
   ExpiresByType text/css "access plus 1 year"
+  # Next fayllarni "text/javascript" turi bilan beradi, "application/..."
+  # bilan emas. Faqat eskisi yozilgani uchun bu qoida hech qachon mos
+  # kelmasdi va fayllar ExpiresDefault'ga tushib, atigi 30 kun keshlanardi
+  # (serverda `Cache-Control: max-age=2592000` ko'rindi). Fayl nomida
+  # mazmun xeshi bor, ya'ni o'zgarsa nomi ham o'zgaradi — bir yil xavfsiz.
+  ExpiresByType text/javascript "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
   ExpiresByType font/woff2 "access plus 1 year"
   ExpiresByType image/svg+xml "access plus 1 month"

@@ -31,6 +31,21 @@ jobs:
 
       - run: npm run build
 
+      # Vaqtinchalik tashxis: Next'ning sahifa payload fayllari hostingda
+      # topilmadi, lekin ildizdagi bittasi yetib bordi. Sabab ikkitadan
+      # biri — yo build ularni bu yerda boshqacha nomlaydi (CI Linux,
+      # ishlab chiqish Windows), yo yuklovchi nuqtali papkalarni tashlab
+      # ketyapti. Ro'yxat ikkisini ajratadi. Masala hal bo'lgach o'chiring.
+      - name: Payload fayllari qanday nomlangan
+        run: |
+          echo "== __next* fayllar =="
+          find out -name "*__PAGE__*" | sort
+          echo
+          echo "== nuqtali papkalar =="
+          find out -type d -name "*.*" | sort | head -20
+          echo
+          echo "jami fayl: $(find out -type f | wc -l)"
+
       # FTP ma'lumotlari GitHub > Settings > Secrets and variables > Actions da:
       # FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, FTP_SERVER_DIR (masalan public_html/),
       # ixtiyoriy FTP_PROTOCOL (ftps yoki ftp). Ular bo'lmasa, faqat build tekshiriladi.

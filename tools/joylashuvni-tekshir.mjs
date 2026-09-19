@@ -32,6 +32,27 @@ const WARN = "!";
 const results = [];
 
 /**
+ * Sertifikat hali o'rnatilmagan bo'lsa, `fetch` har bir so'rovni rad etadi
+ * va hisobotda yigirmata "fetch failed" chiqadi — ya'ni sayt haqida hech
+ * narsa bilib bo'lmaydi. Holbuki qolgan hamma narsani tekshirish mumkin:
+ * sertifikat yo'qligi bitta kamchilik, yigirmata emas.
+ *
+ * Shuning uchun boshida bir marta sinab ko'riladi. Xato aynan
+ * sertifikatga tegishli bo'lsa, tekshirish davom etadi va bu holat
+ * hisobot boshida alohida aytiladi.
+ */
+let sertifikatYomon = false;
+try {
+  await fetch(BASE + "/", { redirect: "manual" }).then((r) => r.body?.cancel());
+} catch (e) {
+  const kod = String(e.cause?.code || e.message);
+  if (/CERT|ALT_NAME|SELF_SIGNED|TLS/i.test(kod)) {
+    sertifikatYomon = kod;
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  }
+}
+
+/**
  * @param {string} nom       — odam o'qiydigan tavsif
  * @param {"muhim"|"ogoh"} daraja
  * @param {() => Promise<{ok: boolean, izoh: string}>} sinov
@@ -84,16 +105,15 @@ const mahalliy = /^(localhost|127\.|\[?::1)/.test(host);
 
 if (!mahalliy) {
   await tekshir("SSL sertifikati ishlaydi", "muhim", async () => {
-    try {
-      const r = await fetch(`https://${host}/`, { redirect: "manual" });
-      return { ok: true, izoh: `https javob berdi (${r.status})` };
-    } catch (e) {
-      const m = String(e.cause?.code || e.message);
-      if (/CERT|SSL|TLS|ALT_NAME|SELF_SIGNED|PRINCIPAL/i.test(m)) {
-        return { ok: false, izoh: `sertifikat yaroqsiz (${m}) — cPanel > SSL/TLS Status > Run AutoSSL` };
-      }
-      return { ok: false, izoh: m };
+    if (sertifikatYomon) {
+      return {
+        ok: false,
+        izoh: `sertifikat yaroqsiz (${sertifikatYomon}) — cPanel > SSL/TLS Status > Run AutoSSL`,
+      };
     }
+    const r = await fetch(`https://${host}/`, { redirect: "manual" });
+    await r.body?.cancel();
+    return { ok: true, izoh: `https javob berdi (${r.status})` };
   });
 
   await tekshir("http → https ga yo'naltiradi", "ogoh", async () => {
@@ -111,16 +131,29 @@ if (!mahalliy) {
 //    Agar bu yiqilsa, pastdagilarning ko'pi ham yiqiladi — sabab bitta.
 // ---------------------------------------------------------------------------
 
+/* Bitta sarlavha ikki marta yuborilishi mumkin: bu xostingda nginx ham,
+   `.htaccess` ham `X-Content-Type-Options` qo'yadi. Node ularni vergul
+   bilan qo'shib beradi ("nosniff, nosniff"), shuning uchun to'g'ridan-
+   to'g'ri solishtirish yolg'on xato chiqaradi. Qiymatlar bir xil bo'lsa
+   muammo yo'q — takrorni tashlab, keyin solishtiramiz. */
+function yagona(headers, nom) {
+  const xom = headers.get(nom);
+  if (!xom) return null;
+  const qismlar = [...new Set(xom.split(",").map((s) => s.trim()))];
+  return { qiymat: qismlar.join(", "), takror: qismlar.length === 1 && xom.includes(",") };
+}
+
 await tekshir(".htaccess qo'llanyapti (sarlavhalar)", "muhim", async () => {
   const r = await olib("/");
-  const nosniff = r.headers.get("x-content-type-options");
-  const ref = r.headers.get("referrer-policy");
-  if (nosniff === "nosniff" && ref) {
-    return { ok: true, izoh: `nosniff + Referrer-Policy: ${ref}` };
+  const nosniff = yagona(r.headers, "x-content-type-options");
+  const ref = yagona(r.headers, "referrer-policy");
+  if (nosniff?.qiymat === "nosniff" && ref) {
+    const eslatma = nosniff.takror ? " (nginx ham qo'yadi — takror, zararsiz)" : "";
+    return { ok: true, izoh: `nosniff + Referrer-Policy: ${ref.qiymat}${eslatma}` };
   }
   return {
     ok: false,
-    izoh: `sarlavhalar yo'q (nosniff=${nosniff}, referrer=${ref}) — nginx .html ni Apache'ga bermayotgan bo'lishi mumkin`,
+    izoh: `sarlavhalar yo'q (nosniff=${nosniff?.qiymat}, referrer=${ref?.qiymat}) — nginx .html ni Apache'ga bermayotgan bo'lishi mumkin`,
   };
 });
 
@@ -140,7 +173,16 @@ await tekshir("Statik fayllar uzoq keshlanadi", "ogoh", async () => {
   const r = await olib(m[0]);
   const cc = r.headers.get("cache-control") || "";
   if (/immutable|max-age=31536000/.test(cc)) return { ok: true, izoh: cc };
-  return { ok: false, izoh: `Cache-Control: "${cc}" (kutilgani: immutable)` };
+  /* 2592000 — bir oy. Bu qiymat mod_expires'dan keladi va u mod_headers
+     qo'ygan `immutable` ni bosib ketadi. Sabab odatda MIME turida:
+     `ExpiresByType` ro'yxatida fayl turi yo'q bo'lsa, ExpiresDefault
+     ishlaydi. Zararli emas (fayl nomida xesh bor), lekin qaytgan mijoz
+     har oy qayta yuklaydi. */
+  const oy = /max-age=(\d+)/.exec(cc)?.[1];
+  const izoh = oy
+    ? `Cache-Control: max-age=${oy} (${Math.round(oy / 86400)} kun) — kutilgani 1 yil; mod_expires MIME turi mos kelmayapti`
+    : `Cache-Control: "${cc}" (kutilgani: immutable)`;
+  return { ok: false, izoh };
 });
 
 // ---------------------------------------------------------------------------
@@ -298,6 +340,10 @@ let yiqilgan = 0;
 let ogohlantirish = 0;
 
 console.log(`\n  ${BASE}\n`);
+if (sertifikatYomon) {
+  console.log(`  ${WARN}  Sertifikat yaroqsiz, shuning uchun qolgan tekshiruvlar uni`);
+  console.log(`     e'tiborga olmay o'tkazildi. Faqat shu saytni sinaymiz.\n`);
+}
 for (const r of results) {
   const belgi = r.ok ? OK : r.daraja === "muhim" ? XX : WARN;
   if (!r.ok && r.daraja === "muhim") yiqilgan++;
