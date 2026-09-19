@@ -28,6 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 hs_flash("Metrika ulandi. Statistika endi shu yerda ko'rinadi.");
             }
         }
+    } elseif ($action === 'metrika_yangilash') {
+        // Keshni tashlaymiz — keyingi yuklashda raqamlar Metrika'dan qayta olinadi.
+        hs_db()->exec("DELETE FROM cache WHERE key LIKE 'ym:%'");
+        hs_flash('Yangilandi.');
     } elseif ($action === 'metrika_uzish') {
         hs_db()->prepare('DELETE FROM settings WHERE key = ?')->execute(array('metrika_token'));
         hs_db()->exec("DELETE FROM cache WHERE key LIKE 'ym:%'");
@@ -192,7 +196,35 @@ if (!$branchRows) {
 }
 echo '</section></div>';
 
-echo '<p class="muted">Davr: ' . h($pLabel) . '. Metrika ma\'lumoti 10 daqiqada bir yangilanadi.</p>';
+/* Ilgari bu yerda shunchaki "10 daqiqada bir yangilanadi" deb turardi.
+   Odam uchun bu hech narsa bildirmaydi: raqam eskimi, yangimi, kutish
+   kerakmi yoki nimadir buzuqmi — bilib bo'lmasdi. Endi aniq vaqt
+   ko'rsatiladi va kutmasdan yangilash tugmasi bor. */
+$keshVaqti = null;
+if (hs_metrika_ready()) {
+    $st = hs_db()->prepare("SELECT MAX(expires_at) FROM cache WHERE key LIKE 'ym:%'");
+    $st->execute();
+    $exp = (int) $st->fetchColumn();
+    if ($exp > time()) {
+        $keshVaqti = $exp;
+    }
+}
+
+echo '<div class="row-between">';
+echo '<p class="muted">Davr: ' . h($pLabel) . '.';
+if ($keshVaqti !== null) {
+    echo ' Ma\'lumot ' . h(date('H:i', $keshVaqti - 600)) . ' da olingan, ';
+    echo h(date('H:i', $keshVaqti)) . ' da o\'zi yangilanadi.';
+} elseif (hs_metrika_ready()) {
+    echo ' Ma\'lumot hozir Metrika\'dan olindi.';
+}
+echo '</p>';
+if (hs_metrika_ready()) {
+    echo '<form method="post" action="/admin/statistika.php?davr=' . h($p) . '">' . hs_csrf_field()
+        . '<input type="hidden" name="amal" value="metrika_yangilash">'
+        . '<button class="btn outline small" type="submit">Hozir yangilash</button></form>';
+}
+echo '</div>';
 /* Shart bazadagi tokenga qaraydi, `hs_metrika_ready()` ga emas. Faqat
    bazadagisini o'chira olamiz — secrets.php dagisi faylda yozilgan va
    uni paneldan olib tashlab bo'lmaydi. Ilgari bu yerda ready() tekshirib

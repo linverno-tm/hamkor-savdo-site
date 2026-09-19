@@ -53,9 +53,26 @@ function hs_metrika_request($endpoint, $params, &$error = null)
     }
     list($code, $body) = hs_http('GET', $url, array('Authorization: OAuth ' . hs_metrika_token(), 'Accept: application/json'), null, 20);
     if ($code !== 200) {
+        /* Qaysi so'rov yiqilgani va Yandex nima deganini xabarga qo'shamiz.
+           Ilgari faqat "token yaroqsiz" deb yozilardi va shu bilan ish
+           tugardi: token saqlashdan oldin tekshiruvdan o'tgan, lekin
+           sahifadagi boshqa so'rov 403 bergan holatni ajratib bo'lmasdi.
+           Endpoint har xil — biri /management, ikkinchisi /stat — ruxsat
+           talablari ham har xil bo'lishi mumkin. Yandex javobining
+           sababi `message` maydonida keladi. */
+        $sabab = '';
+        $j = json_decode($body, true);
+        if (is_array($j)) {
+            if (!empty($j['message'])) {
+                $sabab = (string) $j['message'];
+            } elseif (!empty($j['errors'][0]['message'])) {
+                $sabab = (string) $j['errors'][0]['message'];
+            }
+        }
+        $quyruq = $endpoint . ($sabab !== '' ? ' — ' . mb_substr($sabab, 0, 160) : '');
         $error = $code === 401 || $code === 403
-            ? "Metrika tokeni yaroqsiz yoki ruxsati yetmaydi (HTTP {$code})."
-            : "Metrika'dan ma'lumot olinmadi (HTTP {$code}).";
+            ? "Metrika tokeni yaroqsiz yoki ruxsati yetmaydi (HTTP {$code}): {$quyruq}"
+            : "Metrika'dan ma'lumot olinmadi (HTTP {$code}): {$quyruq}";
         return null;
     }
     $data = json_decode($body, true);
