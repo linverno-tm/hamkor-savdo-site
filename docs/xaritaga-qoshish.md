@@ -1,9 +1,12 @@
 # Google Maps va Yandex xaritasiga qo'shish — to'ldirish varaqasi
 
-Bu ish saytdan alohida va **saytni kutmaydi** — bugun boshlash mumkin.
-Do'konlar xaritada chiqishi uchun domen ishlashi shart emas.
+**Oxirgi yangilanish: 2026-09-19.** Telefon raqamlari, muddat va ish vaqti
+`data/content.json` dagi joriy ma'lumotga moslashtirildi — ilgari bu
+varaqada o'chirilgan `74` raqamlari va eskirgan «24 oy» turgan edi.
 
-Quyida to'ldiriladigan har bir maydon tayyor. Nusxa olib qo'yavering.
+Bu ish saytdan alohida va **saytni kutmaydi**. Do'konlar xaritada chiqishi
+uchun domen ishlashi shart emas — faqat `Sayt` maydonini hozircha bo'sh
+qoldiring (4-bandga qarang).
 
 ---
 
@@ -22,6 +25,15 @@ biznesga biriktiring («Bu mening biznesim» / «Стать владельцем
 Ikkita bir xil karta paydo bo'lsa, keyin ularni birlashtirish juda qiyin va
 ikkalasi ham qidiruvda pastga tushadi.
 
+### Hozirgi holat (2026-09-19)
+
+| Filial | Google | Yandex |
+|---|---|---|
+| Shahrixon — Ozodbek | ✅ karta bor, **egalik olingan** | ⚠️ karta bor, egalik olinmagan — tuzatish moderatsiyada |
+| Shahrixon — Bog' | ❌ yo'q | ❌ yo'q |
+| Asaka — Makro | ❌ yo'q | ❌ yo'q |
+| Andijon — Amir Temur | ⚠️ karta bor, tuzatish kerak | ⚠️ karta bor, ish vaqti yo'q |
+
 ---
 
 ## 1. Kim ochishi kerak
@@ -36,24 +48,22 @@ mumkin.
 
 ---
 
-## 2. YETISHMAYOTGAN MA'LUMOT — buni oldindan hal qiling
+## 2. Ish vaqti — tasdiqlangan
 
-**Ish vaqti.** Google ham, Yandex ham buni majburiy so'raydi. Bizda yo'q.
+Egasi tomonidan 2026-09-19 da tasdiqlandi. Saytdagi ma'lumot bilan bir xil.
 
-Xaritadagi «Hozir ochiq / Yopiq» yozuvi aynan shundan chiqadi va odamlar
-qarorni shunga qarab qabul qiladi. Noto'g'ri yozilsa — mijoz yopiq do'konga
-borib, salbiy sharh qoldiradi.
+| Filial | Har kuni |
+|---|---|
+| Shahrixon — Ozodbek | **08:00 – 18:00** |
+| Shahrixon — Bog' | **08:00 – 18:00** |
+| Asaka — Makro | **08:00 – 18:00** |
+| Andijon — Amir Temur | **09:00 – 22:00** |
 
-Har bir filial uchun alohida so'rang:
+Dam olish kuni yo'q — yetti kun ishlaydi. Tushlik tanaffusi belgilanmaydi.
 
-| Filial | Dushanba–Shanba | Yakshanba |
-|---|---|---|
-| Shahrixon — Ozodbek | | |
-| Shahrixon — Bog' | | |
-| Asaka — Makro | | |
-| Andijon — Amir Temur | | |
-
-Tushlik tanaffusi bo'lsa, uni ham yozing.
+⚠️ Hozir xaritalarda boshqacha turibdi — tuzatish kerak:
+- Yandex: hamma filialda `08:00–20:00` deb yozilgan
+- Google (Shahrixon): Du–Ju va Ya `08:00–18:00`, Sha `08:00–21:00`
 
 ---
 
@@ -71,34 +81,58 @@ HAMKOR SAVDO
 Nomga shahar yoki «mebel do'koni» qo'shmang. Google buni qoidabuzarlik deb
 hisoblaydi va kartani pastga tushiradi. Shahar manzildan o'zi ko'rinadi.
 
-### Manzil va telefon
+### Manzil, telefon va koordinata
 
-**1-filial**
+**1-filial — Shahrixon, Ozodbek**
 ```
 Manzil:  Shahrixon shahar, Ozodbek savdo markazi
-Telefon: +998 74 342 08 80
+Telefon: +998 55 203 08 80
+Koord:   40.7137304, 72.0566577
 ```
 
-**2-filial**
+**2-filial — Shahrixon, Bog'**
 ```
 Manzil:  Shahrixon shahar, Shahrixon markaziy istirohat bog'i yonida
-Telefon: +998 74 342 32 40
+Telefon: +998 55 202 01 01
+Koord:   40.710138, 72.057308
 ```
 
-**3-filial**
+**3-filial — Asaka, Makro**
 ```
 Manzil:  Asaka shahar, Umid ko'chasi, Makro supermarketi, 2-qavat
 Telefon: +998 33 232 30 55
+Koord:   40.6486808, 72.2345559
 ```
 
-**4-filial**
+**4-filial — Andijon, Amir Temur**
 ```
 Manzil:  Andijon shahar, Amir Temur shoh ko'chasi, 62
 Telefon: +998 33 342 08 80
+Koord:   40.758604, 72.3453139
 ```
+
+🔴 **`+998 74 ...` bilan boshlanadigan raqamlarni hech qayerga yozmang.**
+Ular o'chirilgan. Hozir Google'dagi Shahrixon kartasida va eski
+`hamkor-savdo.vercel.app` saytida aynan shu o'lik raqam turibdi.
 
 Asaka filialida **«2-qavat» degan so'zni albatta yozing** — bino boshqa
 brendning nomi bilan tanilgan, bu yozuv odamni to'g'ri joyga olib boradi.
+
+### Ijtimoiy tarmoq havolalari
+
+| Filial | Instagram |
+|---|---|
+| Shahrixon — Ozodbek | `https://www.instagram.com/hamkorsavdo.shahrixon/` |
+| Shahrixon — Bog' | yo'q |
+| Asaka — Makro | `https://www.instagram.com/fayzlixonadon/` |
+| Andijon — Amir Temur | `https://www.instagram.com/hamkorsavdo_andijon/` |
+
+Umumiy kanallar (hamma kartada bir xil):
+```
+Instagram: https://www.instagram.com/hamkorsavdo.uz/
+Telegram:  https://t.me/hamkorsavdouz
+Telegram (mijozlar): https://t.me/hamkorsavdouz_mijozlari
+```
 
 ### Sayt
 
@@ -106,8 +140,10 @@ brendning nomi bilan tanilgan, bu yozuv odamni to'g'ri joyga olib boradi.
 https://hamkorsavdo.uz
 ```
 
-⚠️ Bu manzilni sayt ishga tushgandan **keyin** kiriting. Hozir domen
-ochilmaydi — ishlamaydigan havola kartaning ishonchini tushiradi.
+⚠️ **Hozir kiritmang.** Domen DNS darajasida ishlamayapti —
+`docs/domen-ishlamayapti.md` ga qarang. Ishlamaydigan havola kartaning
+ishonchini tushiradi va Google uni tekshirib, ogohlantirish berishi mumkin.
+Domen ochilgan kuni kiritasiz.
 
 ---
 
@@ -118,17 +154,16 @@ sotgani uchun hammasida bir xil qo'yiladi.
 
 **Asosiy toifa:**
 ```
-Maishiy texnika do'koni
+Maishiy texnika do'koni     (Google inglizchada: Appliance store)
 ```
 
 **Qo'shimcha toifalar:**
 ```
-Mebel do'koni
-Zargarlik do'koni
-Elektronika do'koni
+Mebel do'koni               (Furniture store)
+Zargarlik do'koni           (Jewelry store)
+Elektronika do'koni         (Electronics store)
+Mototsikl do'koni           (Motorcycle dealer)  — skuterlar uchun
 ```
-
-Skuterlar sotilishi tasdiqlansa, `Mototsikl do'koni` toifasini ham qo'shing.
 
 Yandexda toifalar ruscha yoziladi:
 ```
@@ -136,7 +171,12 @@ Yandexda toifalar ruscha yoziladi:
 Мебельный магазин
 Ювелирный магазин
 Магазин электроники
+Мотосалон
 ```
+
+💡 Google'ning toifa maydoni klaviatura bilan tozalanmaydi — eski matn
+o'chmay, yangisi ustiga yopishib qoladi. Maydonni **sichqoncha bilan
+belgilab** («×» tugmasi yoki uch marta bosib) tozalang, keyin yozing.
 
 ---
 
@@ -145,7 +185,7 @@ Yandexda toifalar ruscha yoziladi:
 ### Qisqa variant (Yandex, 100–150 belgi)
 
 ```
-Tilla, maishiy texnika va mebel. 24 oygacha muddatli to'lov — pasport va
+Tilla, maishiy texnika va mebel. 12 oygacha muddatli to'lov — pasport va
 plastik karta kifoya. O'zbekiston bo'ylab yetkazib beramiz.
 ```
 
@@ -156,7 +196,7 @@ HAMKOR SAVDO — Andijon viloyatidagi savdo do'konlari tarmog'i. Bitta
 do'konda uch yo'nalish birlashgan: tilla, maishiy texnika va mebel.
 7000 dan ortiq mahsulot.
 
-24 oygacha muddatli to'lov. Rasmiylashtirish uchun pasport va plastik
+12 oygacha muddatli to'lov. Rasmiylashtirish uchun pasport va plastik
 kartaning o'zi kifoya — kafil ham, ma'lumotnoma ham kerak emas.
 
 Andijon viloyatida yetkazib berish va o'rnatish bepul. O'zbekiston bo'ylab
@@ -174,7 +214,7 @@ Shahrixon (2 ta), Asaka va Andijonda 4 ta filial.
 HAMKOR SAVDO — сеть магазинов в Андижанской области. Золото, бытовая
 техника и мебель в одном месте. Более 7000 товаров.
 
-Рассрочка до 24 месяцев. Для оформления достаточно паспорта и пластиковой
+Рассрочка до 12 месяцев. Для оформления достаточно паспорта и пластиковой
 карты — поручитель и справка не нужны.
 
 Бесплатная доставка и установка по Андижанской области. Доставляем по всему
@@ -185,6 +225,11 @@ HAMKOR SAVDO — сеть магазинов в Андижанской обла�
 
 4 филиала: Шахрихан (2), Асака, Андижан.
 ```
+
+🔴 **Muddat hamma joyda 12 oy.** Hozir ommada uchta har xil raqam turibdi:
+sayt 12, Instagram bio 24, eski vercel sayt 18. Instagram bio'larini ham
+tuzatish kerak — `@hamkorsavdo.uz`, `@hamkorsavdo_andijon`,
+`@hamkorsavdo.shahrixon`.
 
 ---
 
@@ -208,17 +253,17 @@ belgilang — bilmasangiz, belgilamang.
 Loyihada tayyor suratlar bor, ular EXIF va GPS ma'lumotidan tozalangan:
 
 ```
-portfolio/hamkor-savdo-flagship/public/filiallar/<filial>/
+public/filiallar/<filial-id>/
 ```
 
 Har bir filialga o'z suratini yuklang — boshqa filialning surati emas:
 
-| Filial | Tayyor surat |
-|---|---|
-| Shahrixon — Ozodbek | 8 ta |
-| Shahrixon — Bog' | **0 ta** — suratsiz karta ochiladi, keyin qo'shiladi |
-| Asaka — Makro | 7 ta |
-| Andijon — Amir Temur | 6 ta |
+| Filial | Papka | Tayyor surat (`-960.webp`) |
+|---|---|---|
+| Shahrixon — Ozodbek | `shahrixon-ozodbek/` | 10 ta |
+| Shahrixon — Bog' | — | **0 ta** — suratsiz karta ochiladi, keyin qo'shiladi |
+| Asaka — Makro | `asaka-umid/` | 7 ta |
+| Andijon — Amir Temur | `andijon-amir-temur/` | 6 ta |
 
 `-960.webp` bilan tugaydigan fayllarni oling — ular kattaroq.
 
@@ -226,16 +271,29 @@ Har bir filialga o'z suratini yuklang — boshqa filialning surati emas:
 belgisi ko'ringan kadrni qo'ying. Odam xaritadan kelganda binoni tanishi
 kerak.
 
-Asaka filialida tashqi surat boshqa brendning peshtoqini ko'rsatadi —
-muqovaga uni emas, ichkaridagi menejerlar bo'limi suratini qo'ying.
+Asaka filialida muqovaga `tashqi-1` qo'yilgan — kirish binosi. Ichkaridagi
+menejerlar bo'limi surati muqova uchun yaramaydi: odam binoni tanimaydi.
 
 ---
 
 ## 8. Ochilgandan keyin
 
 **Tasdiqlash.** Google pochta orqali kod yuboradi (2 haftagacha) yoki video
-so'raydi. Yandex telefon yoki hujjat orqali tekshiradi. Tasdiqlanmaguncha
-karta qidiruvda to'liq chiqmaydi.
+so'raydi. Yandex telefon orqali tekshiradi.
+
+⚠️ Yandex tasdiqlashi **faqat kartada yozilgan raqamga** qo'ng'iroq qiladi.
+Shahrixon kartasida hozir o'chirilgan `+998 74 342 08 80` turibdi — shuning
+uchun egalikni olish tuzatish moderatsiyadan o'tmaguncha imkonsiz. Avval
+raqamni tuzattiring, keyin egalikni oling.
+
+**Tasdiqlash videosi.** Google so'raydigan video — bu reklama roligi emas.
+Instagram'dagi tayyor videoni yuborish **ishlamaydi** va profil bloklanishi
+mumkin. Video uzluksiz bitta kadrda olinishi kerak:
+
+1. Ko'chadan boshlang — do'kon peshtoqi va nomi ko'rinsin
+2. Atrofdagi bino/ko'chani ko'rsating — manzil tasdiqlansin
+3. Ichkariga kiring — tovarlar, kassa ko'rinsin
+4. Xodimni yoki menejerni ko'rsating
 
 **Sharhlar.** Xaritadagi tartibni yulduzchalar hal qiladi. Do'konga QR kod
 osib qo'ying: «Bizga baho bering». Har bir mijozdan so'raladi. 4.8 yulduzli
@@ -255,7 +313,7 @@ ham o'zgartiring.
 |---|---|
 | Mavjud kartani tekshirish | ijrochi yoki egasi |
 | Akkaunt va karta ochish | **egasi** |
-| Manzilni tasdiqlash | **egasi** (pochta/video) |
-| Ish vaqtini aniqlash | **egasi** |
+| Manzilni tasdiqlash (video/pochta) | **egasi** |
+| Ish vaqtini aniqlash | **egasi** — ✅ bajarildi |
 | Maydonlarni to'ldirish, surat yuklash | ijrochi (menejer sifatida) |
 | Sharhlarga javob berish | ijrochi yoki savdo bo'limi |
