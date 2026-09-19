@@ -74,7 +74,22 @@ $st->execute(array($from, $to));
 $branchRows = $st->fetchAll();
 $names = hs_branch_names();
 
-if (!hs_metrika_ready()) {
+/* Metrika'ga murojaat ulash kartasidan OLDIN qilinadi, chunki natijasi
+   o'sha kartani ko'rsatish-ko'rsatmaslikni hal qiladi.
+   Saqlangan token ishlamay qolishi oddiy hol: Yandex'da ruxsat bekor
+   qilinadi, yoki token boshqa akkauntdan olingan bo'lib chiqadi. Ilgari
+   bunday paytda panel tuzoqqa aylanardi — token "bor" hisoblangani uchun
+   ulash formasi yashirin qolardi, natijada uni almashtirishning yo'li
+   yo'q edi. Endi token sinovdan o'tmasa, forma qaytadi: yangisini
+   qo'yish eskisining ustiga yozadi. */
+$err = '';
+$ov = hs_metrika_ready() ? hs_metrika_overview($d1, $d2, $err) : null;
+$tokenYaroqsiz = hs_metrika_ready() && $err !== '';
+if ($err !== '') {
+    echo '<p class="flash flash-err">' . h($err) . '</p>';
+}
+
+if (!hs_metrika_ready() || $tokenYaroqsiz) {
     $clientId = preg_match('/^[a-f0-9]{32}$/', hs_get('client_id')) ? hs_get('client_id') : '';
     echo '<section class="card"><h2>Yandex Metrika\'ni ulash</h2>';
     echo '<p>Bir marta qilinadi (taxminan 3 daqiqa). Metrika ochilgan Yandex akkauntingiz bilan kirgan bo\'lishingiz kerak.</p>';
@@ -101,12 +116,6 @@ if (!hs_metrika_ready()) {
     echo '<div class="actions"><button class="btn" type="submit">Tekshirish va ulash</button></div></form>';
     echo '<p class="muted">Metrika\'da maqsadlar bo\'lsin: <span class="code">phone_click</span>, <span class="code">telegram_click</span>, <span class="code">lead_sent</span> (JavaScript-событие).</p>';
     echo '</section>';
-}
-
-$err = '';
-$ov = hs_metrika_ready() ? hs_metrika_overview($d1, $d2, $err) : null;
-if ($err !== '') {
-    echo '<p class="flash flash-err">' . h($err) . '</p>';
 }
 
 echo '<div class="kpis">';
@@ -184,7 +193,12 @@ if (!$branchRows) {
 echo '</section></div>';
 
 echo '<p class="muted">Davr: ' . h($pLabel) . '. Metrika ma\'lumoti 10 daqiqada bir yangilanadi.</p>';
-if (hs_metrika_ready() && (string) hs_config('metrika_token', '') === '') {
+/* Shart bazadagi tokenga qaraydi, `hs_metrika_ready()` ga emas. Faqat
+   bazadagisini o'chira olamiz — secrets.php dagisi faylda yozilgan va
+   uni paneldan olib tashlab bo'lmaydi. Ilgari bu yerda ready() tekshirib
+   ko'rilardi, ya'ni tugma token yaroqsiz bo'lgan paytda ham "bor" deb
+   hisoblanardi, lekin ko'rinmay qolgan holatlar bo'lgan. */
+if ((string) hs_setting('metrika_token', '') !== '') {
     echo '<form method="post" action="/admin/statistika.php" data-confirm="Metrika uzilsinmi? Statistika ko\'rinmay qoladi.">' . hs_csrf_field() . '<input type="hidden" name="amal" value="metrika_uzish"><button class="btn danger small" type="submit">Metrika\'ni uzish</button></form>';
 }
 hs_page_end();
