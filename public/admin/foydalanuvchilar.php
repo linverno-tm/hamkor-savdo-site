@@ -63,10 +63,11 @@ $users = hs_db()->query('SELECT * FROM users ORDER BY id')->fetchAll();
 
 hs_page_start('Foydalanuvchilar', $user);
 
-echo '<section class="card"><h2>Egasi</h2><p><b>' . h(hs_config('admin_login', '—')) . '</b> — hamma bo\'limlar. Paroli faqat serverdagi <span class="code">secrets.php</span> da (kompyuterda <span class="code">php tools/admin-parol.php</span> bilan o\'zgartiriladi).</p></section>';
+// Ilgari "paroli faqat secrets.php da" deb yozilgan edi — lekin uni Sozlamalar'dan ham o'zgartirsa bo'ladi.
+echo '<section class="card"><h2>Egasi</h2><p><b>' . h(hs_config('admin_login', '—')) . '</b> — hamma bo\'limlar. Parolni <a href="/admin/sozlamalar.php#parol">Sozlamalar</a> bo\'limida o\'zgartirish mumkin. Unutilsa — kompyuterda <span class="code">php tools/admin-parol.php</span>.</p></section>';
 
-$branchSelect = function ($current) use ($branches) {
-    $html = '<select name="filial"><option value="">Barcha filiallar</option>';
+$branchSelect = function ($current, $id = '') use ($branches) {
+    $html = '<select name="filial"' . ($id !== '' ? ' id="' . $id . '"' : '') . '><option value="">Barcha filiallar</option>';
     foreach ($branches as $k => $v) {
         $html .= '<option value="' . h($k) . '"' . ($current === $k ? ' selected' : '') . '>' . h($v) . '</option>';
     }
@@ -80,9 +81,9 @@ if (!$users) {
 foreach ($users as $u) {
     echo '<div class="repeat-row"><h3>' . h($u['login']) . ($u['name'] ? ' — ' . h($u['name']) : '') . ' ' . ((int) $u['active'] ? '<span class="pill pill-ok">faol</span>' : '<span class="pill st-rad">to\'xtatilgan</span>') . '</h3>';
     echo '<div class="grid grid-3">';
-    echo '<form method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="filial"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><label>Filial</label>' . $branchSelect($u['branch']) . '<div class="actions"><button class="btn outline small" type="submit">Saqlash</button></div></form>';
-    echo '<form method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="parol"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><label>Yangi parol</label><input type="password" name="parol" autocomplete="new-password" minlength="10" required><div class="actions"><button class="btn outline small" type="submit">Parolni o\'zgartirish</button></div></form>';
-    echo '<div><label>Boshqaruv</label><div class="actions">';
+    echo '<form method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="filial"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><label for="u' . (int) $u['id'] . '-f">Filial</label>' . $branchSelect($u['branch'], 'u' . (int) $u['id'] . '-f') . '<div class="actions"><button class="btn outline small" type="submit">Saqlash</button></div></form>';
+    echo '<form method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="parol"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><label for="u' . (int) $u['id'] . '-p">Yangi parol</label><input id="u' . (int) $u['id'] . '-p" type="password" name="parol" autocomplete="new-password" minlength="10" required><div class="actions"><button class="btn outline small" type="submit">Parolni o\'zgartirish</button></div></form>';
+    echo '<div><p class="label">Boshqaruv</p><div class="actions">';
     echo '<form class="inline-form" method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><input type="hidden" name="faol" value="' . ((int) $u['active'] ? '0' : '1') . '"><button class="btn outline small" type="submit">' . ((int) $u['active'] ? 'To\'xtatish' : 'Yoqish') . '</button></form>';
     echo '<form class="inline-form" method="post" action="/admin/foydalanuvchilar.php" data-confirm="Operator o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><button class="btn danger small" type="submit">O\'chirish</button></form>';
     echo '</div></div></div></div>';
@@ -94,7 +95,7 @@ echo '<h2>Yangi operator</h2><div class="grid grid-2">';
 echo '<div><label for="login">Login</label><input id="login" type="text" name="login" required pattern="[A-Za-z0-9_.]{3,40}" autocomplete="off"></div>';
 echo '<div><label for="ism">Ismi</label><input id="ism" type="text" name="ism" maxlength="80"></div>';
 echo '<div><label for="parol">Parol</label><input id="parol" type="password" name="parol" required minlength="10" autocomplete="new-password"><p class="hint">Kamida 10 belgi, harf va raqam.</p></div>';
-echo '<div><label>Filial</label>' . $branchSelect('') . '</div>';
+echo '<div><label for="yangi-filial">Filial</label>' . $branchSelect('', 'yangi-filial') . '</div>';
 echo '</div><div class="actions"><button class="btn" type="submit">Qo\'shish</button></div></form>';
 
 hs_page_end();

@@ -8,7 +8,7 @@
  * kompyuter menyusini unga tiqib bo'lmaydi.
  */
 
-function hs_icon($name)
+function hs_icon($name, $class = '')
 {
     $p = array(
         'home' => '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
@@ -32,9 +32,12 @@ function hs_icon($name)
         'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
         'send' => '<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4z"/>',
         'external' => '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v6H4V6h6"/>',
+        'sun' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+        'moon' => '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+        'filter' => '<path d="M3 5h18l-7 8.5V20l-4-2v-4.5z"/>',
     );
     $body = isset($p[$name]) ? $p[$name] : '';
-    return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $body . '</svg>';
+    return '<svg class="ico' . ($class !== '' ? ' ' . $class : '') . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $body . '</svg>';
 }
 
 /**
@@ -97,7 +100,8 @@ function hs_render_nav($user, $current)
         }
         $html .= '<p class="nav-group">' . h($group) . '</p>';
         foreach ($visible as $it) {
-            $active = $current === $it[0] ? ' active' : '';
+            // Bitta ariza sahifasi ham "Arizalar" bo'limiga tegishli.
+            $active = $current === $it[0] || ($current === '/admin/ariza.php' && $it[0] === '/admin/arizalar.php') ? ' active' : '';
             $count = ($it[0] === '/admin/arizalar.php' && $badge > 0) ? '<span class="badge">' . $badge . '</span>' : '';
             $html .= '<a class="nav-link' . $active . '" href="' . h($it[0]) . '">' . hs_icon($it[2]) . '<span>' . h($it[1]) . '</span>' . $count . '</a>';
         }
@@ -113,6 +117,37 @@ function hs_current_path()
     return preg_replace('#/index\.php$#', '/', $path);
 }
 
+/**
+ * Statik fayl manzili, o'zgarish vaqti bilan. Fayl yangilansa manzil ham
+ * o'zgaradi — brauzer eski CSS/JS ni keshdan ko'rsatib qolmaydi.
+ */
+function hs_asset($file)
+{
+    $full = __DIR__ . '/../assets/' . $file;
+    return '/admin/assets/' . $file . '?v=' . (is_file($full) ? filemtime($full) : '1');
+}
+
+/** Hamma admin sahifalari uchun umumiy <head>. */
+function hs_head($title, $noindex = 'noindex, nofollow')
+{
+    echo '<!doctype html><html lang="uz"><head><meta charset="utf-8">';
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">';
+    echo '<meta name="robots" content="' . h($noindex) . '">';
+    echo '<meta name="color-scheme" content="light dark">';
+    echo '<meta name="theme-color" content="#ffffff">';
+    echo '<title>' . h($title) . '</title>';
+    // theme.js defer'siz: mavzu sahifa chizilishidan oldin qo'yilishi kerak.
+    echo '<script src="' . hs_asset('theme.js') . '"></script>';
+    echo '<link rel="stylesheet" href="' . hs_asset('admin.css') . '">';
+    echo '<script src="' . hs_asset('admin.js') . '" defer></script>';
+    echo '</head>';
+}
+
+function hs_theme_toggle()
+{
+    return '<button type="button" class="theme-toggle" data-theme-toggle aria-label="Mavzuni almashtirish" title="Mavzuni almashtirish">' . hs_icon('moon', 'i-moon') . hs_icon('sun', 'i-sun') . '</button>';
+}
+
 function hs_page_start($title, $user = null, $subtitle = null)
 {
     $current = hs_current_path();
@@ -125,13 +160,8 @@ function hs_page_start($title, $user = null, $subtitle = null)
             }
         }
     }
-    echo '<!doctype html><html lang="uz"><head><meta charset="utf-8">';
-    echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
-    echo '<meta name="robots" content="noindex, nofollow">';
-    echo '<title>' . h($title) . ' — HAMKOR SAVDO admin</title>';
-    echo '<link rel="stylesheet" href="/admin/assets/admin.css?v=3">';
-    echo '<script src="/admin/assets/admin.js?v=3" defer></script>';
-    echo '</head><body>';
+    hs_head($title . ' — HAMKOR SAVDO admin');
+    echo '<body>';
 
     if (!$user) {
         echo '<main class="wrap">';
@@ -139,15 +169,15 @@ function hs_page_start($title, $user = null, $subtitle = null)
     }
 
     $brand = '<a class="brand" href="/admin/"><span class="brand-mark">H</span><span class="brand-text">HAMKOR SAVDO<small>boshqaruv paneli</small></span></a>';
-    $who = '<div class="who"><span class="avatar">' . h(mb_strtoupper(mb_substr($user['login'], 0, 1))) . '</span><span><b>' . h($user['name']) . '</b><small>' . ($user['role'] === 'owner' ? 'Egasi' : 'Operator') . '</small></span></div>';
+    $who = '<div class="who"><span class="avatar">' . h(mb_strtoupper(mb_substr($user['login'], 0, 1))) . '</span><span><b>' . h($user['name']) . '</b><small>' . ($user['role'] === 'owner' ? 'Egasi' : 'Operator') . '</small></span>' . hs_theme_toggle() . '</div>';
 
     echo '<div class="shell">';
     echo '<aside class="side">' . $brand . '<nav class="side-nav" aria-label="Bo\'limlar">' . hs_render_nav($user, $current) . '</nav>' . $who . '</aside>';
     echo '<div class="main-col">';
-    echo '<header class="mobile-top">' . $brand . '<details class="mobile-menu"><summary>' . hs_icon('text') . ' Menyu</summary><nav class="mobile-nav" aria-label="Bo\'limlar">' . hs_render_nav($user, $current) . '</nav></details></header>';
+    echo '<header class="mobile-top">' . $brand . hs_theme_toggle() . '<details class="mobile-menu"><summary>' . hs_icon('text') . ' Menyu</summary><nav class="mobile-nav" aria-label="Bo\'limlar">' . hs_render_nav($user, $current) . '</nav></details></header>';
     echo '<main class="wrap">';
     echo '<div class="page-head"><div><h1>' . h($title) . '</h1>' . ($subtitle ? '<p class="page-sub">' . h($subtitle) . '</p>' : '') . '</div>';
-    echo '<a class="btn outline small" href="' . h(hs_site_url()) . '/" target="_blank" rel="noopener noreferrer">' . hs_icon('external') . ' Saytni ochish</a></div>';
+    echo '<a class="btn outline small" href="' . h(hs_site_url()) . '/" target="_blank" rel="noopener noreferrer" title="Saytni ochish" aria-label="Saytni ochish">' . hs_icon('external') . '<span class="label-long">Saytni ochish</span></a></div>';
     if (session_status() === PHP_SESSION_ACTIVE) {
         foreach (hs_flash() as $f) {
             echo '<p class="flash flash-' . h($f[0]) . '">' . h($f[1]) . '</p>';
@@ -167,8 +197,7 @@ function hs_page_end()
 function hs_render_blocked()
 {
     http_response_code(403);
-    echo '<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
-    echo '<meta name="robots" content="noindex"><title>Kirish yopiq</title><link rel="stylesheet" href="/admin/assets/admin.css?v=3"></head>';
+    hs_head('Kirish yopiq', 'noindex');
     echo '<body class="center"><div class="card narrow auth-card"><div class="auth-icon danger">' . hs_icon('shield') . '</div><h1>Kirish yopiq</h1>';
     echo "<p>Bu qurilmadan juda ko'p noto'g'ri urinish bo'ldi, shuning uchun admin panelga kirish bloklandi.</p>";
     echo '</div></body></html>';
@@ -176,12 +205,16 @@ function hs_render_blocked()
 }
 
 /**
- * Oddiy ustunli grafik, SVG. $rows = [[yorliq, qiymat], ...]
+ * Ustunli grafik. $rows = [[yorliq, qiymat], ...]
+ *
+ * Yorliq va raqamlar oddiy HTML matn: ilgari hammasi bitta SVG ichida edi
+ * va telefonda grafik bilan birga kichrayib, o'qib bo'lmas darajaga tushardi.
+ * Ustun balandligi SVG'ning height atributida (foizda) — CSP style="" ni
+ * taqiqlaydi, atribut esa ruxsat etilgan. $todayLabel — ajratib ko'rsatiladigan kun.
  */
-function hs_bar_chart($rows, $label = '')
+function hs_bar_chart($rows, $label = '', $todayLabel = null)
 {
-    $n = count($rows);
-    if ($n === 0) {
+    if (!$rows) {
         return '<p class="empty">Ma\'lumot yo\'q.</p>';
     }
     $max = 0;
@@ -189,26 +222,58 @@ function hs_bar_chart($rows, $label = '')
         $max = max($max, (float) $r[1]);
     }
     $max = $max > 0 ? $max : 1;
-    $w = 640;
-    $hgt = 170;
-    $gap = 10;
-    $bw = ($w - $gap * ($n - 1)) / $n;
-    $svg = '<svg class="chart" viewBox="0 0 ' . $w . ' ' . ($hgt + 36) . '" role="img" aria-label="' . h($label) . '">';
-    for ($g = 0; $g <= 3; $g++) {
-        $y = round(10 + ($hgt - 10) * $g / 3, 1);
-        $svg .= '<line class="grid-line" x1="0" x2="' . $w . '" y1="' . $y . '" y2="' . $y . '"/>';
+    if ($todayLabel === null) {
+        $todayLabel = date('d.m');
     }
-    foreach ($rows as $i => $r) {
-        $bh = round(($r[1] / $max) * ($hgt - 20), 1);
-        $x = round($i * ($bw + $gap), 1);
-        $y = $hgt - $bh;
-        $svg .= '<rect class="bar' . ((float) $r[1] === 0.0 ? ' zero' : '') . '" x="' . $x . '" y="' . $y . '" width="' . round($bw, 1) . '" height="' . max($bh, 2) . '" rx="6"><title>' . h($r[0] . ': ' . $r[1]) . '</title></rect>';
-        $svg .= '<text class="val" x="' . round($x + $bw / 2, 1) . '" y="' . max($y - 6, 12) . '" text-anchor="middle">' . h($r[1]) . '</text>';
-        $svg .= '<text class="lbl" x="' . round($x + $bw / 2, 1) . '" y="' . ($hgt + 24) . '" text-anchor="middle">' . h($r[0]) . '</text>';
+    $html = '<div class="bars" role="img" aria-label="' . h($label) . '">';
+    foreach ($rows as $r) {
+        $v = (float) $r[1];
+        // Eng balandi 88% — tepasidagi raqamga joy qoladi.
+        $pct = $v > 0 ? max(round($v / $max * 88, 1), 3) : 0;
+        $html .= '<div class="bar-col' . ((string) $r[0] === $todayLabel ? ' today' : '') . '" title="' . h($r[0] . ': ' . $r[1]) . '">';
+        $html .= '<div class="bar-plot"><div class="bar-stack">';
+        $html .= '<span class="bar-val">' . h($r[1]) . '</span>';
+        $html .= '<svg class="bar-svg" width="100%" height="' . ($v > 0 ? $pct . '%' : '3') . '" aria-hidden="true"><rect class="bar' . ($v > 0 ? '' : ' zero') . '" width="100%" height="100%" rx="' . ($v > 0 ? 7 : 1.5) . '"/></svg>';
+        $html .= '</div></div><span class="bar-lbl">' . h($r[0]) . '</span></div>';
     }
-    return $svg . '</svg>';
+    return $html . '</div>';
 }
 
+/**
+ * Sahifalash: joriy sahifa atrofidagilar, birinchi va oxirgisi.
+ * Ilgari hamma raqam chiqardi — 1000 ta arizada 20 ta tugma.
+ * $url — sahifa raqamidan havola yasaydigan funksiya.
+ */
+function hs_pager($page, $pages, $url)
+{
+    if ($pages <= 1) {
+        return '';
+    }
+    $show = array(1, $pages);
+    for ($i = $page - 2; $i <= $page + 2; $i++) {
+        if ($i >= 1 && $i <= $pages) {
+            $show[] = $i;
+        }
+    }
+    $show = array_values(array_unique($show));
+    sort($show);
+    $html = '<nav class="pager" aria-label="Sahifalar">';
+    if ($page > 1) {
+        $html .= '<a href="' . h($url($page - 1)) . '" aria-label="Oldingi sahifa">‹</a>';
+    }
+    $prev = 0;
+    foreach ($show as $i) {
+        if ($i - $prev > 1) {
+            $html .= '<span>…</span>';
+        }
+        $html .= $i === $page ? '<strong aria-current="page">' . $i . '</strong>' : '<a href="' . h($url($i)) . '">' . $i . '</a>';
+        $prev = $i;
+    }
+    if ($page < $pages) {
+        $html .= '<a href="' . h($url($page + 1)) . '" aria-label="Keyingi sahifa">›</a>';
+    }
+    return $html . '</nav>';
+}
 /** Gorizontal ro'yxat: yorliq, qiymat va ulushi (SVG chiziqcha). */
 function hs_share_list($rows)
 {

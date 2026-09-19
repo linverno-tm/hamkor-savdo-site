@@ -49,7 +49,7 @@ if ($c) {
             $branch = $b;
         }
     }
-    if (!$branch) {
+    if (!$branch && $c['branches']) {
         $branch = $c['branches'][0];
         $slug = $branch['id'];
     }
@@ -136,6 +136,11 @@ if (!$c) {
     hs_page_end();
     exit;
 }
+if (!$branch) {
+    echo '<div class="card"><p class="muted">Hali filial yo\'q. Avval <a href="/admin/filiallar.php?yangi=1">filial qo\'shing</a>.</p></div>';
+    hs_page_end();
+    exit;
+}
 
 echo '<div class="seg">';
 foreach ($c['branches'] as $b) {
@@ -178,12 +183,13 @@ if (!$files) {
     echo '<p class="muted">Tartib raqami kichigi birinchi chiqadi. Muqova — bosh sahifadagi filial kartochkasida.</p><div class="photos">';
     foreach ($files as $i => $f) {
         $b = h($f['base']);
+        $fid = 'p' . $i;
         $isCover = isset($prefs['cover']) ? $prefs['cover'] === $f['base'] : false;
-        echo '<div class="photo-item"><img src="' . h($f['thumb']) . '" alt="" loading="lazy"><div class="body">';
+        echo '<div class="photo-item"><img src="' . h($f['thumb']) . '" alt="" loading="lazy" decoding="async"><div class="body">';
         echo '<small>' . h(isset($KINDS[$f['kind']]) ? $KINDS[$f['kind']] : $f['kind']) . ' · ' . $b . '</small>';
-        echo '<label>Tartib</label><input type="number" name="tartib[' . $b . ']" min="1" max="999" value="' . ($i + 1) . '">';
-        echo '<label>Rasm ostidagi yozuv</label><input type="text" name="yorliq[' . $b . ']" maxlength="60" value="' . h(isset($prefs['labels'][$f['base']]) ? $prefs['labels'][$f['base']] : '') . '" placeholder="avtomatik">';
-        echo '<label>Tavsif (ko\'zi ojizlar va Google uchun)</label><input type="text" name="alt[' . $b . ']" maxlength="200" value="' . h(isset($prefs['alts'][$f['base']]) ? $prefs['alts'][$f['base']] : '') . '" placeholder="avtomatik">';
+        echo '<label for="' . $fid . '-t">Tartib</label><input id="' . $fid . '-t" type="number" name="tartib[' . $b . ']" min="1" max="999" value="' . ($i + 1) . '">';
+        echo '<label for="' . $fid . '-y">Rasm ostidagi yozuv</label><input id="' . $fid . '-y" type="text" name="yorliq[' . $b . ']" maxlength="60" value="' . h(isset($prefs['labels'][$f['base']]) ? $prefs['labels'][$f['base']] : '') . '" placeholder="avtomatik">';
+        echo '<label for="' . $fid . '-a">Tavsif (ko\'zi ojizlar va Google uchun)</label><input id="' . $fid . '-a" type="text" name="alt[' . $b . ']" maxlength="200" value="' . h(isset($prefs['alts'][$f['base']]) ? $prefs['alts'][$f['base']] : '') . '" placeholder="avtomatik">';
         echo '<label class="inline"><input type="radio" name="muqova" value="' . $b . '"' . ($isCover ? ' checked' : '') . '> Muqova</label>';
         echo '<label class="inline"><input type="checkbox" name="ochir[' . $b . ']" value="1"> O\'chirish</label>';
         echo '</div></div>';

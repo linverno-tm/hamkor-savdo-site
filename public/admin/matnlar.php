@@ -78,9 +78,10 @@ echo '<div class="actions"><button class="btn" type="submit">Saqlash va nashr qi
 
 function hs_faq_row($k, $o, $q, $a)
 {
-    return '<div class="repeat-row"><div class="grid grid-4"><div><label>Tartib</label><input type="number" name="o[' . $k . ']" value="' . h($o) . '" min="1" max="999"></div></div>'
-        . '<label>Savol</label><input type="text" name="q[' . $k . ']" maxlength="200" value="' . h($q) . '">'
-        . '<label>Javob</label><textarea name="a[' . $k . ']" maxlength="1500">' . h($a) . '</textarea>'
+    $id = 'faq-' . $k;
+    return '<div class="repeat-row"><div class="grid grid-4"><div><label for="' . $id . '-o">Tartib</label><input id="' . $id . '-o" type="number" name="o[' . $k . ']" value="' . h($o) . '" min="1" max="999"></div></div>'
+        . '<label for="' . $id . '-q">Savol</label><input id="' . $id . '-q" type="text" name="q[' . $k . ']" maxlength="200" value="' . h($q) . '">'
+        . '<label for="' . $id . '-a">Javob</label><textarea id="' . $id . '-a" name="a[' . $k . ']" maxlength="1500">' . h($a) . '</textarea>'
         . '<p class="hint">O\'chirish uchun savol va javobni bo\'shating.</p></div>';
 }
 
