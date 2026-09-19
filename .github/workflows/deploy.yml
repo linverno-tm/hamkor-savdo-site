@@ -45,8 +45,30 @@ jobs:
           local-dir: ./out/
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
           # Serverdagi kalitlar va admin bazasiga hech qachon tegilmaydi.
+          #
+          # `**/secrets.php` — `api/secrets.php` ning o'zi ham yetarli, lekin
+          # bu fayl serverdagi Telegram kaliti va admin paroli hashini
+          # saqlaydi. Uni bir marta ustiga yozib yuborish panelga kirishni
+          # yo'qotadi, shuning uchun himoya ikki qavat.
+          #
+          # `admin/_data/**` — arizalar bazasi. U faqat serverda yashaydi;
+          # mahalliy `out/admin/_data/hamkor.sqlite` sinov ma'lumoti bilan
+          # to'lgan bo'ladi va yuklansa, haqiqiy arizalar o'chib ketardi.
           exclude: |
             **/.git*
             **/.git*/**
             api/secrets.php
+            **/secrets.php
             admin/_data/**
+
+      # Yuklash muvaffaqiyatli tugadi — endi saytning o'zi sog'ligini
+      # tekshiramiz. Bu xostingda nginx (Engintron) Apache oldida turadi va
+      # statik fayllarni ba'zan o'zi beradi, ya'ni `.htaccess` chetlab
+      # o'tiladi. Shunda sayt ko'zga chiroyli ko'rinadi, lekin maxfiy
+      # fayllar ochilib qolishi yoki kirillcha 404 yo'qolishi mumkin.
+      # Skript har bir qoidani alohida so'rov bilan sinaydi.
+      - name: Saytni tekshirish
+        if: ${{ env.FTP_SERVER != '' }}
+        run: |
+          sleep 20   # nginx keshi yangilansin
+          node tools/joylashuvni-tekshir.mjs "${{ secrets.SAYT_URL || 'https://hamkorsavdo.uz' }}"

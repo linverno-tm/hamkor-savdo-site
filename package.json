@@ -9,7 +9,8 @@
     "postbuild": "node tools/uz-kr-build.mjs",
     "start": "next start",
     "lint": "eslint",
-    "mahalliy": "php -S localhost:8000 -t out tools/mahalliy-server.php"
+    "mahalliy": "php -S localhost:8000 -t out tools/mahalliy-server.php",
+    "tekshir": "node tools/joylashuvni-tekshir.mjs"
   },
   "dependencies": {
     "next": "16.3.1",
