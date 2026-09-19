@@ -26,7 +26,12 @@ const SKIP_TAGS = new Set(["script", "style", "noscript"]);
 const ATTRS_TO_TRANSLATE = ["alt", "aria-label", "title", "placeholder"];
 /** Ichki sahifa havolasi — nuqta bo'lmasa (fayl kengaytmasi yo'q). */
 const isPageHref = (href) =>
-  href.startsWith("/") && !href.startsWith("/uz-kr") && !href.includes(".") && !href.startsWith("/api");
+  href.startsWith("/") &&
+  !href.startsWith("/uz-kr") &&
+  // Ruscha sahifalarning kirill nusxasi yo'q — havola /ru/ ligicha qolsin.
+  !(href === "/ru" || href.startsWith("/ru/")) &&
+  !href.includes(".") &&
+  !href.startsWith("/api");
 
 /**
  * Kirillga o'girilmaydigan bo'laklar: brend nomi, @nomlar
@@ -150,7 +155,9 @@ const CANONICAL_TAG = /<link\b[^>]*\brel="canonical"[^>]*>/i;
  * yig'ish o'rniga faqat kerakli teglarni almashtiramiz.
  */
 function withSeoLinks(html, urls, canonicalHref) {
-  let out = html.replace(HREFLANG_TAG, "");
+  // Ruscha nusxaga havola (sahifaning o'zi qo'ygan) saqlanadi — faqat
+  // o'zbekcha juftlik va x-default qayta yoziladi.
+  let out = html.replace(HREFLANG_TAG, (tag) => (/href[Ll]ang="ru"/.test(tag) ? tag : ""));
   out = out.replace(CANONICAL_TAG, (tag) =>
     tag.replace(/\bhref="[^"]*"/i, `href="${escapeAttr(canonicalHref)}"`),
   );
@@ -186,6 +193,8 @@ function walkFiles(dir) {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (name === "uz-kr") continue; // o'zining chiqishini qayta o'qimasin
+    // Ruscha sahifalar (out/ru/) — o'zbekcha emas, kirillga "o'girilmaydi".
+    if (dir === OUT_DIR && name === "ru") continue;
     // Google Search Console tasdiqlash fayli — sahifa emas, bir qator matn.
     // Unga tegilmasin: bir harf o'zgarsa, sayt egaligi tasdiqlanmay qoladi.
     if (/^google[0-9a-f]+\.html$/.test(name)) continue;
@@ -196,7 +205,38 @@ function walkFiles(dir) {
   return out;
 }
 
+/**
+ * Ruscha sahifalar (out/ru/) umumiy layout'dan `<html lang="uz">` bilan
+ * chiqadi — Next'da til root layout'da bitta. Brauzer, ekran o'quvchi va
+ * qidiruv tizimi to'g'ri tilni bilishi uchun shu yerda "ru" qilinadi.
+ */
+function fixRussianLang() {
+  const dir = join(OUT_DIR, "ru");
+  let n = 0;
+  const walk = (d) => {
+    for (const name of readdirSync(d)) {
+      const full = join(d, name);
+      if (statSync(full).isDirectory()) walk(full);
+      else if (name.endsWith(".html")) {
+        const html = readFileSync(full, "utf8");
+        const fixed = html.replace(/<html([^>]*)\slang="uz"/, '<html$1 lang="ru"');
+        if (fixed !== html) {
+          writeFileSync(full, fixed, "utf8");
+          n++;
+        }
+      }
+    }
+  };
+  try {
+    walk(dir);
+  } catch {
+    return;
+  }
+  console.log(`ru: ${n} ta sahifada lang="ru"`);
+}
+
 function main() {
+  fixRussianLang();
   const files = walkFiles(OUT_DIR);
   let count = 0;
   let paired = 0;

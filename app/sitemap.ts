@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { branches } from "@/data/branches";
 import { absolute } from "@/lib/seo";
 import { content } from "@/lib/content";
+import { topics } from "@/data/topics";
 
 /** Required by `output: "export"` so this is emitted as a plain file. */
 export const dynamic = "force-static";
@@ -12,11 +13,12 @@ export const dynamic = "force-static";
  * KEYIN paydo bo'ladi — Next o'zi bu haqda bilmaydi, shuning uchun yo'l shu
  * yerda qo'lda takrorlanadi.
  */
-function withUzKr(path: string) {
+function withUzKr(path: string, ruPath?: string) {
   return {
     languages: {
       uz: absolute(path),
       "uz-Cyrl": absolute(`/uz-kr${path}`),
+      ...(ruPath ? { ru: absolute(ruPath) } : {}),
       // Til aniqlanmasa lotin nusxa — sahifalardagi hreflang bilan bir xil.
       "x-default": absolute(path),
     },
@@ -25,7 +27,14 @@ function withUzKr(path: string) {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: absolute("/"), changeFrequency: "monthly", priority: 1, alternates: withUzKr("/") },
+    { url: absolute("/"), changeFrequency: "monthly", priority: 1, alternates: withUzKr("/", "/ru") },
+    { url: absolute("/ru"), changeFrequency: "monthly", priority: 0.9, alternates: withUzKr("/", "/ru") },
+    /* Yo'nalish sahifalari — "texnika muddatli to'lovga", "рассрочка мебель"
+       kabi so'rovlar uchun asosiy sahifalar; bosh sahifadan keyin eng muhimi. */
+    ...topics.flatMap((t) => [
+      { url: absolute(t.path), changeFrequency: "monthly" as const, priority: 0.9, alternates: withUzKr(t.path, t.ruPath) },
+      { url: absolute(t.ruPath), changeFrequency: "monthly" as const, priority: 0.8, alternates: withUzKr(t.path, t.ruPath) },
+    ]),
     {
       url: absolute("/filiallar"),
       changeFrequency: "monthly",

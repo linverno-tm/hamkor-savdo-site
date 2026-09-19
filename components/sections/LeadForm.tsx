@@ -13,27 +13,91 @@ import { useLeadSubmit } from "@/lib/lead";
  * to /rahmat. When JS is available this intercepts the submit and reports the
  * result inline instead, without losing the page.
  */
-export function LeadForm({ branchId }: { branchId?: string }) {
+/* Ruscha sahifalar (/ru/...) uchun. O'zbekcha matnlar avvalgidek — lotin
+   nusxadan kirillchasini `tools/uz-kr-build.mjs` o'zi yasaydi. */
+const TEXT = {
+  uz: {
+    kicker: "Ariza qoldiring",
+    title: "Sizga o'zimiz qo'ng'iroq qilamiz",
+    lead: "Qo'ng'iroq qilishga vaqtingiz yo'qmi? Ism va telefon raqamingizni qoldiring — mutaxassisimiz o'zi bog'lanadi va savollaringizga javob beradi.",
+    orCall: "Yoki hoziroq qo'ng'iroq qiling:",
+    name: "Ismingiz",
+    namePh: "Anvar",
+    phone: "Telefon",
+    phoneTitle: "Telefon raqamini kiriting, masalan: +998 90 123 45 67",
+    phoneHelp: "Shu raqamga qo'ng'iroq qilamiz.",
+    branch: "Qaysi filial sizga qulay?",
+    any: "Farqi yo'q",
+    other: "Boshqa viloyatdaman — yetkazib berasizmi?",
+    note: "Nima qiziqtiradi?",
+    notePh: "Masalan: muzlatgich, muddatli to'lov shartlari",
+    specialTitle: "Mahsulot sizda yo'q — boshqa joyda ko'rganman",
+    specialText: "Uni ham muddatli to'lovga rasmiylashtirib beramiz. Nomi, narxi va qayerdaligini yuqorida yozib qoldiring.",
+    sending: "Yuborilmoqda…",
+    submit: "Arizani yuborish",
+    privacy1: "Ma'lumotlaringiz faqat siz bilan bog'lanish uchun ishlatiladi. Arizani yuborish orqali",
+    privacyLink: "shaxsiy ma'lumotlarni qayta ishlashga",
+    privacy2: "rozilik bildirasiz.",
+    ok: "Arizangiz qabul qilindi. Tez orada bog'lanamiz — rahmat!",
+  },
+  ru: {
+    kicker: "Оставьте заявку",
+    title: "Мы сами вам перезвоним",
+    lead: "Нет времени звонить? Оставьте имя и номер телефона — специалист свяжется с вами и ответит на вопросы.",
+    orCall: "Или позвоните прямо сейчас:",
+    name: "Ваше имя",
+    namePh: "Анвар",
+    phone: "Телефон",
+    phoneTitle: "Введите номер телефона, например: +998 90 123 45 67",
+    phoneHelp: "Перезвоним на этот номер.",
+    branch: "Какой магазин вам удобнее?",
+    any: "Неважно",
+    other: "Я из другого региона — доставите?",
+    note: "Что вас интересует?",
+    notePh: "Например: холодильник, условия рассрочки",
+    specialTitle: "Такого товара у вас нет — я видел его в другом месте",
+    specialText: "Оформим в рассрочку и его. Напишите выше название, цену и где вы его видели.",
+    sending: "Отправляем…",
+    submit: "Отправить заявку",
+    privacy1: "Данные используются только для связи с вами. Отправляя заявку, вы даёте",
+    privacyLink: "согласие на обработку персональных данных",
+    privacy2: ".",
+    ok: "Заявка принята. Скоро свяжемся с вами — спасибо!",
+  },
+};
+
+const CITY_RU: Record<string, string> = { Shahrixon: "Шахрихан", Asaka: "Асака", Andijon: "Андижан" };
+
+export function LeadForm({
+  branchId,
+  lang = "uz",
+  page,
+  lead,
+}: {
+  branchId?: string;
+  lang?: "uz" | "ru";
+  /** Ariza qaysi sahifadan kelgani (Telegram xabarida ko'rinadi). */
+  page?: string;
+  /** Sarlavha ostidagi matn o'rniga — yo'nalish sahifasiga mos. */
+  lead?: string;
+}) {
   /* Yuborish mantiqi `lib/lead.ts` da — bosh qismdagi qisqa forma ham
      aynan shuni ishlatadi, shunda ikkalasi hech qachon ajralib ketmaydi. */
   const { status, onSubmit } = useLeadSubmit();
+  const t = TEXT[lang];
 
   return (
     <section id="ariza" aria-labelledby="lead-title" className="bg-ground py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
-            <p className="kicker">Ariza qoldiring</p>
+            <p className="kicker">{t.kicker}</p>
             <h2 id="lead-title" className="display mt-3 text-4xl sm:text-5xl">
-              Sizga o&apos;zimiz qo&apos;ng&apos;iroq qilamiz
+              {t.title}
             </h2>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-2">
-              Qo&apos;ng&apos;iroq qilishga vaqtingiz yo&apos;qmi? Ism va telefon raqamingizni
-              qoldiring — mutaxassisimiz o&apos;zi bog&apos;lanadi va savollaringizga javob
-              beradi.
-            </p>
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-2">{lead ?? t.lead}</p>
             <p className="mt-6 text-sm text-ink-3">
-              Yoki hoziroq qo&apos;ng&apos;iroq qiling:{" "}
+              {t.orCall}{" "}
               <a
                 href={`tel:${site.phone}`}
                 className="font-semibold text-purple underline-offset-4 hover:underline"
@@ -54,14 +118,14 @@ export function LeadForm({ branchId }: { branchId?: string }) {
               <label htmlFor="website">Saytingiz</label>
               <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
             </div>
-            <input type="hidden" name="page" value={branchId ? `/filiallar/${branchId}` : "/"} />
+            <input type="hidden" name="page" value={page ?? (branchId ? `/filiallar/${branchId}` : "/")} />
             {/* Mijoz qayerdan kelgani — app/layout.tsx dagi SOURCE_SCRIPT yuborishdan oldin to'ldiradi. */}
             <input type="hidden" name="src" defaultValue="" />
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-1">
                 <label htmlFor="lead-name" className="block text-sm font-semibold text-ink">
-                  Ismingiz <span className="text-purple">*</span>
+                  {t.name} <span className="text-purple">*</span>
                 </label>
                 <input
                   id="lead-name"
@@ -73,13 +137,13 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   autoComplete="name"
                   /* ym-disable-keys: Webvisor yozilgan matnni Yandex'ga yubormaydi. */
                   className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
-                  placeholder="Anvar"
+                  placeholder={t.namePh}
                 />
               </div>
 
               <div className="sm:col-span-1">
                 <label htmlFor="lead-phone" className="block text-sm font-semibold text-ink">
-                  Telefon <span className="text-purple">*</span>
+                  {t.phone} <span className="text-purple">*</span>
                 </label>
                 <input
                   id="lead-phone"
@@ -96,19 +160,19 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                      qavs va chiziqchaga ruxsat, chunki odam raqamni
                      "+998 90 123 45 67" ko'rinishida yozadi. */
                   pattern="[+]?[0-9()\-\s]{9,24}"
-                  title="Telefon raqamini kiriting, masalan: +998 90 123 45 67"
+                  title={t.phoneTitle}
                   aria-describedby="lead-phone-help"
                   className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
                   placeholder="+998 90 123 45 67"
                 />
                 <p id="lead-phone-help" className="mt-2 text-xs text-ink-3">
-                  Shu raqamga qo&apos;ng&apos;iroq qilamiz.
+                  {t.phoneHelp}
                 </p>
               </div>
 
               <div className="sm:col-span-2">
                 <label htmlFor="lead-branch" className="block text-sm font-semibold text-ink">
-                  Qaysi filial sizga qulay?
+                  {t.branch}
                 </label>
                 <select
                   id="lead-branch"
@@ -116,10 +180,10 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   defaultValue={branchId ?? ""}
                   className="mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
                 >
-                  <option value="">Farqi yo&apos;q</option>
+                  <option value="">{t.any}</option>
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.city} — {b.landmark}
+                      {lang === "ru" ? CITY_RU[b.city] ?? b.city : b.city} — {b.landmark}
                     </option>
                   ))}
                   {/* Filiallar Andijon viloyatida, lekin yetkazib berish butun
@@ -127,13 +191,13 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                       begona filialni tanlashga majbur bo'lmasin — bu ariza ham
                       boshqacha ishlanadi, operator yetkazish shartlarini
                       aytishi kerak. */}
-                  <option value="boshqa-viloyat">Boshqa viloyatdaman — yetkazib berasizmi?</option>
+                  <option value="boshqa-viloyat">{t.other}</option>
                 </select>
               </div>
 
               <div className="sm:col-span-2">
                 <label htmlFor="lead-note" className="block text-sm font-semibold text-ink">
-                  Nima qiziqtiradi?
+                  {t.note}
                 </label>
                 <textarea
                   id="lead-note"
@@ -141,7 +205,7 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                   rows={3}
                   maxLength={500}
                   className="ym-disable-keys mt-2 w-full rounded-xl border border-line bg-ground p-4 text-ink outline-none transition-colors focus:border-purple"
-                  placeholder="Masalan: muzlatgich, muddatli to'lov shartlari"
+                  placeholder={t.notePh}
                 />
               </div>
 
@@ -163,12 +227,9 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                     className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--purple)]"
                   />
                   <span className="text-sm leading-relaxed text-ink-2">
-                    <span className="font-semibold text-ink">
-                      Mahsulot sizda yo&apos;q — boshqa joyda ko&apos;rganman
-                    </span>
+                    <span className="font-semibold text-ink">{t.specialTitle}</span>
                     <br />
-                    Uni ham muddatli to&apos;lovga rasmiylashtirib beramiz. Nomi, narxi va
-                    qayerdaligini yuqorida yozib qoldiring.
+                    {t.specialText}
                   </span>
                 </label>
               </div>
@@ -180,18 +241,18 @@ export function LeadForm({ branchId }: { branchId?: string }) {
                 disabled={status.kind === "sending"}
                 className="btn btn-primary disabled:opacity-60"
               >
-                {status.kind === "sending" ? "Yuborilmoqda…" : "Arizani yuborish"}
+                {status.kind === "sending" ? t.sending : t.submit}
               </button>
               {/* Forma ism va telefon raqamini yig'adi — bu shaxsga doir
                   ma'lumot. O'zbekiston qonuni bo'yicha odam nima uchun va
                   kimga berayotganini bilishi kerak. */}
               <p className="text-xs leading-relaxed text-ink-3">
-                Ma&apos;lumotlaringiz faqat siz bilan bog&apos;lanish uchun ishlatiladi.
-                Arizani yuborish orqali{" "}
+                {t.privacy1}{" "}
                 <Link href="/maxfiylik" className="font-semibold text-purple underline-offset-2 hover:underline">
-                  shaxsiy ma&apos;lumotlarni qayta ishlashga
-                </Link>{" "}
-                rozilik bildirasiz.
+                  {t.privacyLink}
+                </Link>
+                {lang === "ru" ? "" : " "}
+                {t.privacy2}
               </p>
             </div>
 
@@ -199,7 +260,7 @@ export function LeadForm({ branchId }: { branchId?: string }) {
             <div aria-live="polite" className="mt-5 empty:mt-0">
               {status.kind === "ok" ? (
                 <p className="rounded-xl bg-purple-50 px-5 py-4 font-semibold text-purple">
-                  Arizangiz qabul qilindi. Tez orada bog&apos;lanamiz — rahmat!
+                  {t.ok}
                 </p>
               ) : null}
               {status.kind === "error" ? (
