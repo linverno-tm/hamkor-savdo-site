@@ -62,6 +62,7 @@ function hs_nav_groups()
         ),
         'Boshqaruv' => array(
             array('/admin/foydalanuvchilar.php', 'Foydalanuvchilar', 'users', true, 'Filial operatorlari va ruxsatlar'),
+            array('/admin/telegram.php', 'Telegram', 'send', true, 'Arizalar qaysi odam va guruhlarga boradi'),
             array('/admin/bloklar.php', 'Bloklar', 'shield', true, 'Bloklangan qurilmalar va kirishlar'),
             array('/admin/tarix.php', "O'zgarishlar tarixi", 'history', true, 'Kim, qachon, nimani o\'zgartirdi'),
             array('/admin/nashr.php', 'Nashr holati', 'upload', true, 'O\'zgarishlar saytga chiqdimi'),
