@@ -88,9 +88,86 @@ function hs_metrika_error_message($body)
     return '';
 }
 
+function hs_metrika_url($endpoint, $params)
+{
+    return 'https://api-metrika.yandex.net' . $endpoint . ($params ? '?' . http_build_query($params) : '');
+}
+
+/**
+ * Bir nechta so'rovni BIR VAQTDA yuborib, javoblarni keshga yozadi.
+ * Statistika sahifasi 8 ta so'rov qiladi; ketma-ket bo'lsa 5–10 soniya
+ * qotib turardi. Endi hammasi parallel ketadi, keyin sahifa ularni
+ * keshdan oladi. Xato javob keshlanmaydi — oddiy so'rov uni qayta urinib,
+ * xato matnini o'zi ko'rsatadi. curl_multi bo'lmasa — jimgina hech narsa qilmaydi.
+ */
+function hs_metrika_prefetch($requests)
+{
+    if (!function_exists('curl_multi_init') || !hs_metrika_ready()) {
+        return;
+    }
+    $mh = curl_multi_init();
+    $handles = array();
+    foreach ($requests as $r) {
+        $url = hs_metrika_url($r[0], $r[1]);
+        $key = 'ym:' . md5($url);
+        if (isset($handles[$key]) || hs_cache_get($key) !== null) {
+            continue;
+        }
+        $ch = curl_init($url);
+        curl_setopt_array($ch, array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HTTPHEADER => array('Authorization: OAuth ' . hs_metrika_token(), 'Accept: application/json'),
+        ));
+        curl_multi_add_handle($mh, $ch);
+        $handles[$key] = $ch;
+    }
+    if (!$handles) {
+        curl_multi_close($mh);
+        return;
+    }
+    do {
+        $status = curl_multi_exec($mh, $running);
+        if ($running) {
+            curl_multi_select($mh, 1.0);
+        }
+    } while ($running && $status === CURLM_OK);
+    foreach ($handles as $key => $ch) {
+        if ((int) curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200) {
+            $data = json_decode((string) curl_multi_getcontent($ch), true);
+            if (is_array($data)) {
+                hs_cache_set($key, $data, 600);
+            }
+        }
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+}
+
+/** Statistika sahifasi uchun hamma so'rovlar oldindan, parallel. */
+function hs_metrika_prefetch_page($date1, $date2)
+{
+    $goalsEndpoint = '/management/v1/counter/' . hs_metrika_counter() . '/goals';
+    // 1-to'lqin: maqsadlar ro'yxati va unga bog'liq bo'lmagan hamma narsa.
+    $reqs = array(
+        array($goalsEndpoint, array()),
+        array('/stat/v1/data', hs_metrika_daily_params()),
+        array('/stat/v1/data', hs_metrika_top_pages_params($date1, $date2)),
+    );
+    foreach (array(array('ym:s:lastTrafficSource', 10), array('ym:s:lastSocialNetwork', 8), array('ym:s:regionCity', 10), array('ym:s:deviceCategory', 5)) as $b) {
+        $reqs[] = array('/stat/v1/data', hs_metrika_breakdown_params($b[0], $date1, $date2, $b[1]));
+    }
+    hs_metrika_prefetch($reqs);
+    // 2-to'lqin: asosiy raqamlar maqsad ID laridan tuziladi.
+    $err = null;
+    hs_metrika_prefetch(array(array('/stat/v1/data', hs_metrika_overview_params(hs_metrika_goal_ids($err), $date1, $date2))));
+}
+
 function hs_metrika_request($endpoint, $params, &$error = null)
 {
-    $url = 'https://api-metrika.yandex.net' . $endpoint . ($params ? '?' . http_build_query($params) : '');
+    $url = hs_metrika_url($endpoint, $params);
     $key = 'ym:' . md5($url);
     $cached = hs_cache_get($key);
     if ($cached !== null) {
@@ -138,10 +215,56 @@ function hs_metrika_goal_ids(&$error = null)
     return $ids;
 }
 
+function hs_metrika_stat_params($params)
+{
+    return array_merge(array('ids' => hs_metrika_counter(), 'accuracy' => 'full', 'lang' => 'en'), $params);
+}
+
 function hs_metrika_stat($params, &$error = null)
 {
-    $params = array_merge(array('ids' => hs_metrika_counter(), 'accuracy' => 'full', 'lang' => 'en'), $params);
-    return hs_metrika_request('/stat/v1/data', $params, $error);
+    return hs_metrika_request('/stat/v1/data', hs_metrika_stat_params($params), $error);
+}
+
+/* So'rov parametrlari alohida: sahifa ham, oldindan yuklash ham aynan bir
+   xil manzilni yasashi kerak — aks holda kesh kaliti mos kelmaydi. */
+function hs_metrika_overview_params($goals, $date1, $date2)
+{
+    $metrics = array('ym:s:visits', 'ym:s:users');
+    foreach ($goals as $gid) {
+        if ($gid) {
+            $metrics[] = 'ym:s:goal' . $gid . 'reaches';
+        }
+    }
+    return hs_metrika_stat_params(array('metrics' => implode(',', $metrics), 'date1' => $date1, 'date2' => $date2));
+}
+
+function hs_metrika_daily_params()
+{
+    return hs_metrika_stat_params(array('metrics' => 'ym:s:visits', 'dimensions' => 'ym:s:date', 'date1' => '6daysAgo', 'date2' => 'today', 'sort' => 'ym:s:date', 'limit' => 7));
+}
+
+function hs_metrika_breakdown_params($dimension, $date1, $date2, $limit)
+{
+    return hs_metrika_stat_params(array(
+        'metrics' => 'ym:s:visits',
+        'dimensions' => $dimension,
+        'date1' => $date1,
+        'date2' => $date2,
+        'sort' => '-ym:s:visits',
+        'limit' => $limit,
+    ));
+}
+
+function hs_metrika_top_pages_params($date1, $date2)
+{
+    return hs_metrika_stat_params(array(
+        'metrics' => 'ym:pv:pageviews',
+        'dimensions' => 'ym:pv:URLPath',
+        'date1' => $date1,
+        'date2' => $date2,
+        'sort' => '-ym:pv:pageviews',
+        'limit' => 10,
+    ));
 }
 
 /**
@@ -150,13 +273,7 @@ function hs_metrika_stat($params, &$error = null)
 function hs_metrika_overview($date1, $date2, &$error = null)
 {
     $goals = hs_metrika_goal_ids($error);
-    $metrics = array('ym:s:visits', 'ym:s:users');
-    foreach ($goals as $gid) {
-        if ($gid) {
-            $metrics[] = 'ym:s:goal' . $gid . 'reaches';
-        }
-    }
-    $d = hs_metrika_stat(array('metrics' => implode(',', $metrics), 'date1' => $date1, 'date2' => $date2), $error);
+    $d = hs_metrika_request('/stat/v1/data', hs_metrika_overview_params($goals, $date1, $date2), $error);
     if (!$d) {
         return null;
     }
@@ -174,7 +291,7 @@ function hs_metrika_overview($date1, $date2, &$error = null)
             $i++;
         }
     }
-    $daily = hs_metrika_stat(array('metrics' => 'ym:s:visits', 'dimensions' => 'ym:s:date', 'date1' => '6daysAgo', 'date2' => 'today', 'sort' => 'ym:s:date', 'limit' => 7), $error);
+    $daily = hs_metrika_request('/stat/v1/data', hs_metrika_daily_params(), $error);
     /* Metrika faqat tashrif bo'lgan kunlarni qaytaradi. Bo'sh kunlarni 0
        bilan to'ldiramiz, aks holda bitta kunlik ma'lumot butun grafikni
        egallab oladi va "7 kun" grafigi bir ustunga aylanadi. */
@@ -195,14 +312,7 @@ function hs_metrika_overview($date1, $date2, &$error = null)
 
 function hs_metrika_breakdown($dimension, $date1, $date2, $limit = 10, &$error = null)
 {
-    $d = hs_metrika_stat(array(
-        'metrics' => 'ym:s:visits',
-        'dimensions' => $dimension,
-        'date1' => $date1,
-        'date2' => $date2,
-        'sort' => '-ym:s:visits',
-        'limit' => $limit,
-    ), $error);
+    $d = hs_metrika_request('/stat/v1/data', hs_metrika_breakdown_params($dimension, $date1, $date2, $limit), $error);
     $rows = array();
     if ($d && !empty($d['data'])) {
         foreach ($d['data'] as $r) {
@@ -218,14 +328,7 @@ function hs_metrika_breakdown($dimension, $date1, $date2, $limit = 10, &$error =
 
 function hs_metrika_top_pages($date1, $date2, &$error = null)
 {
-    $d = hs_metrika_stat(array(
-        'metrics' => 'ym:pv:pageviews',
-        'dimensions' => 'ym:pv:URLPath',
-        'date1' => $date1,
-        'date2' => $date2,
-        'sort' => '-ym:pv:pageviews',
-        'limit' => 10,
-    ), $error);
+    $d = hs_metrika_request('/stat/v1/data', hs_metrika_top_pages_params($date1, $date2), $error);
     $rows = array();
     if ($d && !empty($d['data'])) {
         foreach ($d['data'] as $r) {
