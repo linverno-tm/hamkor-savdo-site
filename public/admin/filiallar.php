@@ -1,37 +1,58 @@
 <?php
 require __DIR__ . '/_lib/bootstrap.php';
 require_once __DIR__ . '/_lib/content.php';
+require_once __DIR__ . '/_lib/photos.php';
 
 $user = hs_require_login(true);
 
-/** Formadagi filial maydonlari -> content.json yozuvi. */
-function hs_branch_from_post($id)
+/** Telefonni bir xil ko'rinishga keltiradi: 9 raqam -> +998..., ko'rinishi "+998 55 203 08 80". */
+function hs_branch_phone($raw)
 {
-    $phone = preg_replace('/[^\d+]/', '', hs_post('phone'));
+    $phone = preg_replace('/[^\d+]/', '', (string) $raw);
     $digits = preg_replace('/\D/', '', $phone);
     if (strlen($digits) === 9) {
         $phone = '+998' . $digits;
     } elseif (strlen($digits) === 12) {
         $phone = '+' . $digits;
     }
-    $display = $phone !== '' ? preg_replace('/^\+998(\d{2})(\d{3})(\d{2})(\d{2})$/', '+998 $1 $2 $3 $4', $phone) : null;
-    $hours = str_replace(array('-', '—'), '–', preg_replace('/\s+/', '', hs_post('hours')));
-    $insta = ltrim(hs_post('instagram'), '@');
     return array(
-        'id' => $id,
-        'city' => mb_substr(hs_post('city'), 0, 60),
-        'address' => mb_substr(hs_post('address'), 0, 200),
-        'landmark' => mb_substr(hs_post('landmark'), 0, 120),
-        'phone' => $phone !== '' ? $phone : null,
-        'phoneDisplay' => $display,
-        'instagram' => $insta !== '' ? mb_substr($insta, 0, 40) : null,
-        'hours' => $hours,
-        'mapQuery' => mb_substr(hs_post('mapQuery'), 0, 200),
-        'lat' => (float) str_replace(',', '.', hs_post('lat')),
-        'lng' => (float) str_replace(',', '.', hs_post('lng')),
-        'closed' => hs_post('closed') === '1',
-        'closedNote' => mb_substr(hs_post('closedNote'), 0, 200),
+        $phone !== '' ? $phone : null,
+        $phone !== '' ? preg_replace('/^\+998(\d{2})(\d{3})(\d{2})(\d{2})$/', '+998 $1 $2 $3 $4', $phone) : null,
     );
+}
+
+/**
+ * Formadagi filial maydonlari. Faqat formada BOR maydonlar qaytadi —
+ * filial sahifasidagi har bir karta o'z qismini alohida saqlaydi va
+ * qolganiga tegmaydi.
+ */
+function hs_branch_fields_from_post()
+{
+    $has = function ($k) {
+        return array_key_exists($k, $_POST);
+    };
+    $out = array();
+    if ($has('phone')) {
+        list($out['phone'], $out['phoneDisplay']) = hs_branch_phone(hs_post('phone'));
+    }
+    if ($has('hours')) {
+        $out['hours'] = str_replace(array('-', '—'), '–', preg_replace('/\s+/', '', hs_post('hours')));
+    }
+    if ($has('instagram')) {
+        $insta = ltrim(preg_replace('#^https?://(www\.)?instagram\.com/#i', '', trim(hs_post('instagram'), '/ ')), '@');
+        $out['instagram'] = $insta !== '' ? mb_substr($insta, 0, 40) : null;
+    }
+    foreach (array('city' => 60, 'address' => 200, 'landmark' => 120, 'mapQuery' => 200) as $k => $max) {
+        if ($has($k)) {
+            $out[$k] = mb_substr(hs_post($k), 0, $max);
+        }
+    }
+    foreach (array('lat', 'lng') as $k) {
+        if ($has($k)) {
+            $out[$k] = (float) str_replace(',', '.', hs_post($k));
+        }
+    }
+    return $out;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -39,25 +60,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = hs_post('amal');
     $id = hs_post('id');
     $problem = 'Noma\'lum amal.';
+    $back = '/admin/filiallar.php' . ($id !== '' && $action !== 'ochirish' ? '?id=' . rawurlencode($id) : '');
 
-    if ($action === 'saqlash') {
-        $new = hs_branch_from_post($id);
-        $problem = hs_content_publish($user, 'filial tahrirlandi: ' . $new['city'] . ', ' . $new['landmark'], function (&$c) use ($id, $new) {
+    if ($action === 'qism') {
+        // Filial sahifasidagi bitta karta: faqat o'zidagi maydonlar yangilanadi.
+        $patch = hs_branch_fields_from_post();
+        $what = hs_post('nima', 'filial');
+        $problem = hs_content_publish($user, "filial ({$what}): {$id}", function (&$c) use ($id, $patch) {
             foreach ($c['branches'] as $i => $b) {
                 if ($b['id'] === $id) {
-                    $c['branches'][$i] = $new;
+                    if (isset($patch['city']) && trim($patch['city']) === '') {
+                        return 'Shahar nomi bo\'sh bo\'lmasin.';
+                    }
+                    if (isset($patch['hours']) && $patch['hours'] === '') {
+                        return 'Ish vaqtini kiriting (masalan 9:00–18:00).';
+                    }
+                    $c['branches'][$i] = array_merge($b, $patch);
                     return null;
                 }
             }
             return 'Filial topilmadi (boshqa kishi o\'chirgan bo\'lishi mumkin).';
         });
+        if ($problem === null && hs_post('qayt') === 'royxat') {
+            $back = '/admin/filiallar.php';
+        }
     } elseif ($action === 'qoshish') {
         $newId = strtolower(trim(hs_post('newid')));
-        $new = hs_branch_from_post($newId);
+        $new = array_merge(array(
+            'id' => $newId, 'city' => '', 'address' => '', 'landmark' => '', 'phone' => null, 'phoneDisplay' => null,
+            'instagram' => null, 'hours' => '9:00–18:00', 'mapQuery' => '', 'lat' => 0, 'lng' => 0, 'closed' => false, 'closedNote' => '',
+        ), hs_branch_fields_from_post());
         $problem = hs_content_publish($user, "yangi filial: {$new['city']}, {$new['landmark']}", function (&$c) use ($new) {
+            if (!preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $new['id'])) {
+                return "Sahifa manzili faqat kichik lotin harf, raqam va chiziqchadan iborat bo'lsin.";
+            }
+            foreach ($c['branches'] as $b) {
+                if ($b['id'] === $new['id']) {
+                    return 'Bunday manzilli filial allaqachon bor.';
+                }
+            }
             $c['branches'][] = $new;
             return null;
         });
+        $back = $problem === null ? '/admin/filiallar.php?id=' . rawurlencode($newId) : '/admin/filiallar.php?yangi=1';
     } elseif ($action === 'ochirish') {
         $problem = hs_content_publish($user, "filial o'chirildi: {$id}", function (&$c) use ($id) {
             $before = count($c['branches']);
@@ -80,6 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             return 'Filial topilmadi.';
         });
+        if (hs_post('qayt') === 'royxat') {
+            $back = '/admin/filiallar.php';
+        }
     } elseif ($action === 'tartib') {
         $order = isset($_POST['tartib']) && is_array($_POST['tartib']) ? $_POST['tartib'] : array();
         $problem = hs_content_publish($user, 'filiallar tartibi', function (&$c) use ($order) {
@@ -90,109 +138,201 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
             return null;
         });
+        $back = '/admin/filiallar.php';
     }
 
-    if ($problem === null) {
-        hs_flash(hs_publish_note());
-    } else {
-        hs_flash($problem, 'err');
-    }
-    hs_redirect('/admin/filiallar.php');
+    hs_flash($problem === null ? hs_publish_note() : $problem, $problem === null ? 'ok' : 'err');
+    hs_redirect($back);
 }
 
 $err = null;
 $c = hs_content_load($err);
-hs_page_start('Filiallar', $user);
+$editId = hs_get('id');
+$isNew = hs_get('yangi') === '1';
+$edit = null;
+if ($c) {
+    foreach ($c['branches'] as $b) {
+        if ($b['id'] === $editId) {
+            $edit = $b;
+        }
+    }
+}
+
+hs_page_start($edit ? $edit['city'] : ($isNew ? 'Yangi filial' : 'Filiallar'), $user, $edit ? 'Shu filialning saytdagi hamma ma\'lumoti bir joyda' : null);
 if (!$c) {
     echo '<p class="flash flash-err">' . h($err) . '</p>';
     hs_page_end();
     exit;
 }
 
-function hs_branch_fields($b, $prefix)
+/** Oddiy matn maydoni. */
+function hs_branch_input($name, $label, $value, $hint = '', $attrs = '', $type = 'text')
 {
-    $v = function ($k) use ($b) {
-        return isset($b[$k]) && $b[$k] !== null ? $b[$k] : '';
-    };
-    echo '<div class="grid grid-2">';
-    echo '<div><label for="' . $prefix . 'city">Shahar</label><input id="' . $prefix . 'city" type="text" name="city" required maxlength="60" value="' . h($v('city')) . '"></div>';
-    echo '<div><label for="' . $prefix . 'landmark">Mo\'ljal (kartochka sarlavhasi)</label><input id="' . $prefix . 'landmark" type="text" name="landmark" required maxlength="120" value="' . h($v('landmark')) . '"></div>';
-    echo '<div><label for="' . $prefix . 'address">To\'liq manzil</label><input id="' . $prefix . 'address" type="text" name="address" required maxlength="200" value="' . h($v('address')) . '"></div>';
-    echo '<div><label for="' . $prefix . 'phone">Telefon</label><input id="' . $prefix . 'phone" type="tel" name="phone" maxlength="20" placeholder="+998 33 342 08 80" value="' . h($v('phone')) . '"><p class="hint">Bo\'sh qoldirilsa, umumiy raqam ko\'rsatiladi.</p></div>';
-    echo '<div><label for="' . $prefix . 'hours">Ish vaqti</label><input id="' . $prefix . 'hours" type="text" name="hours" required maxlength="20" placeholder="9:00–18:00" value="' . h($v('hours')) . '"></div>';
-    echo '<div><label for="' . $prefix . 'instagram">Filialning o\'z Instagram sahifasi</label><input id="' . $prefix . 'instagram" type="text" name="instagram" maxlength="40" placeholder="bo\'lmasa bo\'sh" value="' . h($v('instagram')) . '"></div>';
-    echo '<div><label for="' . $prefix . 'lat">Xarita: kenglik (lat)</label><input id="' . $prefix . 'lat" type="text" name="lat" required inputmode="decimal" value="' . h($v('lat')) . '"></div>';
-    echo '<div><label for="' . $prefix . 'lng">Xarita: uzunlik (lng)</label><input id="' . $prefix . 'lng" type="text" name="lng" required inputmode="decimal" value="' . h($v('lng')) . '"><p class="hint">Google Maps\'da joyni bosib turing — koordinata chiqadi.</p></div>';
-    echo '</div>';
-    echo '<label for="' . $prefix . 'mapQuery">Xarita qidiruv matni</label><input id="' . $prefix . 'mapQuery" type="text" name="mapQuery" maxlength="200" value="' . h($v('mapQuery')) . '">';
-    echo '<label class="inline"><input type="checkbox" name="closed" value="1"' . (!empty($b['closed']) ? ' checked' : '') . '> Filial vaqtincha yopiq</label>';
-    echo '<label for="' . $prefix . 'closedNote">Yopiqlik izohi (masalan: "25-sentabrgacha ta\'mirlanmoqda")</label><input id="' . $prefix . 'closedNote" type="text" name="closedNote" maxlength="200" value="' . h($v('closedNote')) . '">';
-}
-
-$editId = hs_get('id');
-$isNew = hs_get('yangi') === '1';
-$edit = null;
-foreach ($c['branches'] as $b) {
-    if ($b['id'] === $editId) {
-        $edit = $b;
+    $id = 'f-' . $name;
+    echo '<div><label for="' . $id . '">' . h($label) . '</label><input id="' . $id . '" type="' . $type . '" name="' . $name . '" value="' . h($value === null ? '' : $value) . '" ' . $attrs . '>';
+    if ($hint !== '') {
+        echo '<p class="hint">' . $hint . '</p>';
     }
+    echo '</div>';
 }
 
+/** Filial sahifasidagi bitta saqlanadigan karta boshi. */
+function hs_part_start($b, $what, $title, $icon, $sub)
+{
+    echo '<form class="card part" method="post" action="/admin/filiallar.php">' . hs_csrf_field()
+        . '<input type="hidden" name="amal" value="qism"><input type="hidden" name="nima" value="' . h($what) . '"><input type="hidden" name="id" value="' . h($b['id']) . '">';
+    echo '<div class="part-head"><span class="part-ico">' . hs_icon($icon) . '</span><div><h2>' . h($title) . '</h2><p class="muted">' . h($sub) . '</p></div></div>';
+}
+
+function hs_part_end($label = 'Saqlash')
+{
+    echo '<div class="actions"><button class="btn" type="submit">' . h($label) . '</button></div></form>';
+}
+
+/* =================== BITTA FILIAL =================== */
 if ($edit) {
-    echo '<p><a href="/admin/filiallar.php">← Barcha filiallar</a></p>';
-    echo '<form class="card" method="post" action="/admin/filiallar.php">' . hs_csrf_field();
-    echo '<input type="hidden" name="amal" value="saqlash"><input type="hidden" name="id" value="' . h($edit['id']) . '">';
-    echo '<div class="card-head"><h2>' . h($edit['city'] . ' — ' . $edit['landmark']) . '</h2><a class="btn outline small" href="' . h(hs_site_url()) . '/filiallar/' . h($edit['id']) . '/" target="_blank" rel="noopener noreferrer">' . hs_icon('external') . ' Saytda ko\'rish</a></div>';
-    hs_branch_fields($edit, 'e-');
-    echo '<div class="actions"><button class="btn" type="submit">Saqlash va nashr qilish</button><a class="btn outline" href="/admin/filiallar.php">Bekor qilish</a></div></form>';
-    echo '<form class="card" method="post" action="/admin/filiallar.php" data-confirm="Filial saytdan butunlay olib tashlanadi. Davom etasizmi?">' . hs_csrf_field();
-    echo '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . h($edit['id']) . '">';
-    echo '<h2>Filialni o\'chirish</h2><p class="muted">Filial sahifasi va bosh sahifadagi kartochkasi saytdan olib tashlanadi. Arizalar tarixi panelda qoladi.</p>';
-    echo '<button class="btn danger" type="submit">Filialni o\'chirish</button></form>';
+    $b = $edit;
+    $prefs = isset($c['photos'][$b['id']]) ? $c['photos'][$b['id']] : array();
+    $photos = hs_branch_photos_sorted($b['id'], $prefs);
+    $cover = hs_branch_cover($b['id'], $prefs);
+    $closed = !empty($b['closed']);
+    $siteUrl = hs_site_url() . '/filiallar/' . rawurlencode($b['id']) . '/';
+
+    echo '<p class="crumbs"><a href="/admin/filiallar.php">← Barcha filiallar</a></p>';
+
+    // Bosh qism: rasm, nom, holat, asosiy tugmalar.
+    echo '<section class="card branch-hero' . ($closed ? ' is-closed' : '') . '">';
+    echo '<div class="hero-img">' . ($cover ? '<img src="' . h($cover['thumb']) . '" alt="" decoding="async">' : '<span>' . hs_icon('image') . '<br>Rasm yo\'q</span>') . '</div>';
+    echo '<div class="hero-body"><div class="hero-status">' . ($closed ? '<span class="pill pill-err">Vaqtincha yopiq</span>' : '<span class="pill pill-ok">Ishlayapti</span>') . '</div>';
+    echo '<h2 class="hero-title">' . h($b['city']) . ' <span>' . h($b['landmark']) . '</span></h2>';
+    echo '<p class="hero-meta">' . hs_icon('phone') . ' ' . h($b['phoneDisplay'] ?: 'Umumiy raqam') . '<span class="dot">·</span>' . hs_icon('clock') . ' ' . h($b['hours']) . '</p>';
+    if ($closed && $b['closedNote'] !== '') {
+        echo '<p class="closed-note">' . h($b['closedNote']) . '</p>';
+    }
+    echo '<div class="actions">';
+    echo '<a class="btn outline small" href="' . h($siteUrl) . '" target="_blank" rel="noopener noreferrer">' . hs_icon('external') . ' Saytda ko\'rish</a>';
+    if ($closed) {
+        echo '<form class="inline-form" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="0"><button class="btn small" type="submit">' . hs_icon('check') . ' Qayta ochish</button></form>';
+    }
+    echo '</div></div></section>';
+
+    echo '<div class="grid grid-2">';
+
+    // 1. Aloqa — eng ko'p o'zgaradigan narsa, birinchi turadi.
+    hs_part_start($b, 'aloqa', 'Telefon va Instagram', 'phone', 'Mijoz saytda shu raqamga qo\'ng\'iroq qiladi');
+    hs_branch_input('phone', 'Filial telefoni', $b['phoneDisplay'] ?: $b['phone'], 'Istalgan ko\'rinishda yozing: <span class="code">55 203 08 80</span> ham bo\'ladi. Bo\'sh qoldirsangiz — umumiy raqam chiqadi.', 'maxlength="20" inputmode="tel" placeholder="+998 55 203 08 80" autocomplete="off"', 'tel');
+    hs_branch_input('instagram', 'Filialning o\'z Instagram sahifasi', $b['instagram'], 'Bo\'lmasa bo\'sh qoldiring.', 'maxlength="60" placeholder="hamkorsavdo.asaka" autocomplete="off"');
+    hs_part_end();
+
+    // 2. Ish vaqti.
+    hs_part_start($b, 'ish vaqti', 'Ish vaqti', 'clock', 'Saytda "Hozir ochiq / yopiq" shu bo\'yicha yoziladi');
+    hs_branch_input('hours', 'Ochilish — yopilish', $b['hours'], '', 'required maxlength="20" placeholder="9:00–18:00" data-hours-input');
+    echo '<div class="chips" data-hours-chips><span class="muted">Tez tanlash:</span>';
+    foreach (array('8:00–18:00', '9:00–18:00', '9:00–19:00', '9:00–20:00', '8:00–20:00') as $hh) {
+        echo '<button type="button" class="chip' . ($hh === $b['hours'] ? ' on' : '') . '" data-hours="' . h($hh) . '">' . h($hh) . '</button>';
+    }
+    echo '</div>';
+    hs_part_end();
+
+    // 3. Suratlar — ko'rinishi shu yerda, boshqarish alohida sahifada.
+    echo '<section class="card part"><div class="part-head"><span class="part-ico">' . hs_icon('image') . '</span><div><h2>Suratlar</h2><p class="muted">' . count($photos) . ' ta rasm saytda turibdi</p></div></div>';
+    if ($photos) {
+        echo '<div class="mini-photos">';
+        foreach (array_slice($photos, 0, 6) as $i => $f) {
+            $isCover = $cover && $cover['base'] === $f['base'];
+            echo '<div class="mini-photo' . ($isCover ? ' is-cover' : '') . '"><img src="' . h($f['thumb']) . '" alt="" loading="lazy" decoding="async">' . ($isCover ? '<span>Asosiy</span>' : '') . '</div>';
+        }
+        echo '</div>';
+    } else {
+        echo '<p class="empty">Hali rasm yo\'q. Rasmli filial mijozga ishonchliroq ko\'rinadi.</p>';
+    }
+    echo '<div class="actions"><a class="btn" href="/admin/suratlar.php?filial=' . h(rawurlencode($b['id'])) . '">' . hs_icon('image') . ' Rasmlarni o\'zgartirish</a></div></section>';
+
+    // 4. Vaqtincha yopish.
+    if (!$closed) {
+        echo '<form class="card part" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="1">';
+        echo '<div class="part-head"><span class="part-ico warn">' . hs_icon('clock') . '</span><div><h2>Vaqtincha yopish</h2><p class="muted">Ta\'mir, bayram yoki inventarizatsiya bo\'lsa</p></div></div>';
+        echo '<label for="f-closedNote">Saytda nima deb yozilsin? (ixtiyoriy)</label><input id="f-closedNote" type="text" name="closedNote" maxlength="200" placeholder="Masalan: 25-sentabrgacha ta\'mirlanmoqda">';
+        echo '<p class="hint">Filial saytdan yo\'qolmaydi — kartochkasida "Vaqtincha yopiq" yozuvi chiqadi. Istalgan payt qayta ochasiz.</p>';
+        echo '<div class="actions"><button class="btn danger" type="submit">Vaqtincha yopish</button></div></form>';
+    } else {
+        echo '<section class="card part"><div class="part-head"><span class="part-ico warn">' . hs_icon('clock') . '</span><div><h2>Filial yopiq</h2><p class="muted">Saytda "Vaqtincha yopiq" deb ko\'rinib turibdi</p></div></div>';
+        echo '<form method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="0"><div class="actions"><button class="btn" type="submit">' . hs_icon('check') . ' Qayta ochish</button></div></form></section>';
+    }
+    echo '</div>';
+
+    // 5. Manzil va xarita — kamdan-kam o'zgaradi, pastda.
+    hs_part_start($b, 'manzil', 'Manzil va xarita', 'store', 'Mijoz filialni qanday topadi');
+    echo '<div class="grid grid-2">';
+    hs_branch_input('city', 'Shahar', $b['city'], '', 'required maxlength="60"');
+    hs_branch_input('landmark', 'Mo\'ljal (kartochkada katta yoziladi)', $b['landmark'], 'Masalan: "Makro supermarketi, 2-qavat"', 'required maxlength="120"');
+    echo '</div>';
+    hs_branch_input('address', 'To\'liq manzil', $b['address'], '', 'required maxlength="200"');
+    echo '<details class="more"><summary>Xaritadagi joy (koordinata)</summary><div class="grid grid-2">';
+    hs_branch_input('lat', 'Kenglik', $b['lat'], '', 'required inputmode="decimal"');
+    hs_branch_input('lng', 'Uzunlik', $b['lng'], '', 'required inputmode="decimal"');
+    echo '</div>';
+    hs_branch_input('mapQuery', 'Xaritada qidiruv matni', $b['mapQuery'], '', 'maxlength="200"');
+    echo '<p class="hint">Qanday topiladi: Google Maps\'da filial joyini barmoq bilan bosib turing — tepada ikkita raqam chiqadi (masalan <span class="code">40.7137, 72.0566</span>). Birinchisi kenglik, ikkinchisi uzunlik. '
+        . '<a href="https://www.google.com/maps?q=' . h($b['lat'] . ',' . $b['lng']) . '" target="_blank" rel="noopener noreferrer">Hozirgi joyni xaritada ochish</a></p>';
+    echo '</details>';
+    hs_part_end();
+
+    echo '<form class="card danger-zone" method="post" action="/admin/filiallar.php" data-confirm="«' . h($b['city'] . ' — ' . $b['landmark']) . '» saytdan butunlay olib tashlanadi. Davom etasizmi?">' . hs_csrf_field();
+    echo '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . h($b['id']) . '">';
+    echo '<div><h2>Filialni butunlay o\'chirish</h2><p class="muted">Filial yopilgan bo\'lsa. Sahifasi va kartochkasi saytdan olib tashlanadi, arizalar tarixi panelda qoladi.</p></div>';
+    echo '<button class="btn danger" type="submit">O\'chirish</button></form>';
     hs_page_end();
     exit;
 }
 
+/* =================== YANGI FILIAL =================== */
 if ($isNew) {
-    echo '<p><a href="/admin/filiallar.php">← Barcha filiallar</a></p>';
+    echo '<p class="crumbs"><a href="/admin/filiallar.php">← Barcha filiallar</a></p>';
     echo '<form class="card" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="qoshish">';
-    echo '<h2>Yangi filial</h2>';
-    echo '<label for="newid">Sahifa manzili</label><input id="newid" type="text" name="newid" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="40" placeholder="masalan: namangan-markaz"><p class="hint">Saytda <span class="code">hamkorsavdo.uz/filiallar/<b>shu-nom</b>/</span> bo\'ladi. Faqat kichik lotin harf, raqam va chiziqcha; keyin o\'zgartirib bo\'lmaydi.</p>';
-    hs_branch_fields(array('closed' => false), 'n-');
+    echo '<h2>Yangi filial</h2><p class="muted">Asosiysini to\'ldiring — rasm va qolganini keyin filial sahifasida qo\'shasiz.</p>';
+    echo '<div class="grid grid-2">';
+    hs_branch_input('city', 'Shahar', '', '', 'required maxlength="60" placeholder="Namangan"');
+    hs_branch_input('landmark', 'Mo\'ljal', '', 'Kartochkada katta yoziladi.', 'required maxlength="120" placeholder="Markaziy bozor yonida"');
+    hs_branch_input('address', 'To\'liq manzil', '', '', 'required maxlength="200"');
+    hs_branch_input('phone', 'Telefon', '', 'Bo\'sh bo\'lsa — umumiy raqam.', 'maxlength="20" inputmode="tel" placeholder="+998 55 203 08 80"', 'tel');
+    hs_branch_input('hours', 'Ish vaqti', '9:00–18:00', '', 'required maxlength="20"');
+    hs_branch_input('newid', 'Sahifa manzili', '', 'Saytda <span class="code">hamkorsavdo.uz/filiallar/<b>shu-nom</b>/</span> bo\'ladi. Kichik lotin harf va chiziqcha, keyin o\'zgarmaydi.', 'required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="40" placeholder="namangan-bozor"');
+    hs_branch_input('lat', 'Xarita: kenglik', '', 'Google Maps\'da joyni bosib turing — birinchi raqam.', 'required inputmode="decimal" placeholder="40.7137"');
+    hs_branch_input('lng', 'Xarita: uzunlik', '', 'Ikkinchi raqam.', 'required inputmode="decimal" placeholder="72.0566"');
+    echo '</div><input type="hidden" name="mapQuery" value="">';
     echo '<div class="actions"><button class="btn" type="submit">Filialni qo\'shish</button><a class="btn outline" href="/admin/filiallar.php">Bekor qilish</a></div></form>';
     hs_page_end();
     exit;
 }
 
-echo '<div class="card"><div class="card-head"><h2>' . count($c['branches']) . ' ta filial</h2><a class="btn small" href="/admin/filiallar.php?yangi=1">+ Yangi filial</a></div>';
-echo '<div class="branch-list">';
+/* =================== RO'YXAT =================== */
+echo '<div class="row-between list-head"><p class="muted">' . count($c['branches']) . ' ta filial. Birini bosing — hammasini o\'sha yerda o\'zgartirasiz.</p><a class="btn" href="/admin/filiallar.php?yangi=1">+ Yangi filial</a></div>';
+echo '<div class="branch-cards">';
 foreach ($c['branches'] as $b) {
-    $phone = $b['phoneDisplay'] ?: 'umumiy raqam';
-    echo '<div class="branch-row">';
-    echo '<div class="branch-main"><b>' . h($b['city']) . '</b> <span class="muted">— ' . h($b['landmark']) . '</span>';
-    echo '<small>' . hs_icon('phone') . ' ' . h($phone) . ' &nbsp; ' . hs_icon('clock') . ' ' . h($b['hours']) . '</small>';
-    if (!empty($b['closed']) && $b['closedNote'] !== '') {
-        echo '<small class="closed-note">' . h($b['closedNote']) . '</small>';
-    }
-    echo '</div>';
-    echo '<div>' . (!empty($b['closed']) ? '<span class="pill pill-err">Vaqtincha yopiq</span>' : '<span class="pill pill-ok">Ishlayapti</span>') . '</div>';
-    echo '<div class="branch-actions">';
-    // "Tahrirlash" birinchi: telefonda popover ochilganda tugmalar joyidan sakramaydi.
-    echo '<a class="btn outline small" href="/admin/filiallar.php?id=' . h(rawurlencode($b['id'])) . '">Tahrirlash</a>';
-    if (empty($b['closed'])) {
-        echo '<details class="inline-details"><summary class="btn outline small">Vaqtincha yopish</summary><form method="post" action="/admin/filiallar.php" class="popover">' . hs_csrf_field()
-            . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="1">'
-            . '<label for="yopiq-' . h($b['id']) . '">Saytda ko\'rinadigan izoh (ixtiyoriy)</label><input id="yopiq-' . h($b['id']) . '" type="text" name="closedNote" maxlength="200" placeholder="masalan: 25-sentabrgacha ta\'mirlanmoqda">'
-            . '<div class="actions"><button class="btn danger small" type="submit">Yopish</button></div></form></details>';
-    } else {
-        echo '<form class="inline-form" method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . h($b['id']) . '"><input type="hidden" name="yopiq" value="0"><button class="btn small" type="submit">Qayta ochish</button></form>';
-    }
-    echo '</div></div>';
+    $prefs = isset($c['photos'][$b['id']]) ? $c['photos'][$b['id']] : array();
+    $cover = hs_branch_cover($b['id'], $prefs);
+    $closed = !empty($b['closed']);
+    $url = '/admin/filiallar.php?id=' . rawurlencode($b['id']);
+    echo '<article class="branch-card' . ($closed ? ' is-closed' : '') . '">';
+    echo '<a class="bc-img" href="' . h($url) . '" tabindex="-1" aria-hidden="true">' . ($cover ? '<img src="' . h($cover['thumb']) . '" alt="" loading="lazy" decoding="async">' : '<span>' . hs_icon('image') . '</span>')
+        . ($closed ? '<em class="pill pill-err">Vaqtincha yopiq</em>' : '') . '</a>';
+    echo '<div class="bc-body"><a class="bc-title" href="' . h($url) . '"><b>' . h($b['city']) . '</b><span>' . h($b['landmark']) . '</span></a>';
+    echo '<p class="bc-meta">' . hs_icon('clock') . ' ' . h($b['hours']) . '</p>';
+
+    // Telefonni ro'yxatning o'zidan tez o'zgartirish.
+    echo '<form class="quick-phone" method="post" action="/admin/filiallar.php">' . hs_csrf_field()
+        . '<input type="hidden" name="amal" value="qism"><input type="hidden" name="nima" value="telefon"><input type="hidden" name="qayt" value="royxat"><input type="hidden" name="id" value="' . h($b['id']) . '">'
+        . '<label for="qp-' . h($b['id']) . '">' . hs_icon('phone') . ' Telefon</label><div class="qp-row"><input id="qp-' . h($b['id']) . '" type="tel" name="phone" inputmode="tel" maxlength="20" value="' . h($b['phoneDisplay'] ?: '') . '" placeholder="umumiy raqam" data-dirty-watch>'
+        . '<button class="btn small" type="submit" data-dirty-show>Saqlash</button></div></form>';
+
+    echo '<a class="btn outline small bc-open" href="' . h($url) . '">Boshqarish →</a>';
+    echo '</div></article>';
 }
-echo '</div></div>';
+echo '</div>';
 
 echo '<details class="card"><summary class="summary-head">Saytdagi tartibni o\'zgartirish</summary>';
-echo '<form method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="tartib"><div class="grid grid-4">';
+echo '<form method="post" action="/admin/filiallar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="tartib"><p class="muted">Kichik raqam saytda birinchi chiqadi.</p><div class="grid grid-4">';
 foreach ($c['branches'] as $i => $b) {
     echo '<div><label for="t-' . h($b['id']) . '">' . h($b['city'] . ', ' . $b['landmark']) . '</label><input id="t-' . h($b['id']) . '" type="number" min="1" max="99" name="tartib[' . h($b['id']) . ']" value="' . ($i + 1) . '"></div>';
 }
