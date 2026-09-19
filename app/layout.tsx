@@ -27,11 +27,13 @@ const bebas = Bebas_Neue({
 });
 
 const description =
-  `HAMKOR SAVDO — Andijon viloyatidagi ${site.facts.branchCount} ta filial: tilla, texnika va mebel. ${site.facts.productCount.replace("+", " dan ortiq")} mahsulot, ${site.facts.installmentMonthsMax} oygacha muddatli to'lov, ${site.freeDeliveryArea}da bepul yetkazib berish va o'rnatish.`;
+  `Maishiy texnika, mebel va tilla ${site.facts.installmentMonthsMax} oygacha muddatli to'lovga — pasport va plastik karta kifoya. Shahrixon, Asaka va Andijonda ${site.facts.branchCount} ta filial, ${site.facts.productCount.replace("+", " dan ortiq")} mahsulot, ${site.freeDeliveryArea}da bepul yetkazib berish va o'rnatish.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "HAMKOR SAVDO — Oilangizga ishonchli hamkor",
+  /* Ilgari "Oilangizga ishonchli hamkor" edi — chiroyli, lekin odam Google'ga
+     bunday yozmaydi. Endi sarlavhada nima sotilishi, qanday shartda va qayerda. */
+  title: `HAMKOR SAVDO — maishiy texnika, mebel va tilla muddatli to'lovga | Andijon viloyati`,
   description,
   // `keywords` meta tegini qidiruv tizimlari 2009-yildan beri e'tiborga
   // olmaydi (Google buni ochiq e'lon qilgan) — shuning uchun olib tashlandi.
@@ -43,7 +45,7 @@ export const metadata: Metadata = {
     canonical: absolute("/"),
   },
   openGraph: {
-    title: "HAMKOR SAVDO — Oilangizga ishonchli hamkor",
+    title: `HAMKOR SAVDO — maishiy texnika, mebel va tilla muddatli to'lovga`,
     description,
     locale: "uz_UZ",
     type: "website",
@@ -68,6 +70,7 @@ export const viewport = {
  * ruscha brauzerda ham (ataylab Lotinni tanlagan bo'lishi mumkin).
  */
 const LANG_DETECT_SCRIPT = `(function(){try{
+if (location.pathname.indexOf('/ru/') === 0 || location.pathname === '/ru') return;
 var onCyr = location.pathname.indexOf('/uz-kr') === 0;
 var saved = localStorage.getItem('hs_lang');
 if (!saved && !onCyr && /^ru\\b/i.test(navigator.language || '')) {

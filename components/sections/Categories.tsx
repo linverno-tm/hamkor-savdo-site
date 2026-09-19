@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { categories } from "@/data/categories";
 import { site } from "@/data/site";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -79,13 +80,15 @@ export function Categories() {
               <div className="px-7 pb-7 pt-6">
                 <p className="font-semibold text-ink">{c.kicker}</p>
                 <p className="mt-3 leading-relaxed text-ink-2">{c.description}</p>
-                <a
-                  href="#filiallar"
+                {/* Yo'nalishning o'z sahifasiga: u yerda shartlar, savol-javob va
+                    ariza bor — qidiruvda ham aynan o'sha sahifa chiqadi. */}
+                <Link
+                  href={`/${c.id}`}
                   className="tap mt-6 inline-flex items-center gap-2 font-semibold text-purple underline-offset-4 hover:underline"
                 >
-                  Filialda ko&apos;rish
+                  Muddatli to&apos;lov shartlari
                   <span aria-hidden="true">→</span>
-                </a>
+                </Link>
               </div>
             </article>
           ))}

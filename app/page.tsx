@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { branches } from "@/data/branches";
 import { site } from "@/data/site";
 import { absolute } from "@/lib/seo";
@@ -38,6 +39,11 @@ const ALL_DAYS = [
   "Saturday",
   "Sunday",
 ];
+
+/* Lotin/kirill juftligini build skripti qo'yadi; bu yerda faqat ruscha. */
+export const metadata: Metadata = {
+  alternates: { canonical: absolute("/"), languages: { ru: absolute("/ru") } },
+};
 
 export default function Home() {
   /**

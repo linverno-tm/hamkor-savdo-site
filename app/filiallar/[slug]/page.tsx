@@ -39,7 +39,7 @@ export async function generateMetadata({
      sarlavha deb hisoblaydi va ikkalasidan birini natijalardan tushirib
      yuboradi. Mo'ljal qidiruvda ham foydali — odam do'konni shu bo'yicha
      qidiradi. */
-  const title = `${branch.city}, ${branch.landmark} — HAMKOR SAVDO`;
+  const title = `${branch.city}: maishiy texnika, mebel va tilla muddatli to'lovga — ${branch.landmark} | HAMKOR SAVDO`;
   const description = `HAMKOR SAVDO ${branch.city} filiali — ${branch.address}. Tilla, texnika va mebel: ${site.facts.installmentMonthsMax} oygacha muddatli to'lov, ${site.freeDeliveryArea}da bepul yetkazib berish va o'rnatish.`;
 
   return {

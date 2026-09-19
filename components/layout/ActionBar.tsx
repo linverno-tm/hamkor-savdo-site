@@ -30,14 +30,17 @@ import { site } from "@/data/site";
 export function ActionBar({
   href = "#ariza",
   label = "Ariza qoldirish",
+  callLabel = "Qo'ng'iroq",
 }: {
   href?: string;
   label?: string;
+  /** Ruscha sahifalarda "Позвонить". */
+  callLabel?: string;
 }) {
   return (
     <div className="action-bar" aria-label="Tezkor amallar">
       <a href={`tel:${site.phone}`} className="btn btn-primary flex-1">
-        Qo&apos;ng&apos;iroq
+        {callLabel}
       </a>
       <a href={href} className="btn btn-outline flex-1">
         {label}
