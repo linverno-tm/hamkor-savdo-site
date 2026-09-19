@@ -745,6 +745,7 @@ details.more[open] > summary::before { content: "− "; }
 }
 
 /* Yoqish/o'chirish tugmasi — oddiy checkbox, faqat ko'rinishi boshqa. */
+.admin-pill { background: var(--warn-bg); color: var(--warn); }
 .switch { display: inline-flex; align-items: center; gap: .55rem; margin: 0; font-weight: 600; font-size: .88rem; cursor: pointer; user-select: none; }
 .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .switch-ui {
