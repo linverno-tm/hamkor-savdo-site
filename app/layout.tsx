@@ -104,6 +104,7 @@ for (var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){retu
 k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
 (window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=${YM_ID}','ym');
 ym(${YM_ID}, 'init', {ssr:true, webvisor:true, clickmap:true, referrer:ref, url:location.href, accurateTrackBounce:true, trackLinks:true});
+ym(${YM_ID}, 'getClientID', function(id){ window.__hsYmCid = id; });
 document.addEventListener('click', function(ev){
   var a = ev.target && ev.target.closest && ev.target.closest('a[href]');
   if (!a) return;
@@ -137,10 +138,31 @@ if (!src) {
     else src = host;
   }
   sessionStorage.setItem('hs_src', String(src).toLowerCase().slice(0, 60));
+  /* Batafsil: reklama belgilari (utm, gclid/yclid/fbclid), qaysi sahifadan
+     kelgani va saytda birinchi ochilgan sahifa. Telegram'dagi ariza xabarida
+     "Instagram · reklama: kuzgi_aksiya · kirgan sahifa: /filiallar/asaka/"
+     ko'rinishida chiqadi. Faqat sessiyaning birinchi sahifasida yoziladi. */
+  var p = new URLSearchParams(location.search), info = [];
+  ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){ var v = p.get(k); if (v) info.push(k.slice(4) + '=' + v); });
+  ['gclid','yclid','fbclid'].forEach(function(k){ if (p.get(k)) info.push('click=' + k); });
+  var rr = sessionStorage.getItem('hs_ref'); if (rr === null) rr = document.referrer;
+  try { var ru = new URL(rr); if (ru.hostname.replace(/^www\\./, '') !== location.hostname.replace(/^www\\./, '')) info.push('ref=' + ru.hostname.replace(/^www\\./, '') + ru.pathname.slice(0, 40)); } catch(e) {}
+  info.push('land=' + location.pathname.slice(0, 60));
+  sessionStorage.setItem('hs_src_info', info.join(';').slice(0, 300));
+}
+function hidden(form, name, value){
+  var el = form.querySelector('input[name="' + name + '"]');
+  if (!el) { el = document.createElement('input'); el.type = 'hidden'; el.name = name; form.appendChild(el); }
+  el.value = value;
 }
 document.addEventListener('submit', function(ev){
-  var f = ev.target && ev.target.querySelector && ev.target.querySelector('input[name="src"]');
-  if (f) f.value = sessionStorage.getItem('hs_src') || '';
+  var form = ev.target;
+  if (!form || !form.querySelector || !form.querySelector('input[name="src"]')) return;
+  hidden(form, 'src', sessionStorage.getItem('hs_src') || '');
+  hidden(form, 'src_info', sessionStorage.getItem('hs_src_info') || '');
+  /* Metrika'dagi aynan shu mehmon: ariza uning ClientID si bilan saqlanadi —
+     Metrika'da (Vebvizor) shu odam saytda nima qilganini topish mumkin. */
+  hidden(form, 'ym_cid', window.__hsYmCid || '');
 }, true);
 }catch(e){}})();`;
 

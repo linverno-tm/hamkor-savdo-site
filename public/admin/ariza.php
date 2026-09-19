@@ -3,6 +3,17 @@ require __DIR__ . '/_lib/bootstrap.php';
 require_once __DIR__ . '/_lib/leads.php';
 
 $user = hs_require_login();
+
+/** Paneldagi holat o'zgarishi Telegram'dagi ariza xabarlarida ham ko'rinsin. Telegram ishlamasa — jim. */
+function hs_lead_tg_sync($id)
+{
+    try {
+        require_once __DIR__ . '/_lib/tgchats.php';
+        hs_tg_sync_lead($id);
+    } catch (Throwable $e) {
+        error_log('HAMKOR SAVDO: Telegram xabari yangilanmadi: ' . $e->getMessage());
+    }
+}
 $id = (int) ($_SERVER['REQUEST_METHOD'] === 'POST' ? hs_post('id') : hs_get('id'));
 
 $st = hs_db()->prepare('SELECT * FROM leads WHERE id = ?');
@@ -27,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $up->execute(array($status, hs_now(), $user['login'], $id));
             hs_audit($user['login'], 'ariza holati', "#{$id}: {$lead['status']} -> {$status}");
             hs_flash("Ariza #{$id}: " . hs_lead_statuses()[$status]);
+            hs_lead_tg_sync($id);
         }
         hs_redirect(hs_safe_return(hs_post('qayt'), '/admin/arizalar.php'));
     }
@@ -40,16 +52,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $up->execute(array($status, $note, hs_now(), $user['login'], $id));
             hs_audit($user['login'], 'ariza holati', "#{$id}: {$lead['status']} -> {$status}");
             hs_flash('Saqlandi.');
+            if ($status !== $lead['status']) {
+                hs_lead_tg_sync($id);
+            }
         }
     } elseif ($action === 'telegram' && hs_is_owner($user)) {
         // Arizani qayta yuborish: hamma yoqilgan chatlarga yoki tanlangan bittasiga.
         require_once __DIR__ . '/_lib/tgchats.php';
         $to = hs_post('chat');
-        $text = hs_tg_lead_text($lead, 'qayta yuborildi');
         if ($to === '') {
-            $n = hs_tg_send_lead($text, $lead['branch']);
+            $n = hs_tg_deliver_lead($id, 'qayta yuborildi');
         } else {
-            $n = hs_tg_send_to($to, $text) ? 1 : 0;
+            $n = hs_tg_deliver_to($lead, $to, 'qayta yuborildi') ? 1 : 0;
         }
         if ($n > 0) {
             hs_db()->prepare('UPDATE leads SET telegram_sent = 1 WHERE id = ?')->execute(array($id));
@@ -82,7 +96,11 @@ if ((int) $lead['special']) {
     echo '<dt>Turi</dt><dd><span class="pill st-yangi">Do\'konda yo\'q mahsulot</span></dd>';
 }
 echo '<dt>Vaqt</dt><dd>' . h(date('d.m.Y H:i', strtotime($lead['created_at']))) . '</dd>';
-echo '<dt>Manba</dt><dd>' . h(hs_source_label($lead['source'])) . '</dd>';
+require_once __DIR__ . '/_lib/tgchats.php';
+echo '<dt>Qayerdan</dt><dd>' . h(hs_tg_source_text($lead['source'], $lead['source_detail'])) . '</dd>';
+if ($lead['ym_client'] !== '') {
+    echo '<dt>Metrika ID</dt><dd><span class="code">' . h($lead['ym_client']) . '</span><p class="hint">Metrika\'da Vebvizor yoki "Посетители" hisobotida shu ID bo\'yicha qidirsangiz, mijoz saytda nima qilganini ko\'rasiz.</p></dd>';
+}
 echo '<dt>Sahifa</dt><dd>' . h($lead['page'] !== '' ? $lead['page'] : '—') . '</dd>';
 echo '<dt>Telegram</dt><dd>' . ((int) $lead['telegram_sent'] ? '<span class="pill pill-ok">yuborilgan</span>' : '<span class="pill pill-err">yetib bormagan</span>') . '</dd>';
 echo '</dl></section>';

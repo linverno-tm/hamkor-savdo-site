@@ -125,6 +125,18 @@ function hs_db_migrate(PDO $pdo)
         3 => array(
             "ALTER TABLE tg_chats ADD COLUMN admin INTEGER NOT NULL DEFAULT 0",
         ),
+        // Arizaning batafsil manbasi va Metrika ClientID; har bir chatga ketgan
+        // xabar — holat o'zgarsa hamma nusxadagi tugmalar yangilanishi uchun.
+        4 => array(
+            "ALTER TABLE leads ADD COLUMN source_detail TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE leads ADD COLUMN ym_client TEXT NOT NULL DEFAULT ''",
+            "CREATE TABLE tg_lead_msgs (
+                lead_id INTEGER NOT NULL,
+                chat_id TEXT NOT NULL,
+                message_id INTEGER NOT NULL,
+                PRIMARY KEY (lead_id, chat_id)
+            )",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {
