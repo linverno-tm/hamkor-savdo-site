@@ -186,6 +186,9 @@ function walkFiles(dir) {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
     if (name === "uz-kr") continue; // o'zining chiqishini qayta o'qimasin
+    // Google Search Console tasdiqlash fayli — sahifa emas, bir qator matn.
+    // Unga tegilmasin: bir harf o'zgarsa, sayt egaligi tasdiqlanmay qoladi.
+    if (/^google[0-9a-f]+\.html$/.test(name)) continue;
     const st = statSync(full);
     if (st.isDirectory()) out.push(...walkFiles(full));
     else if (name.endsWith(".html")) out.push(full);
