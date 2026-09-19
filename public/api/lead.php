@@ -276,7 +276,23 @@ $payload = http_build_query(array(
 $url = 'https://api.telegram.org/bot' . $token . '/sendMessage';
 $sent = false;
 
-if ($token === '' || $chatId === '') {
+/* Kimga yuborish admin panelda hal qilinadi (admin/telegram.php): bir
+   nechta odam va guruh, har biri uchun filial filtri bilan. Panel
+   kutubxonasi yuklanmagan bo'lsa — eskicha, secrets.php dagi bitta chatga. */
+$multi = false;
+if ($leadId > 0 && $token !== '' && is_file(__DIR__ . '/../admin/_lib/tgchats.php')) {
+    try {
+        require_once __DIR__ . '/../admin/_lib/tgchats.php';
+        $sent = hs_tg_send_lead(implode("\n", $lines), $known ? $branch : '') > 0;
+        $multi = true;
+    } catch (Throwable $e) {
+        error_log('HAMKOR SAVDO: qabul qiluvchilar ro\'yxati ishlamadi, eski usulga o\'tildi: ' . $e->getMessage());
+    }
+}
+
+if ($multi) {
+    // Yuqorida yuborildi.
+} elseif ($token === '' || $chatId === '') {
     // Telegram sozlanmagan, lekin ariza bazada saqlandi.
 } elseif (getenv('HS_DRY_RUN') === '1') {
     $sent = true;

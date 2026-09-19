@@ -588,6 +588,48 @@ details.card[open] > summary.summary-head { margin-bottom: .6rem; }
 .row-between { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; }
 .row-between > p, .row-between > form { margin: 0; }
 
+/* ---------- telegram chatlari ---------- */
+.chat-list { display: flex; flex-direction: column; gap: .6rem; }
+.chat-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .8rem 1.2rem; align-items: center;
+  padding: .9rem 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--ground);
+  transition: border-color .2s var(--ease), background-color .2s var(--ease);
+}
+.chat-row.is-on { border-color: var(--ok-line); background: linear-gradient(90deg, var(--ok-bg), transparent 55%); }
+.chat-row.is-left { opacity: .7; }
+.chat-title { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.chat-main small { display: block; margin-top: .2rem; overflow-wrap: anywhere; }
+.chat-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem .7rem; }
+.chat-controls .actions.tight { margin-top: 0; }
+.switch-form, .branch-form { display: flex; align-items: center; gap: .35rem; margin: 0; }
+.branch-form select { width: auto; max-width: 240px; min-height: 36px; padding: .3rem .6rem; font-size: .86rem; }
+@media (max-width: 859.98px) {
+  .chat-row { grid-template-columns: 1fr; }
+  .chat-controls { justify-content: flex-start; }
+  .chat-controls { min-width: 0; }
+  .branch-form { flex: 1 1 100%; min-width: 0; }
+  .branch-form select { flex: 1 1 auto; width: 100%; min-width: 0; max-width: none; text-overflow: ellipsis; }
+}
+
+/* Yoqish/o'chirish tugmasi — oddiy checkbox, faqat ko'rinishi boshqa. */
+.switch { display: inline-flex; align-items: center; gap: .55rem; margin: 0; font-weight: 600; font-size: .88rem; cursor: pointer; user-select: none; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch-ui {
+  position: relative; width: 42px; height: 24px; flex: none; border-radius: 999px;
+  background: var(--ground-3); border: 1px solid var(--input-line); transition: background-color .2s var(--ease), border-color .2s var(--ease);
+}
+.switch-ui::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .22s var(--ease);
+}
+.switch input:checked + .switch-ui { background: var(--ok); border-color: var(--ok); }
+.switch input:checked + .switch-ui::after { transform: translateX(18px); }
+.switch input:focus-visible + .switch-ui { box-shadow: 0 0 0 4px var(--focus); }
+.switch input:disabled + .switch-ui { opacity: .5; }
+.steps { margin: 0; padding-left: 1.2rem; }
+.steps li { margin-bottom: .7rem; }
+.steps li::marker { color: var(--purple-ink); font-weight: 700; }
+
 /* ---------- kirish sahifasi ---------- */
 .auth-card { padding: 2rem; text-align: left; box-shadow: var(--shadow-lg); animation: page-in .4s var(--ease) both; }
 .auth-card h1 { margin: .8rem 0 .4rem; }

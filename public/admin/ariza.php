@@ -41,6 +41,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_audit($user['login'], 'ariza holati', "#{$id}: {$lead['status']} -> {$status}");
             hs_flash('Saqlandi.');
         }
+    } elseif ($action === 'telegram' && hs_is_owner($user)) {
+        // Arizani qayta yuborish: hamma yoqilgan chatlarga yoki tanlangan bittasiga.
+        require_once __DIR__ . '/_lib/tgchats.php';
+        $to = hs_post('chat');
+        $text = hs_tg_lead_text($lead, 'qayta yuborildi');
+        if ($to === '') {
+            $n = hs_tg_send_lead($text, $lead['branch']);
+        } else {
+            $n = hs_tg_send_to($to, $text) ? 1 : 0;
+        }
+        if ($n > 0) {
+            hs_db()->prepare('UPDATE leads SET telegram_sent = 1 WHERE id = ?')->execute(array($id));
+            hs_audit($user['login'], "ariza Telegram'ga qayta yuborildi", "#{$id} -> " . ($to === '' ? "{$n} ta chat" : $to));
+        }
+        hs_flash($n > 0 ? "Ariza #{$id} Telegram'ga yuborildi ({$n} ta chat)." : "Yuborilmadi. Telegram bo'limida kamida bitta chat yoqilganini tekshiring.", $n > 0 ? 'ok' : 'err');
     } elseif ($action === 'ochirish' && hs_is_owner($user)) {
         hs_db()->prepare('DELETE FROM leads WHERE id = ?')->execute(array($id));
         hs_audit($user['login'], "ariza o'chirildi", "#{$id} ({$lead['phone']})");
@@ -85,6 +100,18 @@ if ($lead['updated_at']) {
 echo '<div class="actions"><button class="btn" type="submit">Saqlash</button><a class="btn outline" href="/admin/arizalar.php">Ro\'yxatga qaytish</a></div></form></div>';
 
 if (hs_is_owner($user)) {
+    require_once __DIR__ . '/_lib/tgchats.php';
+    $tgChats = hs_db()->query("SELECT chat_id, title, type FROM tg_chats WHERE status = 'member' ORDER BY leads DESC, title")->fetchAll();
+    echo '<form class="card" method="post" action="/admin/ariza.php">' . hs_csrf_field();
+    echo '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="amal" value="telegram">';
+    echo '<div class="card-head"><h2>Telegram\'ga yuborish</h2><a class="btn outline small" href="/admin/telegram.php">Qabul qiluvchilar</a></div>';
+    echo '<p class="muted">Ariza kimgadir yetib bormagan bo\'lsa yoki boshqa guruhga ham kerak bo\'lsa.</p>';
+    echo '<div class="grid grid-2"><div><label for="tg-chat">Kimga</label><select id="tg-chat" name="chat"><option value="">Arizalar yoqilgan hamma chatlarga</option>';
+    foreach ($tgChats as $tc) {
+        echo '<option value="' . h($tc['chat_id']) . '">' . h($tc['title']) . ' (' . h(hs_tg_type_label($tc['type'])) . ')</option>';
+    }
+    echo '</select></div><div class="actions"><button class="btn outline" type="submit">' . hs_icon('send') . ' Yuborish</button></div></div></form>';
+
     echo '<form class="card" method="post" action="/admin/ariza.php" data-confirm="Ariza butunlay o\'chiriladi. Davom etasizmi?">' . hs_csrf_field();
     echo '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="amal" value="ochirish">';
     echo '<h2>Mijoz so\'rovi bilan o\'chirish</h2><p class="muted">Mijoz ma\'lumotlarini o\'chirishni so\'rasa (maxfiylik siyosati bo\'yicha).</p>';

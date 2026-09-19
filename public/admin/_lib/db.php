@@ -105,6 +105,22 @@ function hs_db_migrate(PDO $pdo)
                 error TEXT NOT NULL DEFAULT ''
             )",
         ),
+        // Bot turgan chatlar: kimga/qaysi guruhga ariza borishini panel hal qiladi.
+        2 => array(
+            "CREATE TABLE tg_chats (
+                chat_id TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                title TEXT NOT NULL DEFAULT '',
+                username TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'member',
+                leads INTEGER NOT NULL DEFAULT 0,
+                branch TEXT NOT NULL DEFAULT '',
+                added_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                last_sent_at TEXT,
+                last_error TEXT NOT NULL DEFAULT ''
+            )",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

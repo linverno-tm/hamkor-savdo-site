@@ -3,6 +3,7 @@ require __DIR__ . '/_lib/bootstrap.php';
 require_once __DIR__ . '/_lib/leads.php';
 require_once __DIR__ . '/_lib/metrika.php';
 require_once __DIR__ . '/_lib/content.php';
+require_once __DIR__ . '/_lib/tgchats.php';
 
 $user = hs_require_login();
 $owner = hs_is_owner($user);
@@ -81,7 +82,7 @@ if ($owner) {
     // Sozlash holati — nima ishlayapti, nima qolgan. Hammasi ulangach yashiriladi.
     $checks = array(
         array(true, 'Admin panel va parol', 'Kirish himoyasi va 5 urinishdan keyin blok ishlayapti.', ''),
-        array((string) hs_config('token', '') !== '' && (string) hs_config('chat_id', '') !== '', 'Telegram bot', 'Arizalar va xavfsizlik xabarlari botga keladi.', ''),
+        array((string) hs_config('token', '') !== '' && hs_tg_active_count() > 0, 'Telegram bot', 'Arizalar kimga borishi — Telegram bo\'limida.', '/admin/telegram.php'),
         array(true, 'Arizalar bazasi', 'Har bir ariza saqlanadi, Telegram ishlamasa ham yo\'qolmaydi.', ''),
         array(hs_metrika_ready(), 'Yandex Metrika', 'Tashriflar, manbalar, shaharlar.', '/admin/statistika.php'),
         array(hs_repo_mode() !== 'none', 'Saytni paneldan tahrirlash', hs_repo_mode() === 'local' ? 'Mahalliy sinov rejimi.' : 'GitHub tokeni orqali avtomatik nashr.', '/admin/nashr.php'),
