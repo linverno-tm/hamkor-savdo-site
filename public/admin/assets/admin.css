@@ -284,6 +284,8 @@ details.card[open] > summary.summary-head { margin-bottom: .6rem; }
 .seg a, .seg span { padding: .4rem .85rem; border-radius: 10px; text-decoration: none; color: var(--ink-2); font-weight: 500; }
 .seg span { background: var(--purple); color: #fff; }
 .seg a:hover { background: var(--ground-2); }
+.row-between { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; }
+.row-between > p, .row-between > form { margin: 0; }
 
 /* ---------- kirish sahifasi ---------- */
 .auth-card { padding: 2rem; text-align: left; }

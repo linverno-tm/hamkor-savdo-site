@@ -38,7 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_audit($user['login'], 'Metrika uzildi');
         hs_flash('Metrika uzildi.');
     }
-    hs_redirect('/admin/statistika.php');
+    // Davr saqlanadi: "Hozir yangilash" 30 kunlik ko'rinishdan bosilsa, o'sha yerga qaytadi.
+    $davr = hs_get('davr', '');
+    hs_redirect('/admin/statistika.php' . (preg_match('/^(bugun|kecha|7|30)$/', $davr) ? '?davr=' . $davr : ''));
 }
 
 $periods = array(
