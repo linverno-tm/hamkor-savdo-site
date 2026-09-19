@@ -1,0 +1,89 @@
+name: FTP ulanishini sinash
+
+# Vaqtinchalik tashxis ish oqimi. Yuklash `530 Login authentication failed`
+# bilan yiqilganda, sabab uchtadan biri bo'ladi: parol noto'g'ri, login
+# boshqacha, yoki TLS sozlamasi mos emas. Asosiy ish oqimi bularni ajrata
+# olmaydi — u faqat "yiqildi" deydi.
+#
+# Bu yerda uchalasi alohida sinaladi. Parolning o'zi hech qayerga
+# chiqmaydi: faqat uzunligi bosiladi (nusxa olganda oxirida ortiqcha
+# bo'shliq yoki yangi qator qolgan-qolmaganini shu ko'rsatadi), qolgan
+# joyda GitHub secret qiymatini avtomatik `***` bilan almashtiradi.
+#
+# Masala hal bo'lgach bu faylni o'chiring.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sina:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Secret'lar qanday holatda
+        env:
+          U: ${{ secrets.FTP_USERNAME }}
+          P: ${{ secrets.FTP_PASSWORD }}
+          D: ${{ secrets.FTP_SERVER_DIR }}
+          S: ${{ secrets.FTP_SERVER }}
+        run: |
+          echo "FTP_SERVER      uzunligi: ${#S}"
+          echo "FTP_USERNAME    uzunligi: ${#U}"
+          echo "FTP_PASSWORD    uzunligi: ${#P}"
+          echo "FTP_SERVER_DIR  uzunligi: ${#D}"
+          echo
+          echo "Kutilgan: server 13, login 8, papka 13 belgi."
+          echo "Parol uzunligi o'zingiz yozgandan bitta ortiq bo'lsa —"
+          echo "nusxa olganda oxirida yangi qator qolgan."
+          echo
+          # Bo'shliq yoki yangi qator bormi — qiymatni oshkor qilmasdan
+          case "$P" in
+            *" ") echo "DIQQAT: parol bo'sh joy bilan tugaydi" ;;
+            " "*) echo "DIQQAT: parol bo'sh joy bilan boshlanadi" ;;
+            *) echo "Parolda chetki bo'sh joy sezilmadi" ;;
+          esac
+
+      - name: Server javobi
+        run: |
+          echo | timeout 10 openssl s_client -connect "${{ secrets.FTP_SERVER }}:21" -starttls ftp 2>&1 | grep -E "subject=|issuer=|Verify return" | head -5 || true
+
+      - name: Uch xil ulanishni sinash
+        env:
+          U: ${{ secrets.FTP_USERNAME }}
+          P: ${{ secrets.FTP_PASSWORD }}
+          S: ${{ secrets.FTP_SERVER }}
+        run: |
+          sina() {
+            nom="$1"; shift
+            # --list-only: faqat ildiz papkasini o'qiydi, hech narsa yozmaydi
+            xato=$(curl --silent --show-error --connect-timeout 15 --max-time 40 \
+                     --user "$U:$P" "$@" "ftp://$S/" --list-only 2>&1 >/dev/null)
+            kod=$?
+            if [ $kod -eq 0 ]; then
+              echo "  ✓  $nom — ULANDI"
+            else
+              echo "  ✗  $nom — curl($kod): ${xato#curl: }"
+            fi
+          }
+
+          echo "Login: asosiy (FTP_USERNAME)"
+          sina "FTPS (explicit, majburiy)" --ssl-reqd
+          sina "FTPS (explicit, ixtiyoriy)" --ssl
+          sina "oddiy FTP (shifrlanmagan)"
+          echo
+
+          # Ba'zi cPanel sozlamalarida asosiy akkaunt uchun ham
+          # login@domen ko'rinishi talab qilinadi.
+          echo "Login: FTP_USERNAME@hamkorsavdo.uz"
+          U="$U@hamkorsavdo.uz"
+          sina "FTPS (explicit, majburiy)" --ssl-reqd
+          sina "oddiy FTP (shifrlanmagan)"
+
+      - name: Natija nimani anglatadi
+        if: always()
+        run: |
+          echo "curl(67) yoki 530  — login yoki parol mos emas"
+          echo "curl(35) yoki 60   — TLS muammosi, sertifikat ishonchsiz"
+          echo "curl(7) yoki 28    — ulanmadi: port yopiq yoki IP bloklangan"
+          echo "Hammasi 67 bo'lsa  — parolni qayta kiritish kerak"
+          echo "Faqat FTPS yiqilsa — FTP_PROTOCOL ni 'ftp' ga o'zgartiring"
