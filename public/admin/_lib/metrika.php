@@ -175,9 +175,19 @@ function hs_metrika_overview($date1, $date2, &$error = null)
         }
     }
     $daily = hs_metrika_stat(array('metrics' => 'ym:s:visits', 'dimensions' => 'ym:s:date', 'date1' => '6daysAgo', 'date2' => 'today', 'sort' => 'ym:s:date', 'limit' => 7), $error);
-    if ($daily && !empty($daily['data'])) {
-        foreach ($daily['data'] as $row) {
-            $out['daily7'][] = array(date('d.m', strtotime($row['dimensions'][0]['name'])), (int) $row['metrics'][0]);
+    /* Metrika faqat tashrif bo'lgan kunlarni qaytaradi. Bo'sh kunlarni 0
+       bilan to'ldiramiz, aks holda bitta kunlik ma'lumot butun grafikni
+       egallab oladi va "7 kun" grafigi bir ustunga aylanadi. */
+    if ($daily !== null) {
+        $byDate = array();
+        if (!empty($daily['data'])) {
+            foreach ($daily['data'] as $row) {
+                $byDate[$row['dimensions'][0]['name']] = (int) $row['metrics'][0];
+            }
+        }
+        for ($k = 6; $k >= 0; $k--) {
+            $day = date('Y-m-d', strtotime("-{$k} day"));
+            $out['daily7'][] = array(date('d.m', strtotime($day)), isset($byDate[$day]) ? $byDate[$day] : 0);
         }
     }
     return $out;

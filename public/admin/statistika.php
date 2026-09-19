@@ -59,7 +59,8 @@ hs_page_start('Statistika', $user);
 
 echo '<div class="seg">';
 foreach ($periods as $k => $v) {
-    echo $k === $p ? '<span>' . h($v[0]) . '</span>' : '<a href="/admin/statistika.php?davr=' . h($k) . '">' . h($v[0]) . '</a>';
+    // '7' va '30' kalitlari PHP'da int bo'lib qoladi — string bilan solishtiramiz.
+    echo (string) $k === $p ? '<span>' . h($v[0]) . '</span>' : '<a href="/admin/statistika.php?davr=' . h($k) . '">' . h($v[0]) . '</a>';
 }
 echo '</div>';
 
