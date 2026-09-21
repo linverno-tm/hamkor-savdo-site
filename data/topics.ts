@@ -16,7 +16,7 @@ import { branches } from "./branches";
  * Brend, narx, kafolat, foiz — egasi bermagan, shuning uchun YO'Q.
  */
 
-export type TopicId = "texnika" | "mebel" | "tilla" | "muddatli-tolov";
+export type TopicId = "texnika" | "skuter" | "mebel" | "tilla" | "muddatli-tolov";
 export type Lang = "uz" | "ru";
 
 export interface TopicText {
@@ -155,6 +155,69 @@ export const topics: Topic[] = [
         },
       ],
       cta: "Напишите, какая техника нужна, — рассчитаем платёж и перезвоним.",
+    },
+  },
+  {
+    /* Skuterlar bosh sahifada alohida yo'nalish emas (categories.ts dagi
+       2026-09-17 qarori), lekin odamlar "skuter" deb alohida qidiradi —
+       shuning uchun qidiruv uchun o'z sahifasi bor. Model, narx, turi
+       (elektr/benzin) egasi bermagan — YO'Q. */
+    id: "skuter",
+    path: "/skuter",
+    ruPath: "/ru/skutery",
+    uz: {
+      title: `Skuter muddatli to'lovga — ${M} oygacha | Shahrixon, Asaka, Andijon | HAMKOR SAVDO`,
+      description: `Skuterlar ${M} oygacha muddatli to'lovga (rassrochka). Pasport va plastik karta kifoya, kafilsiz. ${FREE}da bepul yetkazib berish. ${cities("uz")}da ${B} ta filial.`,
+      kicker: "Skuterlar",
+      h1: "Skuter muddatli to'lovga",
+      lead: `Skuterni bugun minib ketasiz, pulini ${M} oygacha bo'lib to'laysiz. Rasmiylashtirish uchun pasport va plastik karta kifoya.`,
+      points: [
+        { title: `${M} oygacha`, text: "Skuterni hozir olasiz, to'lov oylarga bo'linadi." },
+        { title: "Pasport + karta", text: "Kafil va ma'lumotnoma kerak emas." },
+        { title: "Bepul yetkazish", text: `${FREE}da uyingizgacha olib boramiz.` },
+        { title: "Ko'rib tanlash", text: `${cities("uz")}dagi filiallarda skuterni jonli ko'rasiz.` },
+      ],
+      body: [
+        "HAMKOR SAVDO do'konlarida skuterlar maishiy texnika bo'limida sotiladi. Ishga, o'qishga, bozorga yoki qishloq ichida yurish uchun skuterni filialda ko'rib, o'zingizga mosini tanlaysiz.",
+        `Skuterni ${M} oygacha muddatli to'lovga (rassrochka) rasmiylashtiramiz. Pasport va plastik kartangiz bilan filialga keling yoki saytda ariza qoldiring — mutaxassisimiz qo'ng'iroq qilib, oylik to'lovni hisoblab beradi.`,
+        `${FREE} bo'ylab — ${cities("uz")} va atrofidagi tuman va qishloqlarga — bepul yetkazib beramiz. Boshqa viloyatlarga ham yetkazamiz, shartlarini qo'ng'iroqda aytamiz.`,
+        "Kerakli skuter do'konda bo'lmasa, boshqa joyda ko'rgan modelingizni ham muddatli to'lovga rasmiylashtirib beramiz — nomi va narxini ayting.",
+      ],
+      faq: [
+        ...commonFaqUz,
+        {
+          q: "Qaysi skuterlar borligini qanday bilaman?",
+          a: "Qo'ng'iroq qiling yoki ariza qoldiring — hozir qaysi filialda qanday skuterlar borligini va oylik to'lovini aytib beramiz.",
+        },
+      ],
+      cta: "Qanday skuter kerakligini yozing — bor modellar va oylik to'lovni aytib, o'zimiz qo'ng'iroq qilamiz.",
+    },
+    ru: {
+      title: `Скутеры в рассрочку до ${M} месяцев — Андижан, Шахрихан, Асака | HAMKOR SAVDO`,
+      description: `Скутеры в рассрочку до ${M} месяцев: только паспорт и пластиковая карта, без поручителей. Бесплатная доставка по Андижанской области. ${B} магазина: ${cities("ru")}.`,
+      kicker: "Скутеры",
+      h1: "Скутеры в рассрочку",
+      lead: `Скутер забираете сегодня, а платите частями до ${M} месяцев. Для оформления нужны только паспорт и пластиковая карта.`,
+      points: [
+        { title: `До ${M} месяцев`, text: "Скутер сейчас — оплата частями по месяцам." },
+        { title: "Паспорт + карта", text: "Без поручителей и справок." },
+        { title: "Бесплатная доставка", text: "По Андижанской области привезём до дома." },
+        { title: "Выбор вживую", text: `Посмотреть скутеры можно в магазинах: ${cities("ru")}.` },
+      ],
+      body: [
+        "В магазинах HAMKOR SAVDO скутеры продаются в отделе бытовой техники. Для работы, учёбы, базара или поездок по посёлку — скутер можно посмотреть в магазине и выбрать подходящий.",
+        `Скутеры оформляем в рассрочку до ${M} месяцев. Приходите с паспортом и пластиковой картой или оставьте заявку на сайте — специалист перезвонит и рассчитает ежемесячный платёж.`,
+        `По Андижанской области — ${cities("ru")}, а также районы и сёла вокруг — доставляем бесплатно. В другие регионы тоже доставляем, условия уточним по телефону.`,
+        "Если нужного скутера нет в магазине, оформим в рассрочку и модель, которую вы видели в другом месте, — просто скажите название и цену.",
+      ],
+      faq: [
+        ...commonFaqRu,
+        {
+          q: "Как узнать, какие скутеры есть в наличии?",
+          a: "Позвоните или оставьте заявку — скажем, какие скутеры сейчас есть в каком магазине и сколько будет ежемесячный платёж.",
+        },
+      ],
+      cta: "Напишите, какой скутер нужен, — скажем, что есть в наличии, и перезвоним.",
     },
   },
   {
