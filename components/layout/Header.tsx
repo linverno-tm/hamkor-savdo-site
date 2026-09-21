@@ -28,12 +28,12 @@ export function Header() {
           <Logo className="h-8 w-auto sm:h-9" />
         </Link>
 
-        {/* Kirill matn lotin matndan biroz kengroq bo'lgani uchun (masalan
-            "Muddatli to'lov" -> "Муддатли тўлов") bu qatorga oddiy 2xl (1536px)
-            yetmay qoldi — shuning uchun maxsus kengroq chegara (1700px) va
-            har bir band `whitespace-nowrap`: matn hech qachon o'z ichida
-            ikki qatorga bo'linib, chalkash ko'rinmaydi. */}
-        <nav aria-label="Asosiy menyu" className="hidden items-center gap-5 min-[1700px]:flex">
+        {/* Kirill matn lotin matndan biroz kengroq (masalan "Muddatli to'lov"
+            -> "Муддатли тўлов"). Ilgari 7 ta uzun band bilan 1700px kerak edi;
+            menyu 6 ta sahifaga qisqargach 1440px yetadi — kirill nusxada ham
+            tekshirilgan. Har bir band `whitespace-nowrap`: matn hech qachon
+            o'z ichida ikki qatorga bo'linib, chalkash ko'rinmaydi. */}
+        <nav aria-label="Asosiy menyu" className="hidden items-center gap-5 min-[1440px]:flex">
           {navigation.map((item) => (
             <Link
               key={item.href}
@@ -70,7 +70,7 @@ export function Header() {
         </nav>
 
         {/* Mobile: native disclosure, works without JS */}
-        <details id="mobile-menu" className="mobile-menu min-[1700px]:hidden">
+        <details id="mobile-menu" className="mobile-menu min-[1440px]:hidden">
           <summary
             className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-line text-purple"
             aria-label="Menyu"

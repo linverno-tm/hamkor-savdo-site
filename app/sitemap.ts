@@ -36,6 +36,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       { url: absolute(t.ruPath), changeFrequency: "monthly" as const, priority: 0.8, alternates: withUzKr(t.path, t.ruPath) },
     ]),
     {
+      url: absolute("/aloqa"),
+      changeFrequency: "monthly",
+      priority: 0.8,
+      alternates: withUzKr("/aloqa"),
+    },
+    {
       url: absolute("/filiallar"),
       changeFrequency: "monthly",
       priority: 0.9,

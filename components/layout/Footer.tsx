@@ -90,21 +90,6 @@ export function Footer() {
             © {new Date().getFullYear()} {site.name}. {site.serviceArea}.
           </p>
           <p className="flex flex-wrap items-center gap-x-5">
-            <Link href="/texnika" className="transition-colors hover:text-purple">
-              Maishiy texnika
-            </Link>
-            <Link href="/mebel" className="transition-colors hover:text-purple">
-              Mebel
-            </Link>
-            <Link href="/tilla" className="transition-colors hover:text-purple">
-              Tilla
-            </Link>
-            <Link href="/muddatli-tolov" className="transition-colors hover:text-purple">
-              Muddatli to&apos;lov
-            </Link>
-            <Link href="/filiallar" className="transition-colors hover:text-purple">
-              Filiallar
-            </Link>
             {/* Ruscha nusxa — oddiy <a>: boshqa til, to'liq yuklanish kerak. */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/ru/" hrefLang="ru" data-lang-link className="transition-colors hover:text-purple">
