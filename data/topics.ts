@@ -104,7 +104,7 @@ export const topics: Topic[] = [
     },
     uz: {
       title: `Maishiy texnika muddatli to'lovga — ${M} oygacha | Shahrixon, Asaka, Andijon | HAMKOR SAVDO`,
-      description: `Muzlatgich, kir yuvish mashinasi, oshxona texnikasi va skuterlar ${M} oygacha muddatli to'lovga. Pasport va plastik karta kifoya. ${FREE}da bepul yetkazish va o'rnatish. ${cities("uz")}da ${B} ta filial.`,
+      description: `Muzlatgich, kir yuvish mashinasi, oshxona texnikasi va skuterlar ${M} oygacha muddatli to'lovga (nasiyaga). Pasport va plastik karta kifoya. ${FREE}da bepul yetkazish va o'rnatish. ${cities("uz")}da ${B} ta filial.`,
       kicker: "Maishiy texnika",
       h1: "Maishiy texnika muddatli to'lovga",
       lead: `Muzlatgich, kir yuvish mashinasi, oshxona texnikasi va skuterlar — ${M} oygacha bo'lib to'lab olasiz. Rasmiylashtirish uchun pasport va plastik karta kifoya.`,
@@ -167,7 +167,7 @@ export const topics: Topic[] = [
     ruPath: "/ru/skutery",
     uz: {
       title: `Skuter muddatli to'lovga — ${M} oygacha | Shahrixon, Asaka, Andijon | HAMKOR SAVDO`,
-      description: `Skuterlar ${M} oygacha muddatli to'lovga (rassrochka). Pasport va plastik karta kifoya, kafilsiz. ${FREE}da bepul yetkazib berish. ${cities("uz")}da ${B} ta filial.`,
+      description: `Skuterlar ${M} oygacha muddatli to'lovga (nasiya, rassrochka). Pasport va plastik karta kifoya, kafilsiz. ${FREE}da bepul yetkazib berish. ${cities("uz")}da ${B} ta filial.`,
       kicker: "Skuterlar",
       h1: "Skuter muddatli to'lovga",
       lead: `Skuterni bugun minib ketasiz, pulini ${M} oygacha bo'lib to'laysiz. Rasmiylashtirish uchun pasport va plastik karta kifoya.`,
@@ -233,7 +233,7 @@ export const topics: Topic[] = [
     },
     uz: {
       title: `Mebel muddatli to'lovga — ${M} oygacha | Shahrixon, Asaka, Andijon | HAMKOR SAVDO`,
-      description: `Yotoqxonadan oshxonagacha — uy uchun mebel ${M} oygacha muddatli to'lovga. Pasport va plastik karta kifoya. ${FREE}da bepul yetkazish va o'rnatish. ${cities("uz")}da ${B} ta filial.`,
+      description: `Yotoqxonadan oshxonagacha — uy uchun mebel ${M} oygacha muddatli to'lovga (nasiyaga). Pasport va plastik karta kifoya. ${FREE}da bepul yetkazish va o'rnatish. ${cities("uz")}da ${B} ta filial.`,
       kicker: "Mebel",
       h1: "Mebel muddatli to'lovga",
       lead: `Yotoqxonadan oshxonagacha — uyni butunlay jihozlash uchun mebel. ${M} oygacha bo'lib to'laysiz, rasmiylashtirish uchun pasport va plastik karta kifoya.`,
@@ -299,7 +299,7 @@ export const topics: Topic[] = [
     },
     uz: {
       title: `Tilla taqinchoqlar muddatli to'lovga — ${M} oygacha | Shahrixon, Asaka, Andijon | HAMKOR SAVDO`,
-      description: `Sovchilik, to'y va bayram uchun tilla taqinchoqlar ${M} oygacha muddatli to'lovga. Pasport va plastik karta kifoya. Do'konda ko'rib, taqqoslab tanlaysiz. ${cities("uz")}da ${B} ta filial.`,
+      description: `Sovchilik, to'y va bayram uchun tilla taqinchoqlar ${M} oygacha muddatli to'lovga (nasiyaga). Pasport va plastik karta kifoya. Do'konda ko'rib, taqqoslab tanlaysiz. ${cities("uz")}da ${B} ta filial.`,
       kicker: "Tilla",
       h1: "Tilla taqinchoqlar muddatli to'lovga",
       lead: `Sovchilik, to'y, tug'ilgan kun — muhim kunlar uchun tilla taqinchoqlar. ${M} oygacha bo'lib to'laysiz, rasmiylashtirish uchun pasport va plastik karta kifoya.`,
@@ -355,8 +355,8 @@ export const topics: Topic[] = [
     path: "/muddatli-tolov",
     ruPath: "/ru/rassrochka",
     uz: {
-      title: `Muddatli to'lov (rassrochka) ${M} oygacha — pasport va karta bilan | Andijon viloyati | HAMKOR SAVDO`,
-      description: `Texnika, mebel va tillani ${M} oygacha muddatli to'lovga oling: faqat pasport va plastik karta, kafilsiz. ${N} dan ortiq mahsulot, ${FREE}da bepul yetkazish. ${cities("uz")}da ${B} ta filial.`,
+      title: `Muddatli to'lov va nasiya (rassrochka) ${M} oygacha — pasport va karta bilan | Andijon viloyati | HAMKOR SAVDO`,
+      description: `Texnika, mebel va tillani ${M} oygacha muddatli to'lovga (nasiyaga) oling: faqat pasport va plastik karta, kafilsiz. ${N} dan ortiq mahsulot, ${FREE}da bepul yetkazish. ${cities("uz")}da ${B} ta filial.`,
       kicker: "Muddatli to'lov",
       h1: `Muddatli to'lov — ${M} oygacha, pasport va karta bilan`,
       lead: `Maishiy texnika, mebel va tilla taqinchoqlarni bugun olib ketasiz, to'lovni ${M} oygacha bo'lib to'laysiz. Kafil ham, ma'lumotnoma ham kerak emas — pasport va plastik karta kifoya.`,
@@ -367,13 +367,17 @@ export const topics: Topic[] = [
         { title: "Yo'q mahsulot ham", text: "Boshqa joyda ko'rganingizni ham rasmiylashtiramiz." },
       ],
       body: [
-        "Muddatli to'lov (xalq tilida — rassrochka) — mahsulotni hozir olib, pulini oylarga bo'lib to'lash. HAMKOR SAVDO'da bu uch yo'nalishning hammasiga amal qiladi: maishiy texnika, mebel va tilla taqinchoqlar.",
+        "Muddatli to'lov (xalq tilida — nasiya yoki rassrochka) — mahsulotni hozir olib, pulini oylarga bo'lib to'lash. HAMKOR SAVDO'da bu uch yo'nalishning hammasiga amal qiladi: maishiy texnika, mebel va tilla taqinchoqlar.",
         `Qanday ishlaydi: mahsulotni tanlaysiz, pasport va plastik kartangiz bilan joyida rasmiylashtiramiz, xaridingizni shu kuniyoq olib ketasiz yoki yetkazib beramiz — to'lovni esa ${M} oygacha bo'lib to'laysiz.`,
         "Oylik to'lov mahsulot narxi va tanlangan muddatga qarab hisoblanadi. Aniq summani bilish uchun ariza qoldiring yoki qo'ng'iroq qiling — mutaxassisimiz hisoblab beradi.",
         "Kerakli mahsulot do'konda bo'lmasa ham qaytib ketmaysiz: boshqa do'konda, bozorda yoki internetda ko'rgan mahsulotingizni ham muddatli to'lovga rasmiylashtirib beramiz.",
       ],
       faq: [
         ...commonFaqUz,
+        {
+          q: "Nasiya bilan muddatli to'lovning farqi bormi?",
+          a: `Xalq orasida muddatli to'lovni nasiya yoki rassrochka deyishadi — gap bitta narsa haqida: mahsulotni hozir olib, pulini ${M} oygacha bo'lib to'laysiz. Pasport va plastik karta kifoya.`,
+        },
         {
           q: "Boshqa joyda ko'rgan mahsulotni ham muddatli to'lovga olsam bo'ladimi?",
           a: "Ha. Mahsulotning nomi, narxi va qayerdaligini ayting — uni ham muddatli to'lovga rasmiylashtirib beramiz.",
@@ -398,7 +402,7 @@ export const topics: Topic[] = [
         { title: "Даже чего нет у нас", text: "Оформим и товар, который вы видели в другом месте." },
       ],
       body: [
-        "Рассрочка — это когда товар вы забираете сейчас, а платите частями по месяцам. В HAMKOR SAVDO она действует на все три направления: бытовую технику, мебель и золотые украшения.",
+        "Рассрочка (в народе — насия) — это когда товар вы забираете сейчас, а платите частями по месяцам. В HAMKOR SAVDO она действует на все три направления: бытовую технику, мебель и золотые украшения.",
         `Как это работает: выбираете товар, мы оформляем рассрочку на месте по паспорту и пластиковой карте, покупку забираете в тот же день или мы её доставляем — а оплачиваете частями до ${M} месяцев.`,
         "Ежемесячный платёж зависит от цены товара и срока. Чтобы узнать точную сумму, оставьте заявку или позвоните — специалист рассчитает.",
         "Если нужного товара нет в магазине, вы не уйдёте ни с чем: оформим в рассрочку и товар, который вы видели в другом магазине, на базаре или в интернете.",
