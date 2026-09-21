@@ -25,14 +25,18 @@ biznesga biriktiring («Bu mening biznesim» / «Стать владельцем
 Ikkita bir xil karta paydo bo'lsa, keyin ularni birlashtirish juda qiyin va
 ikkalasi ham qidiruvda pastga tushadi.
 
-### Hozirgi holat (2026-09-19)
+### Hozirgi holat (2026-09-21)
 
-| Filial | Google | Yandex |
-|---|---|---|
-| Shahrixon — Ozodbek | ✅ karta bor, **egalik olingan** | ⚠️ karta bor, egalik olinmagan — tuzatish moderatsiyada |
-| Shahrixon — Bog' | ❌ yo'q | ❌ yo'q |
-| Asaka — Makro | ❌ yo'q | ❌ yo'q |
-| Andijon — Amir Temur | ⚠️ karta bor, tuzatish kerak | ⚠️ karta bor, ish vaqti yo'q |
+Google kartalari `tojiddinov.sft@gmail.com` akkauntida boshqariladi.
+
+| Filial | Google kartadagi nom | Holati | Keyingi qadam |
+|---|---|---|---|
+| Shahrixon — Ozodbek | HAMKOR SAVDO | ✅ boshqariladi, **tasdiqlanmagan**. Telefon `55 203 08 80`, sayt `/filiallar/shahrixon-ozodbek/`, har kuni 08–18, toifalar: Appliance Shop (asosiy), Home Furniture Shop, Jewellery Store, Motor scooter dealer — 2026-09-21 da tuzatildi | Tasdiqlash (video) — tasdiqlanmaguncha tuzatishlar mijozlarga ko'rinmasligi mumkin |
+| Asaka — Makro | Fayzli Xonodon Savdo Do'koni | ⏸ egalik **boshlangan**, tasdiqlash usulini tanlash bosqichida to'xtatildi | «Verify using 33 232 30 55» — kod shu raqamga SMS/qo'ng'iroq bilan keladi, filialdagi odam tayyor turishi kerak. Keyin nomni HAMKOR SAVDO ga, sayt, ish vaqti, toifalar |
+| Shahrixon — Bog' | Artel premium markaz | ❌ egasiz, hali boshlanmagan. Telefon `74 342 32 40` — o'lik | Egalikni olish (`fp=6630540401465519791`). Peshtoqda **«Texno Mebel»** yozilgan — kartaga shu nom qo'yiladi (Google qoidasi: nom peshtoqqa mos). Telefon `55 202 01 01`. Eski raqam o'lik, shuning uchun tasdiqlash faqat video orqali |
+| Andijon — Amir Temur | Hamkor Savdo | ⚠️ **boshqa Google akkaunt boshqaradi** («Claim» tugmasi yo'q). Nom, telefon, ish vaqti to'g'ri, sayt yo'q | Kim ochganini aniqlash; yoki egalik so'rovi (Request access), yoki «Suggest an edit» bilan sayt qo'shish |
+
+Yandex kartalari hali ko'rib chiqilmagan (2026-09-19 dan beri o'zgarmagan).
 
 ---
 
