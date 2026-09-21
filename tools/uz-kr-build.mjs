@@ -197,7 +197,8 @@ function walkFiles(dir) {
     if (dir === OUT_DIR && name === "ru") continue;
     // Google Search Console tasdiqlash fayli — sahifa emas, bir qator matn.
     // Unga tegilmasin: bir harf o'zgarsa, sayt egaligi tasdiqlanmay qoladi.
-    if (/^google[0-9a-f]+\.html$/.test(name)) continue;
+    // Yandex Webmaster fayli (yandex_...html) ham xuddi shunday.
+    if (/^(google|yandex_)[0-9a-f]+\.html$/.test(name)) continue;
     const st = statSync(full);
     if (st.isDirectory()) out.push(...walkFiles(full));
     else if (name.endsWith(".html")) out.push(full);
