@@ -2,6 +2,7 @@
 require __DIR__ . '/_lib/bootstrap.php';
 require_once __DIR__ . '/_lib/tgchats.php';
 require_once __DIR__ . '/_lib/tasks.php';
+require_once __DIR__ . '/_lib/mijozbot.php';
 
 $user = hs_require_login(true);
 hs_tg_seed();
@@ -23,8 +24,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_cache_set('tg:info', null, 1);
         hs_audit($user['login'], 'telegram webhook ulandi', $ok ? 'ok' : (string) $res);
         hs_flash($ok ? "Bot ulandi. Endi bot qo'shilgan guruhlar va unga /start yozgan odamlar shu ro'yxatda o'zi paydo bo'ladi." : 'Ulanmadi: ' . $res, $ok ? 'ok' : 'err');
+    } elseif ($action === 'rol' && $row) {
+        $r = hs_post('rol');
+        if (!in_array($r, array('', 'mijozlar', 'katalog'), true) || ($r !== '' && $row['type'] === 'private')) {
+            hs_flash("Noto'g'ri tanlov.", 'err');
+        } else {
+            hs_mb_set_role($id, $r);
+            hs_audit($user['login'], 'telegram: chat roli', $row['title'] . ': ' . ($r !== '' ? $r : 'oddiy'));
+            hs_flash($r === 'mijozlar' ? "«{$row['title']}» — mijozlar guruhi: bot savollarga javob beradi, arizalar bu yerga yuborilmaydi."
+                : ($r === 'katalog' ? "«{$row['title']}» — mahsulot kanali: postlari katalogga tushadi." : "«{$row['title']}» — oddiy chat."));
+        }
+    } elseif ($action === 'mb_sozlama') {
+        hs_set_setting('mb_on', hs_post('mb_on') === '1' ? '1' : '0');
+        hs_set_setting('mb_mode', hs_post('mb_mode') === 'faol' ? 'faol' : 'kuzatish');
+        hs_set_setting('mb_notify', hs_post('mb_notify') === 'hammasi' ? 'hammasi' : 'kerak');
+        hs_set_setting('mb_remind_m', (string) max(5, min(240, (int) hs_post('mb_remind_m'))));
+        $model = hs_post('mb_model');
+        hs_set_setting('mb_model', in_array($model, array('claude-opus-5', 'claude-sonnet-5', 'claude-haiku-4-5'), true) ? $model : HS_MB_DEFAULT_MODEL);
+        foreach (array('mb_group', 'mb_channel') as $k) {
+            $v = ltrim(preg_replace('#^(https?://)?t\.me/#i', '', hs_post($k)), '@');
+            if (preg_match('/^[A-Za-z0-9_]{4,64}$/', $v)) {
+                hs_set_setting($k, $v);
+            }
+        }
+        hs_audit($user['login'], 'mijozlar guruhi sozlamasi');
+        hs_flash('Saqlandi.');
+    } elseif ($action === 'mb_kalit') {
+        $key = trim(hs_post('mb_key'));
+        if (!preg_match('/^sk-ant-[A-Za-z0-9_\-]{20,200}$/', $key)) {
+            hs_flash("Kalit formati noto'g'ri (sk-ant-... bilan boshlanadi).", 'err');
+        } else {
+            hs_set_setting('mb_claude_key', $key);
+            hs_audit($user['login'], 'mijozlar guruhi: Claude kaliti saqlandi', '…' . substr($key, -4));
+            hs_flash('Claude kaliti saqlandi. "Sinab ko\'rish" bilan tekshiring.');
+        }
+    } elseif ($action === 'mb_kalit_ochir') {
+        hs_db()->prepare('DELETE FROM settings WHERE key = ?')->execute(array('mb_claude_key'));
+        hs_audit($user['login'], "mijozlar guruhi: Claude kaliti o'chirildi");
+        hs_flash("Kalit o'chirildi. Bot endi oddiy so'z qidiruvi bilan ishlaydi va savollarni operatorga yuboradi.");
+    } elseif ($action === 'mb_katalog') {
+        list($n, $err) = hs_mb_backfill(hs_mb_setting('channel'), 15);
+        hs_audit($user['login'], 'mijozlar guruhi: katalog yangilandi', $err !== '' ? $err : "{$n} ta post");
+        hs_flash($err !== '' ? $err : "Kanaldan {$n} ta post katalogga yozildi. Jami: " . hs_mb_catalog_count() . ' ta.', $err !== '' ? 'err' : 'ok');
+    } elseif ($action === 'mb_sinov') {
+        $savol = mb_substr(hs_post('savol'), 0, 500);
+        if ($savol === '') {
+            hs_flash('Savol yozing.', 'err');
+        } else {
+            $rows = hs_mb_catalog_rows();
+            list($d, $err) = hs_mb_ask_claude($savol, '', $rows);
+            if ($d === null) {
+                hs_flash('Claude ishlamadi: ' . $err, 'err');
+            } else {
+                $byN = array();
+                foreach ($rows as $r) {
+                    $byN[(int) $r['n']] = $r;
+                }
+                $found = array();
+                foreach ((array) $d['post_ids'] as $n) {
+                    if (isset($byN[(int) $n])) {
+                        $found[] = mb_substr(preg_split('/\R/u', trim($byN[(int) $n]['text']))[0], 0, 60) . ' — ' . $byN[(int) $n]['url'];
+                    }
+                }
+                hs_flash(($d['is_question'] ? 'Savol' : 'Savol emas (bot jim turadi)') . ' · ' . $d['kind'] . ($d['needs_operator'] ? ' · operatorga yuboriladi' : '')
+                    . "\nJavob: " . $d['reply'] . ($found ? "\nPostlar: " . implode(' | ', $found) : "\nMos post topilmadi."));
+            }
+        }
     } elseif ($action === 'arizalar' && $row) {
         $on = hs_post('leads') === '1' ? 1 : 0;
+        if ($on && $row['role'] !== '') {
+            hs_flash("«{$row['title']}» — " . ($row['role'] === 'mijozlar' ? 'mijozlar guruhi' : 'mahsulot kanali') . ": unga arizalar (mijozlar raqami) yuborilmaydi.", 'err');
+            hs_redirect('/admin/telegram.php');
+        }
         $db->prepare('UPDATE tg_chats SET leads = ?, updated_at = ? WHERE chat_id = ?')->execute(array($on, hs_now(), $id));
         hs_audit($user['login'], $on ? 'telegram: arizalar yoqildi' : "telegram: arizalar o'chirildi", $row['title'] . " ({$id})");
         hs_flash($on ? "Arizalar endi «{$row['title']}» ga ham boradi." : "«{$row['title']}» ga arizalar yuborilmaydi.");
@@ -99,11 +170,12 @@ $botName = $info['me'] && !empty($info['me']['username']) ? $info['me']['usernam
 $wh = $info['wh'];
 $connected = $wh && isset($wh['url']) && $wh['url'] === hs_tg_webhook_url();
 $otherHook = $wh && !empty($wh['url']) && !$connected;
-if ($connected && (empty($wh['allowed_updates']) || !in_array('callback_query', $wh['allowed_updates'], true))) {
+// Eski ulanishda keyin qo'shilgan voqea turlari yo'q bo'lsa — qayta ulaymiz (tugmalar, kanal postlarini tahrirlash).
+if ($connected && (empty($wh['allowed_updates']) || array_diff(array('callback_query', 'edited_channel_post'), $wh['allowed_updates']))) {
     list($upOk) = hs_tg_connect_webhook();
     hs_db()->prepare('DELETE FROM cache WHERE key = ?')->execute(array('tg:info'));
     if ($upOk) {
-        hs_flash("Bot yangilandi: endi ruxsat so'rovlarini Telegram'dagi tugmalar bilan hal qilasiz.");
+        hs_flash("Bot ulanishi yangilandi: tugmalar va mahsulot kanali postlari endi to'liq keladi.");
     }
 }
 
@@ -156,6 +228,104 @@ if (!$info['me']) {
 }
 echo '</section>';
 
+/* ---- mijozlar guruhi yordamchisi ---- */
+$mbGroup = null;
+$mbChannel = null;
+foreach ($chats as $c) {
+    if ($c['role'] === 'mijozlar' && $c['status'] === 'member' && !$mbGroup) {
+        $mbGroup = $c;
+    } elseif ($c['role'] === 'katalog' && $c['status'] === 'member' && !$mbChannel) {
+        $mbChannel = $c;
+    }
+}
+$mbAdmin = null;
+if ($mbGroup && $info['me']) {
+    $mbAdmin = hs_cache_get('mb:botstatus:' . $mbGroup['chat_id']);
+    if (!is_string($mbAdmin)) {
+        list($okM, $mem) = hs_tg_api('getChatMember', array('chat_id' => $mbGroup['chat_id'], 'user_id' => $info['me']['id']));
+        $mbAdmin = $okM && isset($mem['status']) ? (string) $mem['status'] : '';
+        hs_cache_set('mb:botstatus:' . $mbGroup['chat_id'], $mbAdmin, 300);
+    }
+}
+$mbKey = hs_mb_key();
+$mbCount = hs_mb_catalog_count();
+$mbStats = hs_db()->query("SELECT COUNT(*) AS jami, SUM(status = 'javob') AS javob, SUM(status = 'kuzatish') AS kuzatish, SUM(needs_operator = 1) AS operator, SUM(answered_by <> '') AS xodim, SUM(lead_id IS NOT NULL) AS ariza
+    FROM mb_questions WHERE created_at > '" . date('Y-m-d H:i:s', time() - 7 * 86400) . "' AND status <> 'tashlandi'")->fetch();
+$okIco = function ($ok) {
+    return '<span class="state ' . ($ok ? 'on' : 'off') . '">' . hs_icon($ok ? 'check' : 'clock') . '</span>';
+};
+echo '<section class="card"><div class="part-head"><span class="part-ico">' . hs_icon('users') . '</span><div><h2>Mijozlar guruhi yordamchisi</h2>'
+    . '<p class="muted">Guruhdagi "X bormi? narxi?" savollariga bot kanal postlari bilan javob beradi, aniq javob kerak bo\'lsa — xodimlarga yuboradi</p></div></div>';
+echo '<ul class="checklist">';
+$groupAt = '@' . h(hs_mb_setting('group'));
+echo '<li>' . $okIco($mbGroup && ($mbAdmin === 'administrator' || $mbAdmin === 'creator')) . '<div><b>'
+    . ($mbGroup ? 'Guruh: ' . h($mbGroup['title']) . ($mbAdmin === 'administrator' || $mbAdmin === 'creator' ? ' — bot admin' : ' — bot admin EMAS') : 'Bot ' . $groupAt . ' guruhida hali yo\'q') . '</b><small>'
+    . ($mbGroup ? ($mbAdmin === 'administrator' || $mbAdmin === 'creator' ? 'Bot barcha xabarlarni ko\'radi. Arizalar (mijozlar raqami) bu guruhga yuborilmaydi.' : 'Barcha xabarlarni ko\'rishi uchun botni guruhda admin qiling (qo\'shimcha huquq shart emas).')
+        : 'Botni ' . $groupAt . ' guruhiga qo\'shing va admin qiling. Guruh o\'zi "mijozlar guruhi" deb belgilanadi — unga salom ham, ariza ham yuborilmaydi.') . '</small></div></li>';
+$faol = hs_mb_setting('mode') === 'faol';
+echo '<li>' . $okIco(true) . '<div><b>' . (hs_mb_setting('on') !== '1' ? "Rejim: o'chirilgan" : ($faol ? 'Rejim: ✅ Faol — bot guruhga javob yozadi' : "Rejim: 🧪 Kuzatish — bot guruhga yozmaydi")) . '</b><small>'
+    . ($faol ? "Aniq javob kerak bo'lsa, savol xodimlarga ham keladi." : "Har bir savol va botning javob loyihasi xodimlar chatiga keladi. Javoblar to'g'ri ekaniga ishonch hosil qilgach, pastda \"Faol\" ni tanlang.") . '</small></div></li>';
+echo '<li>' . $okIco($mbCount > 0) . '<div><b>Katalog: ' . $mbCount . ' ta post</b><small>'
+    . 'Manba: @' . h(hs_mb_setting('channel')) . ($mbChannel ? ' (bot kanalda — yangi postlar o\'zi tushadi)' : ' (bot kanalda emas — postlar har 6 soatda kanalning ochiq sahifasidan yig\'iladi; darhol tushishi uchun botni kanalga admin qiling)')
+    . ' va guruhdagi xodimlarning narxli postlari.' . (hs_setting('mb_backfill_at', '') !== '' ? ' Oxirgi yig\'ish: ' . h(date('d.m H:i', strtotime(hs_setting('mb_backfill_at')))) . '.' : '') . '</small></div></li>';
+echo '<li>' . $okIco($mbKey !== '') . '<div><b>' . ($mbKey !== '' ? 'Claude ulangan (…' . h(substr($mbKey, -4)) . ') · ' . h(hs_mb_setting('model')) : 'Claude kaliti kiritilmagan') . '</b><small>'
+    . ($mbKey !== '' ? 'Savollarni lotin/kirill, xato yozuvda ham tushunadi.' : 'Kalitsiz bot oddiy so\'z qidiruvi bilan ishlaydi va har bir savolni operatorga yuboradi. Kalit: console.anthropic.com → API Keys.') . '</small></div></li>';
+echo '<li>' . $okIco(true) . '<div><b>Oxirgi 7 kun: ' . (int) $mbStats['jami'] . ' ta savol</b><small>'
+    . ((int) $mbStats['kuzatish'] ? 'Kuzatishda (guruhga yozilmadi): ' . (int) $mbStats['kuzatish'] . ' · ' : '')
+    . 'Bot javob berdi: ' . (int) $mbStats['javob'] . ' · operator kerak: ' . (int) $mbStats['operator'] . ' · xodim javob berdi: ' . (int) $mbStats['xodim'] . ' · raqam qoldirdi (ariza): ' . (int) $mbStats['ariza'] . '</small></div></li>';
+echo '</ul>';
+
+echo '<form method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_sozlama">';
+echo '<label class="switch toggle-row"><input type="hidden" name="mb_on" value="0"><input type="checkbox" name="mb_on" value="1"' . (hs_mb_setting('on') === '1' ? ' checked' : '') . '><span class="switch-ui" aria-hidden="true"></span><span>Guruhdagi savollarga javob berish</span></label>';
+echo '<div class="grid grid-4">';
+echo '<div class="span-2"><label for="mb_mode">Rejim</label><select id="mb_mode" name="mb_mode"><option value="kuzatish"' . (hs_mb_setting('mode') !== 'faol' ? ' selected' : '') . '>🧪 Kuzatish — guruhga yozmaydi, javob loyihasini xodimlarga ko\'rsatadi</option><option value="faol"' . (hs_mb_setting('mode') === 'faol' ? ' selected' : '') . '>✅ Faol — guruhdagi savolga o\'zi javob beradi</option></select><p class="hint">Avval bir necha kun kuzating: bot javoblari xodimlar chatiga keladi. To\'g\'ri bo\'lsa — Faol.</p></div>';
+echo '<div><label for="mb_group">Mijozlar guruhi</label><input id="mb_group" type="text" name="mb_group" maxlength="80" value="@' . h(hs_mb_setting('group')) . '"></div>';
+echo '<div><label for="mb_channel">Mahsulot kanali</label><input id="mb_channel" type="text" name="mb_channel" maxlength="80" value="@' . h(hs_mb_setting('channel')) . '"></div>';
+echo '<div><label for="mb_notify">Xodimlarga yuborish</label><select id="mb_notify" name="mb_notify"><option value="kerak"' . (hs_mb_setting('notify') === 'kerak' ? ' selected' : '') . '>Operator kerak bo\'lganda</option><option value="hammasi"' . (hs_mb_setting('notify') === 'hammasi' ? ' selected' : '') . '>Har bir savol</option></select><p class="hint">Arizalar keladigan "barcha filiallar" chatlariga.</p></div>';
+echo '<div><label for="mb_remind_m">Javobsiz eslatma (daqiqa)</label><input id="mb_remind_m" type="number" name="mb_remind_m" min="5" max="240" value="' . h(hs_mb_setting('remind_m')) . '"></div>';
+echo '<div class="span-2"><label for="mb_model">Claude modeli</label><select id="mb_model" name="mb_model">';
+foreach (array('claude-opus-5' => 'Claude Opus 5 — eng aniq (tavsiya)', 'claude-sonnet-5' => 'Claude Sonnet 5 — arzonroq', 'claude-haiku-4-5' => 'Claude Haiku 4.5 — eng arzon, tez') as $mv => $ml) {
+    echo '<option value="' . h($mv) . '"' . (hs_mb_setting('model') === $mv ? ' selected' : '') . '>' . h($ml) . '</option>';
+}
+echo '</select><p class="hint">Bitta savol taxminan: Opus 5 — 2–7 sent, Sonnet 5 — 1–3 sent, Haiku — ~1 sent (katalog hajmiga bog\'liq). Aniq xarajat — console.anthropic.com da.</p></div>';
+echo '</div><div class="actions"><button class="btn" type="submit">Saqlash</button></div></form>';
+
+echo '<div class="grid grid-2">';
+echo '<form method="post" action="/admin/telegram.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit">'
+    . '<label for="mb_key">Claude API kaliti' . ($mbKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">'
+    . '<p class="hint">Faqat serverdagi bazada saqlanadi, sahifada qayta ko\'rsatilmaydi.</p><div class="actions"><button class="btn outline small" type="submit">Kalitni saqlash</button></div></form>';
+if ($mbKey !== '') {
+    echo '<form method="post" action="/admin/telegram.php" class="actions" data-confirm="Claude kaliti o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit_ochir"><button class="btn danger small" type="submit">Kalitni o\'chirish</button></form>';
+}
+echo '<form method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_sinov">'
+    . '<label for="savol">Sinab ko\'rish (guruhga hech narsa yuborilmaydi)</label><input id="savol" type="text" name="savol" maxlength="500" placeholder="masalan: Assalomu alaykum planshetlar ham bormi">'
+    . '<div class="actions"><button class="btn outline small" type="submit"' . ($mbKey === '' ? ' disabled' : '') . '>Sinash</button></div></form>';
+echo '</div>';
+echo '<form method="post" action="/admin/telegram.php" class="actions">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_katalog"><button class="btn outline small" type="submit">🔄 Katalogni kanaldan yangilash</button></form>';
+
+$recent = hs_db()->query("SELECT * FROM mb_questions WHERE status <> 'tashlandi' ORDER BY id DESC LIMIT 15")->fetchAll();
+if ($recent) {
+    echo '<h3>Oxirgi savollar</h3><div class="table-wrap"><table><thead><tr><th>Vaqt</th><th>Mijoz</th><th>Savol</th><th>Bot javobi</th><th>Holat</th></tr></thead><tbody>';
+    foreach ($recent as $q) {
+        if ($q['answered_by'] !== '') {
+            $state = '<span class="pill st-sotildi">✅ ' . h($q['answered_by']) . '</span>';
+        } elseif ((int) $q['lead_id'] > 0) {
+            $state = '<span class="pill st-qongiroq">📞 ariza #' . (int) $q['lead_id'] . '</span>';
+        } elseif ($q['status'] === 'xato') {
+            $state = '<span class="pill pill-err">xato</span>';
+        } elseif ($q['status'] === 'kuzatish') {
+            $state = '<span class="pill st-yangi">🧪 kuzatishda</span>';
+        } elseif ((int) $q['needs_operator']) {
+            $state = '<span class="pill st-yangi">operator kerak</span>';
+        } else {
+            $state = '<span class="pill st-sotildi">bot javob berdi</span>';
+        }
+        echo '<tr><td>' . h(date('d.m H:i', strtotime($q['created_at']))) . '</td><td>' . h($q['user_name']) . '</td><td>' . h(mb_substr($q['text'], 0, 120)) . '</td><td><small>' . h(mb_substr($q['reply'], 0, 140)) . ($q['post_ids'] !== '' ? ' · ' . count(explode(',', $q['post_ids'])) . ' post' : '') . ($q['error'] !== '' ? '<br><span class="closed-note">' . h(mb_substr($q['error'], 0, 120)) . '</span>' : '') . '</small></td><td>' . $state . '</td></tr>';
+    }
+    echo '</tbody></table></div>';
+}
+echo '</section>';
+
 /* ---- chatlar ---- */
 echo '<section class="card"><div class="card-head"><h2>Arizalar kimga boradi</h2><span class="muted">' . count($chats) . ' ta chat</span></div>';
 if (!$chats) {
@@ -174,6 +344,9 @@ if (!$chats) {
         if ((int) $c['admin'] === 1) {
             echo ' <span class="pill admin-pill">★ Boshqaruvchi</span>';
         }
+        if ($c['role'] !== '') {
+            echo ' <span class="pill st-yangi">' . ($c['role'] === 'mijozlar' ? '👥 Mijozlar guruhi' : '📣 Mahsulot kanali') . '</span>';
+        }
         echo '</div><small>' . ($c['username'] !== '' ? '@' . h($c['username']) . ' · ' : '') . 'ID ' . $cid
             . ($c['last_sent_at'] ? ' · oxirgi xabar ' . h(date('d.m H:i', strtotime($c['last_sent_at']))) : '') . '</small>';
         if ($c['last_error'] !== '') {
@@ -185,16 +358,29 @@ if (!$chats) {
         // Yoqish tugmasi: yashirin 0 + checkbox 1 — belgilanmasa 0 yuboriladi.
         echo '<form method="post" action="/admin/telegram.php" class="switch-form">' . hs_csrf_field()
             . '<input type="hidden" name="amal" value="arizalar"><input type="hidden" name="id" value="' . $cid . '"><input type="hidden" name="leads" value="0">'
-            . '<label class="switch"><input type="checkbox" name="leads" value="1" data-autosubmit' . ($on ? ' checked' : '') . ($left ? ' disabled' : '') . '><span class="switch-ui" aria-hidden="true"></span><span>Arizalar</span></label>'
+            . '<label class="switch"' . ($c['role'] !== '' ? ' title="Mijozlar guruhi / mahsulot kanaliga arizalar yuborilmaydi"' : '') . '><input type="checkbox" name="leads" value="1" data-autosubmit' . ($on ? ' checked' : '') . ($left || $c['role'] !== '' ? ' disabled' : '') . '><span class="switch-ui" aria-hidden="true"></span><span>Arizalar</span></label>'
             . '<button class="btn outline small js-hide" type="submit">OK</button></form>';
 
-        echo '<form method="post" action="/admin/telegram.php" class="branch-form">' . hs_csrf_field()
-            . '<input type="hidden" name="amal" value="filial"><input type="hidden" name="id" value="' . $cid . '">'
-            . '<select name="filial" data-autosubmit aria-label="' . h($c['title']) . ' — qaysi filial arizalari"><option value="">Barcha filiallar</option>';
-        foreach ($branches as $k => $v) {
-            echo '<option value="' . h($k) . '"' . ((string) $c['branch'] === (string) $k ? ' selected' : '') . '>📍 Filial rahbari: ' . h($v) . '</option>';
+        if ($c['type'] !== 'private') {
+            echo '<form method="post" action="/admin/telegram.php" class="branch-form">' . hs_csrf_field()
+                . '<input type="hidden" name="amal" value="rol"><input type="hidden" name="id" value="' . $cid . '">'
+                . '<select name="rol" data-autosubmit aria-label="' . h($c['title']) . ' — roli">';
+            foreach (array('' => 'Xodimlar chati (arizalar mumkin)', 'mijozlar' => '👥 Mijozlar guruhi — bot javob beradi', 'katalog' => '📣 Mahsulot kanali — katalog') as $rv => $rl) {
+                echo '<option value="' . h($rv) . '"' . ($c['role'] === $rv ? ' selected' : '') . '>' . h($rl) . '</option>';
+            }
+            echo '</select><button class="btn outline small js-hide" type="submit">OK</button></form>';
         }
-        echo '</select><button class="btn outline small js-hide" type="submit">OK</button></form>';
+
+        // Mijozlar guruhi / mahsulot kanaliga ariza bormaydi — filial tanlovi ham kerak emas.
+        if ($c['role'] === '') {
+            echo '<form method="post" action="/admin/telegram.php" class="branch-form">' . hs_csrf_field()
+                . '<input type="hidden" name="amal" value="filial"><input type="hidden" name="id" value="' . $cid . '">'
+                . '<select name="filial" data-autosubmit aria-label="' . h($c['title']) . ' — qaysi filial arizalari"><option value="">Barcha filiallar</option>';
+            foreach ($branches as $k => $v) {
+                echo '<option value="' . h($k) . '"' . ((string) $c['branch'] === (string) $k ? ' selected' : '') . '>📍 Filial rahbari: ' . h($v) . '</option>';
+            }
+            echo '</select><button class="btn outline small js-hide" type="submit">OK</button></form>';
+        }
 
         echo '<div class="actions tight">';
         if ($c['type'] === 'private' && !$left) {

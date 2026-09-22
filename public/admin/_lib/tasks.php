@@ -3,7 +3,8 @@
  * Vaqt bo'yicha ishlaydigan vazifalar:
  *   - javobsiz ariza eslatmasi (15 va 30 daqiqa, sozlanadi; 30 daqiqalik — 3 martagacha takrorlanadi);
  *   - arizalarning kechki zaxira nusxasi (boshqaruvchiga Telegram'da fayl);
- *   - kunlik hisobot (avval cron/hisobot.php qilardi).
+ *   - kunlik hisobot (avval cron/hisobot.php qilardi);
+ *   - mijozlar guruhi: javobsiz savol eslatmasi va kanal katalogini yangilash (_lib/mijozbot.php).
  *
  * Ikki yo'l bilan ishga tushadi:
  *   1. Hostingdagi Cron har 5 daqiqada: php .../admin/cron/vazifalar.php — aniq.
@@ -13,6 +14,7 @@
  */
 require_once __DIR__ . '/tgchats.php';
 require_once __DIR__ . '/leads.php';
+require_once __DIR__ . '/mijozbot.php';
 
 function hs_task_setting($key)
 {
@@ -53,6 +55,11 @@ function hs_tasks_run($fromCron = false)
         }
         if (hs_tasks_daily_report()) {
             $done[] = 'hisobot';
+        }
+        // Mijozlar guruhi: javobsiz savol eslatmasi va kanal katalogini yangilash.
+        $mb = hs_mb_tasks();
+        if ($mb) {
+            $done[] = "{$mb} ta savol eslatmasi";
         }
     } catch (Throwable $e) {
         error_log('HAMKOR SAVDO: vazifalar xatosi: ' . $e->getMessage());

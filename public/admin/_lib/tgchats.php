@@ -23,7 +23,9 @@ function hs_tg_api($method, $params = array())
         @file_put_contents(hs_data_dir() . '/telegram.log', '[' . hs_now() . "] {$method} " . json_encode($params, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
         $fake = array(
             'getMe' => array('id' => 1, 'is_bot' => true, 'username' => 'sinov_bot'),
-            'getWebhookInfo' => array('url' => hs_setting('tg_webhook_secret', '') !== '' ? hs_tg_webhook_url() : '', 'allowed_updates' => array('message', 'channel_post', 'my_chat_member', 'callback_query')),
+            'getWebhookInfo' => array('url' => hs_setting('tg_webhook_secret', '') !== '' ? hs_tg_webhook_url() : '', 'allowed_updates' => array('message', 'channel_post', 'edited_channel_post', 'my_chat_member', 'callback_query')),
+            'getChatAdministrators' => array(array('user' => array('id' => 777, 'is_bot' => false, 'first_name' => 'Xodim'), 'status' => 'administrator')),
+            'getChatMember' => array('status' => 'administrator'),
             'getChat' => array('id' => isset($params['chat_id']) ? $params['chat_id'] : 0, 'type' => 'supergroup', 'title' => 'Sinov guruhi'),
             'sendMessage' => array('message_id' => mt_rand(1000, 999999)),
         );
@@ -587,6 +589,12 @@ function hs_tg_handle_callback($q)
         $answer('Natija belgilangan.');
         return;
     }
+    // Mijozlar guruhi savoli: "✅ Javob berildi" — savol kelgan xodimlar chatidagi har kim.
+    if (preg_match('/^mq:(\d+)$/', $data, $m)) {
+        require_once __DIR__ . '/mijozbot.php';
+        hs_mb_handle_callback($q, (int) $m[1]);
+        return;
+    }
     // Qolgani — faqat boshqaruvchi.
     if (!hs_tg_is_admin($from)) {
         $answer("Bu tugmani faqat boshqaruvchi bosa oladi.");
@@ -611,6 +619,11 @@ function hs_tg_handle_callback($q)
             return;
         }
         $approve = $data[0] === 'a';
+        if ($approve && $row['role'] !== '') {
+            // Mijozlar guruhi / mahsulot kanali — mijozlar telefoni u yerga ketmasin.
+            $answer($row['role'] === 'mijozlar' ? "Bu mijozlar guruhi — unga arizalar yuborilmaydi." : "Bu mahsulot kanali — unga arizalar yuborilmaydi.");
+            return;
+        }
         $branch = $approve ? $m[2] : $row['branch'];
         if ($branch !== '' && !isset(hs_branch_names()[$branch])) {
             $branch = '';
@@ -660,6 +673,10 @@ function hs_tg_handle_callback($q)
             return;
         }
         $on = (int) $row['leads'] ? 0 : 1;
+        if ($on && $row['role'] !== '') {
+            $answer('Bu ' . ($row['role'] === 'mijozlar' ? 'mijozlar guruhi' : 'mahsulot kanali') . ' — arizalar yuborilmaydi.');
+            return;
+        }
         $db->prepare('UPDATE tg_chats SET leads = ?, updated_at = ? WHERE chat_id = ?')->execute(array($on, hs_now(), $row['chat_id']));
         hs_audit('telegram ' . $who, $on ? 'telegram: arizalar yoqildi (botdan)' : "telegram: arizalar o'chirildi (botdan)", $row['title'] . ' (' . $row['chat_id'] . ')');
         $showCard(hs_tg_get_chat($row['chat_id']));
@@ -690,6 +707,7 @@ function hs_tg_handle_callback($q)
 /** Webhook'dan kelgan bitta voqea. */
 function hs_tg_handle_update($u)
 {
+    require_once __DIR__ . '/mijozbot.php';
     if (isset($u['callback_query']['id'])) {
         hs_tg_handle_callback($u['callback_query']);
         return;
@@ -700,14 +718,46 @@ function hs_tg_handle_update($u)
         $new = isset($u['my_chat_member']['new_chat_member']['status']) ? $u['my_chat_member']['new_chat_member']['status'] : '';
         $in = in_array($new, array('member', 'administrator', 'creator', 'restricted'), true);
         $isNew = hs_tg_upsert($chat, $in ? 'member' : 'left');
+        $who = isset($u['my_chat_member']['from']) ? hs_tg_chat_title($u['my_chat_member']['from']) : '';
+        // Mijozlar guruhi / mahsulot kanali: arizalar bu yerga hech qachon yuborilmaydi va
+        // guruhga "arizalar shu yerga keladi" degan salom ham yozilmaydi.
+        $role = hs_mb_is_customer_chat($chat) ? 'mijozlar' : (hs_mb_is_catalog_chat($chat) ? 'katalog' : '');
+        if ($role !== '') {
+            hs_mb_set_role($chat['id'], $role);
+            if ($in) {
+                hs_mb_notify_admins_role($chat, $role, $new, $who);
+            }
+            return;
+        }
         if ($in && $isNew && $chat['type'] !== 'private') {
-            $who = isset($u['my_chat_member']['from']) ? hs_tg_chat_title($u['my_chat_member']['from']) : '';
             hs_tg_ask_admins($chat, $who);
-            hs_tg_api('sendMessage', array('chat_id' => $chat['id'], 'text' => "Salom! HAMKOR SAVDO boti ulandi.\nBoshqaruvchi ruxsat bergach, saytdan kelgan arizalar shu yerga yuboriladi."));
+            // Ochiq guruh yoki kanal (@nomi bor) — ko'pincha mijozlar ko'radigan joy: salom yozmaymiz.
+            if (empty($chat['username'])) {
+                hs_tg_api('sendMessage', array('chat_id' => $chat['id'], 'text' => "Salom! HAMKOR SAVDO boti ulandi.\nBoshqaruvchi ruxsat bergach, saytdan kelgan arizalar shu yerga yuboriladi."));
+            }
         }
         return;
     }
-    $msg = isset($u['message']) ? $u['message'] : (isset($u['channel_post']) ? $u['channel_post'] : null);
+    // Mahsulot kanali posti (yangi yoki tahrirlangan) — katalogga.
+    $post = isset($u['channel_post']) ? $u['channel_post'] : (isset($u['edited_channel_post']) ? $u['edited_channel_post'] : null);
+    if ($post && isset($post['chat'])) {
+        $row = hs_tg_get_chat($post['chat']['id']);
+        if (hs_mb_is_catalog_chat($post['chat'], $row)) {
+            if (!$row) {
+                hs_tg_upsert($post['chat'], 'member');
+            }
+            if (!$row || $row['role'] !== 'katalog') {
+                hs_mb_set_role($post['chat']['id'], 'katalog');
+            }
+            hs_mb_catalog_from_message($post, true);
+            return;
+        }
+        if (isset($u['edited_channel_post'])) {
+            return;
+        }
+    }
+    // Boshqa kanal posti — avvalgidek (kanalga /start yozib ro'yxatga qo'shish mumkin).
+    $msg = isset($u['message']) ? $u['message'] : $post;
     if (!$msg || !isset($msg['chat'])) {
         return;
     }
@@ -718,6 +768,25 @@ function hs_tg_handle_update($u)
     $chat = $msg['chat'];
     $text = isset($msg['text']) ? trim((string) $msg['text']) : '';
     $private = $chat['type'] === 'private';
+
+    // Mijozlar guruhi: savollarga javob, xodim postlari katalogga. Arizalar oqimiga kirmaydi.
+    if (!$private) {
+        $row = hs_tg_get_chat($chat['id']);
+        if (hs_mb_is_customer_chat($chat, $row)) {
+            if (!$row) {
+                hs_tg_upsert($chat, 'member');
+            }
+            if (!$row || $row['role'] !== 'mijozlar') {
+                hs_mb_set_role($chat['id'], 'mijozlar');
+            }
+            hs_mb_handle_group_message($msg);
+            return;
+        }
+    }
+    // Guruhdagi "Operator bilan bog'lanish" tugmasidan kelgan mijoz (start=qN) va uning raqami.
+    if ($private && hs_mb_handle_private($msg)) {
+        return;
+    }
 
     // Boshqaruvchi buyruqlari: /royxat — hamma chatlar tugma bilan.
     if ($private && hs_tg_is_admin($chat['id']) && preg_match('#^/(royxat|ro\'yxat|chatlar|list)\b#iu', $text)) {
@@ -753,7 +822,7 @@ function hs_tg_handle_update($u)
 function hs_tg_active_count()
 {
     hs_tg_seed();
-    return (int) hs_db()->query("SELECT COUNT(*) FROM tg_chats WHERE leads = 1 AND status = 'member'")->fetchColumn();
+    return (int) hs_db()->query("SELECT COUNT(*) FROM tg_chats WHERE leads = 1 AND status = 'member' AND role = ''")->fetchColumn();
 }
 
 /**
@@ -767,9 +836,9 @@ function hs_tg_lead_recipients($branch)
     hs_tg_seed();
     $branch = (string) $branch;
     if ($branch === '' || $branch === 'boshqa-viloyat') {
-        return hs_db()->query("SELECT * FROM tg_chats WHERE leads = 1 AND status = 'member' ORDER BY added_at")->fetchAll();
+        return hs_db()->query("SELECT * FROM tg_chats WHERE leads = 1 AND status = 'member' AND role = '' ORDER BY added_at")->fetchAll();
     }
-    $st = hs_db()->prepare("SELECT * FROM tg_chats WHERE leads = 1 AND status = 'member' AND (branch = '' OR branch = ?) ORDER BY added_at");
+    $st = hs_db()->prepare("SELECT * FROM tg_chats WHERE leads = 1 AND status = 'member' AND role = '' AND (branch = '' OR branch = ?) ORDER BY added_at");
     $st->execute(array($branch));
     return $st->fetchAll();
 }
@@ -795,7 +864,7 @@ function hs_tg_connect_webhook()
     return hs_tg_api('setWebhook', array(
         'url' => hs_tg_webhook_url(),
         'secret_token' => hs_tg_webhook_secret(),
-        'allowed_updates' => json_encode(array('message', 'channel_post', 'my_chat_member', 'callback_query')),
+        'allowed_updates' => json_encode(array('message', 'channel_post', 'edited_channel_post', 'my_chat_member', 'callback_query')),
         // Oxirgi 24 soatdagi voqealar ham kelsin: bot yaqinda qo'shilgan guruhlar ro'yxatga tushadi.
         'drop_pending_updates' => 'false',
     ));

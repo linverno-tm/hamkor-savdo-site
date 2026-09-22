@@ -152,6 +152,53 @@ function hs_db_migrate(PDO $pdo)
             // Eski arizalar bo'yicha yangi, takroriy eslatmalar boshlanib ketmasin.
             "UPDATE leads SET remind_level = 9 WHERE remind_level >= 2",
         ),
+        // Mijozlar guruhi yordamchisi (_lib/mijozbot.php): chat roli, kanal/guruhdagi
+        // mahsulot postlari (katalog) va guruhdagi savollar.
+        7 => array(
+            // '' — oddiy chat (arizalar yoqilishi mumkin); 'mijozlar' — mijozlar guruhi,
+            // 'katalog' — mahsulot kanali. Bu ikkisiga ariza HECH QACHON yuborilmaydi.
+            "ALTER TABLE tg_chats ADD COLUMN role TEXT NOT NULL DEFAULT ''",
+            "CREATE TABLE mb_posts (
+                source TEXT NOT NULL,
+                post_id INTEGER NOT NULL,
+                url TEXT NOT NULL DEFAULT '',
+                text TEXT NOT NULL,
+                photo INTEGER NOT NULL DEFAULT 0,
+                posted_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (source, post_id)
+            )",
+            "CREATE INDEX mb_posts_posted ON mb_posts(posted_at)",
+            "CREATE TABLE mb_questions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                chat_id TEXT NOT NULL,
+                message_id INTEGER NOT NULL,
+                user_id TEXT NOT NULL DEFAULT '',
+                user_name TEXT NOT NULL DEFAULT '',
+                text TEXT NOT NULL,
+                context TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'yangi',
+                kind TEXT NOT NULL DEFAULT '',
+                reply TEXT NOT NULL DEFAULT '',
+                post_ids TEXT NOT NULL DEFAULT '',
+                bot_message_id INTEGER,
+                needs_operator INTEGER NOT NULL DEFAULT 0,
+                answered_by TEXT NOT NULL DEFAULT '',
+                answered_at TEXT,
+                lead_id INTEGER,
+                reminded INTEGER NOT NULL DEFAULT 0,
+                error TEXT NOT NULL DEFAULT ''
+            )",
+            "CREATE INDEX mb_q_created ON mb_questions(created_at)",
+            "CREATE INDEX mb_q_msg ON mb_questions(chat_id, message_id)",
+            "CREATE TABLE mb_q_msgs (
+                q_id INTEGER NOT NULL,
+                chat_id TEXT NOT NULL,
+                message_id INTEGER NOT NULL,
+                PRIMARY KEY (q_id, chat_id)
+            )",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

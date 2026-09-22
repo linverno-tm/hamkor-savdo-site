@@ -386,7 +386,7 @@ textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
 
 .flash {
   display: flex; gap: .6rem; padding: .8rem 1rem; border-radius: 13px; margin: 0 0 1.1rem; border: 1px solid transparent;
-  animation: pop-in .3s var(--ease) both; overflow-wrap: anywhere;
+  animation: pop-in .3s var(--ease) both; overflow-wrap: anywhere; white-space: pre-line;
 }
 .flash-ok { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-line); }
 .flash-err { background: var(--err-bg); color: var(--err); border-color: var(--err-line); }
@@ -724,7 +724,8 @@ details.more[open] > summary::before { content: "− "; }
 /* ---------- telegram chatlari ---------- */
 .chat-list { display: flex; flex-direction: column; gap: .6rem; }
 .chat-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .8rem 1.2rem; align-items: center;
+  /* Boshqaruv tugmalari ko'payganda nom ustuni siqilib qolmasin: tugmalar keyingi qatorga o'tadi. */
+  display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 640px); gap: .8rem 1.2rem; align-items: center;
   padding: .9rem 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--ground);
   transition: border-color .2s var(--ease), background-color .2s var(--ease);
 }
@@ -779,7 +780,7 @@ details.more[open] > summary::before { content: "− "; }
 
 /* ---------- eslatma va zaxira ---------- */
 .toggle-row { margin: .9rem 0 .2rem; }
-@media (min-width: 760px) { .span-3 { grid-column: span 3; align-self: end; } }
+@media (min-width: 760px) { .span-3 { grid-column: span 3; align-self: end; } .span-2 { grid-column: span 2; } }
 .cron-card.ok { border-color: var(--ok-line); }
 .cron-card .steps { margin-top: .4rem; }
 .cron-card .code { word-break: break-all; user-select: all; }

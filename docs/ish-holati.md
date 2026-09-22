@@ -4,8 +4,22 @@ Yangi sessiyada davom etish uchun qisqa, lekin to'liq xulosa. Avval shuni o'qing
 
 ## 0. Birinchi navbatda
 
-- **Push qilinmagan commit bor:** `876fddc` — Metrika: pauzali qayta urinish, asosiy raqamlarni bo'laklab olish, oxirgi yaxshi natija zaxirasi (7 kun), "Ulash" bo'limi faqat 401/403 da. Egasi "push qil" deganidan keyin push qilinadi.
-- Push'dan keyin egasi admin → Statistika → "7 kun" / "30 kun" ni tekshirishi kerak. Xato qolsa, qizil xabarning to'liq matnini so'rang: unda endi qaysi so'rov yiqilgani `{...}` ichida yoziladi.
+- **Mijozlar guruhi yordamchisi** (`public/admin/_lib/mijozbot.php`) — commit qilingan, push egasi "push qil" deganda.
+  Arizalar boti (@murojatlarXS_bot) ikkinchi vazifa oladi: @hamkorsavdouz_mijozlari guruhidagi "X bormi? narxi?"
+  savollariga javob. Push'dan keyin egasi quyidagilarni o'zi qiladi (tartib muhim):
+  1. Admin → Telegram sahifasini ochish (webhook `edited_channel_post` bilan o'zi qayta ulanadi, migratsiya 7).
+  2. "Mijozlar guruhi yordamchisi" bo'limiga Claude API kalitini kiritish (console.anthropic.com), "Sinash" bilan tekshirish.
+  3. "Katalogni kanaldan yangilash".
+  4. Shundan KEYIN botni guruhga qo'shib, admin qilish (qo'shimcha huquqsiz). Guruh `@nom` bo'yicha o'zi "mijozlar guruhi"
+     bo'ladi: unga salom ham, ariza ham yuborilmaydi. Ixtiyoriy: botni @hamkorsavdouz kanaliga ham admin qilish.
+  5. Standart rejim — **Kuzatish**: bot guruhga YOZMAYDI, har bir savol va javob loyihasi xodimlar chatiga keladi.
+     Bir necha kun javoblar to'g'ri bo'lsa, egasi panelda "Faol" ga o'tkazadi.
+  - DIQQAT: push'dan OLDIN botni guruhga qo'shmang — eski kod guruhga "arizalar shu yerga keladi" deb yozadi.
+- Qarorlar: savolni Claude (default `claude-opus-5`, `effort: low`, JSON schema, `fallbacks: "default"`) tushunadi; kalitsiz
+  — oddiy so'z qidiruvi + har savol operatorga. Katalog: kanal postlari (t.me/s + webhook) va guruhdagi XODIMlarning narxli
+  postlari (mijoz boshqa kanaldan uzatgani kirmaydi), faqat oxirgi 120 kun. "Operator bilan bog'lanish" → bot lichkasi →
+  telefon (request_contact, faqat o'z raqami) → oddiy ariza (`source=telegram`, `page=telegram-guruh`).
+- Ochiq savol: kanal/postlarda "24 oygacha", `content.json` da `installmentMonthsMax: 12` — bot faktlarni content.json dan oladi.
 
 ## 1. Loyiha
 
@@ -13,8 +27,8 @@ Yangi sessiyada davom etish uchun qisqa, lekin to'liq xulosa. Avval shuni o'qing
 - Repo: https://github.com/linverno-tm/hamkor-savdo-site, branch `main`.
 - Deploy: `main` ga push → GitHub Actions → FTP (hosting ahost, cPanel). Odatda 2–3 daqiqa.
 - Texnologiya: Next.js 16 (static export, `output: "export"`), React 19, Tailwind v4 (`@theme inline`). Postbuild `tools/uz-kr-build.mjs` o'zbek-kirill nusxasini `out/uz-kr/` ga yozadi. Ruscha sahifalar `app/ru/`.
-- Admin panel: `public/admin/` — PHP + SQLite (migratsiyalar `_lib/db.php`, hozir 6-versiya). Kontent `data/content.json` da, panel uni GitHub'ga commit qilib nashr qiladi.
-- Telegram bot: webhook `/api/telegram.php`; lid xabarlari, holat tugmalari, "Men oldim", filial rahbarlari, eslatmalar.
+- Admin panel: `public/admin/` — PHP + SQLite (migratsiyalar `_lib/db.php`, hozir 7-versiya). Kontent `data/content.json` da, panel uni GitHub'ga commit qilib nashr qiladi.
+- Telegram bot: webhook `/api/telegram.php`; lid xabarlari, holat tugmalari, "Men oldim", filial rahbarlari, eslatmalar; mijozlar guruhi yordamchisi (`_lib/mijozbot.php`, migratsiya 7).
 - Cron (cPanel, har 5 daqiqa): `/usr/local/bin/ea-php82 /home/hamkors4/public_html/admin/cron/vazifalar.php` — eslatmalar, kechki CSV zaxira, kunlik hisobot.
 
 ## 2. Ish qoidalari (egasi bilan kelishilgan)
@@ -31,7 +45,7 @@ Yangi sessiyada davom etish uchun qisqa, lekin to'liq xulosa. Avval shuni o'qing
   `chrome --headless=new --user-data-dir=<tmp> --window-size=1440,11500 --virtual-time-budget=20000 --screenshot=<png> http://localhost:3000/`
   Dark rejim uchun `--blink-settings=preferredColorScheme=0`. Windows'da headless oyna 500px dan tor bo'lmaydi.
 
-## 3. Bugun qilinganlar (hammasi push qilingan, 876fddc dan tashqari)
+## 3. Bugun qilinganlar (mijozlar guruhi yordamchisidan tashqari hammasi push qilingan)
 
 **Bot / admin**
 - 30 daqiqalik eslatma guruhlarga ham boradi; arizani olgan odamni belgilaydi (username yoki ismi orqali havola — `claimed_uid` ustuni, migratsiya 6) va natija tugmalari bilan so'raydi; holat belgilanmaguncha 3 martagacha qayta so'raydi. Eslatmadagi tugma bosilsa — ariza yangilanadi, eslatmada "✔ Sotildi — @kim".
@@ -79,6 +93,6 @@ Yangi sessiyada davom etish uchun qisqa, lekin to'liq xulosa. Avval shuni o'qing
 
 - Filiallar va kontent: `data/content.json` (admin panel tahrirlaydi).
 - Sayt faktlari: `data/site.ts`; menyu: `data/navigation.ts`; yo'nalish sahifalari matni: `data/topics.ts`.
-- Bot: `public/admin/_lib/tgchats.php`, eslatmalar/zaxira: `public/admin/_lib/tasks.php`.
+- Bot: `public/admin/_lib/tgchats.php`, mijozlar guruhi: `public/admin/_lib/mijozbot.php`, eslatmalar/zaxira: `public/admin/_lib/tasks.php`.
 - Metrika: `public/admin/_lib/metrika.php`, sahifa `public/admin/statistika.php` (hisoblagich 112743600).
 - Sharh havolalari va QR: `docs/sharh-yigish.md`, `docs/sharh-qr.pdf`.
