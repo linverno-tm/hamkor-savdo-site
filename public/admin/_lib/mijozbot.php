@@ -368,8 +368,10 @@ function hs_mb_system_prompt()
 {
     return "Sen HAMKOR SAVDO do'konining Telegram'dagi mijozlar guruhida ishlaydigan yordamchisisan. "
         . "Guruhda mijozlar mahsulot bormi, narxi, muddatli to'lov, filial, yetkazish haqida so'raydi. "
-        . "Ular o'zbekcha lotin yoki kirill yozuvida, ko'pincha xato bilan yozadi (masalan \"kirmowina\" — kir yuvish mashinasi, "
-        . "\"marazilnik\" — muzlatgich/morozilnik, \"kandisaner\" — konditsioner), ba'zan ruscha.\n\n"
+        . "Ular o'zbekcha lotin yoki kirill yozuvida, ko'pincha xato yoki ruscha so'z bilan yozadi. Masalan: \"kirmowina\", "
+        . "\"стиралка\" — kir yuvish mashinasi; \"xolodelnik\", \"xaladelnik\", \"holodilnik\", \"холодильник\", \"sovutgich\" — muzlatgich; "
+        . "\"marazilnik\", \"морозилка\", \"kamera\" — muzlatgich (morozilnik); \"kandisaner\" — konditsioner; \"plisos\" — changyutgich; "
+        . "\"tilivizor\" — televizor.\n\n"
         . "Vazifang — har bir yangi xabar bo'yicha qaror:\n"
         . "1. is_question: xabar do'konga savol yoki so'rovmi (mahsulot, narx, shartlar, manzil, operator). Salom, rahmat, "
         . "fikr, reklama, boshqa mijozga javob, mavzuga aloqasiz gap — false.\n"
@@ -530,6 +532,15 @@ function hs_mb_keyword_search($text, $rows, $limit = 3)
 }
 
 /**
+ * Mahsulot turini tanish uchun "skelet": normallashtirilgan matnda a/o va e/i farqi ham yo'qoladi —
+ * og'zaki yozuvlar ("xaladelnik", "marazilnik", "kandisaner") to'g'ri shakl bilan bir xil bo'ladi.
+ */
+function hs_mb_skeleton($s)
+{
+    return strtr(hs_mb_normalize($s), array('a' => 'o', 'e' => 'i', 'y' => 'i'));
+}
+
+/**
  * AI siz: savoldagi mahsulot turi rasmiy yo'nalishlarga kirsa — uning nomi ("skuterlar"), aks holda ''.
  * Kalitlar hs_mb_normalize() dan o'tgan (lotin, kichik harf) so'z boshlari.
  */
@@ -538,8 +549,10 @@ function hs_mb_known_type($text)
     $types = array(
         // Faqat saytda tasdiqlangan yo'nalishlar (data/categories.ts) — sotilishi aniq bo'lmagan turga "bor" demaymiz.
         'skuter' => 'skuterlar', 'skooter' => 'skuterlar', 'moped' => 'skuterlar',
-        'kirmo' => 'kir yuvish mashinalari', 'kir yuv' => 'kir yuvish mashinalari', 'kirmash' => 'kir yuvish mashinalari', 'kir mash' => 'kir yuvish mashinalari', 'kir mosh' => 'kir yuvish mashinalari', 'stiraln' => 'kir yuvish mashinalari',
-        'xolodil' => 'muzlatgichlar', 'xaladil' => 'muzlatgichlar', 'muzlat' => 'muzlatgichlar', 'morozil' => 'muzlatgichlar', 'marazil' => 'muzlatgichlar',
+        'kirmosh' => 'kir yuvish mashinalari', 'kirmash' => 'kir yuvish mashinalari', 'kir yuv' => 'kir yuvish mashinalari', 'kirmash' => 'kir yuvish mashinalari', 'kir mash' => 'kir yuvish mashinalari', 'kir mosh' => 'kir yuvish mashinalari', 'stiral' => 'kir yuvish mashinalari',
+        // a/o, e/i farqi hs_mb_skeleton() da yo'qoladi: "xolodil" = xaladelnik, holodilnik, xolodelnik, холодильник...
+        'xolodil' => 'muzlatgichlar', 'xolodel' => 'muzlatgichlar', 'xolodl' => 'muzlatgichlar', 'muzlat' => 'muzlatgichlar',
+        'muzlotk' => 'muzlatgichlar', 'sovutgich' => 'muzlatgichlar', 'morozil' => 'muzlatgichlar', 'morozl' => 'muzlatgichlar',
         'konditsi' => 'konditsionerlar', 'kondisi' => 'konditsionerlar', 'kandisa' => 'konditsionerlar', 'kanditsa' => 'konditsionerlar', 'kondits' => 'konditsionerlar',
         'televiz' => 'televizorlar', 'tilivi' => 'televizorlar', 'televi' => 'televizorlar',
         'pilesos' => 'changyutgichlar', 'pylesos' => 'changyutgichlar', 'plisos' => 'changyutgichlar', 'changyut' => 'changyutgichlar',
@@ -547,10 +560,10 @@ function hs_mb_known_type($text)
         'divan' => 'divanlar', 'krovat' => 'krovatlar', 'kravat' => 'krovatlar', 'shkaf' => 'shkaflar', 'mebel' => 'mebellar', 'stol stul' => 'stol-stullar',
         'tilla' => 'tilla taqinchoqlar', 'uzuk' => 'tilla taqinchoqlar', 'zira' => 'tilla taqinchoqlar', 'bilaguz' => 'tilla taqinchoqlar', 'sirg' => 'tilla taqinchoqlar',
     );
-    $t = hs_mb_normalize($text);
+    $t = hs_mb_skeleton($text);
     foreach ($types as $k => $name) {
-        // Kalit ham xuddi shunday normallashtiriladi (masalan "sh" -> "sx"), aks holda lotin "mashina" topilmaydi.
-        if (mb_strpos($t, hs_mb_normalize($k)) !== false) {
+        // Kalit ham xuddi shunday o'giriladi — "xaladelnik", "xolodilnik", "холодильник" bitta "xolodil" ga tushadi.
+        if (mb_strpos($t, hs_mb_skeleton($k)) !== false) {
             return $name;
         }
     }
