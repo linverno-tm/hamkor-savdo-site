@@ -174,6 +174,27 @@ function hs_metrika_request($endpoint, $params, &$error = null)
         return $cached;
     }
     list($code, $body) = hs_http('GET', $url, array('Authorization: OAuth ' . hs_metrika_token(), 'Accept: application/json'), null, 20);
+    /* "Query is too complicated. Please reduce the date interval or sampling" —
+       tashriflar ko'paygach `accuracy=full` (tanlanmagan, 100% aniq) og'ir
+       bo'lib qoladi. Shunda o'sha so'rov pastroq aniqlik bilan qayta yuboriladi
+       va natija ASL kalit ostida ham keshlanadi — keyingi 10 daqiqada og'ir
+       so'rov qayta urilmaydi. Raqamlar tanlanma bo'yicha — juda yaqin, lekin
+       bir-ikki tashrifga farq qilishi mumkin. */
+    if ($code === 400 && isset($params['accuracy']) && stripos((string) $body, 'too complicated') !== false) {
+        foreach (array('high', 'medium', 'low') as $acc) {
+            $try = hs_metrika_url($endpoint, array_merge($params, array('accuracy' => $acc)));
+            list($code, $body) = hs_http('GET', $try, array('Authorization: OAuth ' . hs_metrika_token(), 'Accept: application/json'), null, 20);
+            if ($code === 200) {
+                $data = json_decode($body, true);
+                hs_cache_set($key, $data, 600);
+                hs_cache_set('ym:' . md5($try), $data, 600);
+                return $data;
+            }
+            if ($code !== 400) {
+                break;
+            }
+        }
+    }
     if ($code !== 200) {
         /* Qaysi so'rov yiqilgani va Yandex nima deganini xabarga qo'shamiz.
            Ilgari faqat "token yaroqsiz" deb yozilardi va shu bilan ish
