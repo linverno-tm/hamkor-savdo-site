@@ -460,9 +460,35 @@ function hs_tg_is_lead_message($q, $leadId)
 {
     $chatId = isset($q['message']['chat']['id']) ? (string) $q['message']['chat']['id'] : '';
     $msgId = isset($q['message']['message_id']) ? (int) $q['message']['message_id'] : 0;
-    $st = hs_db()->prepare('SELECT COUNT(*) FROM tg_lead_msgs WHERE lead_id = ? AND chat_id = ? AND message_id = ?');
-    $st->execute(array((int) $leadId, $chatId, $msgId));
+    // Eslatma xabari ariza xabariga javob bo'lib keladi — uning tugmalari ham o'sha ariza uchun.
+    $replyTo = isset($q['message']['reply_to_message']['message_id']) ? (int) $q['message']['reply_to_message']['message_id'] : 0;
+    $st = hs_db()->prepare('SELECT COUNT(*) FROM tg_lead_msgs WHERE lead_id = ? AND chat_id = ? AND message_id IN (?, ?)');
+    $st->execute(array((int) $leadId, $chatId, $msgId, $replyTo));
     return (int) $st->fetchColumn() > 0;
+}
+
+/** Eslatma ostidagi tugmalar: faqat natija (Yangi'siz, "Men oldim"siz). */
+function hs_tg_result_keyboard($leadId)
+{
+    $row = array();
+    foreach (hs_tg_status_buttons() as $key => $b) {
+        if ($key !== 'yangi') {
+            $row[] = array('text' => $b[0], 'callback_data' => 's:' . (int) $leadId . ':' . $b[1]);
+        }
+    }
+    return json_encode(array('inline_keyboard' => array($row)), JSON_UNESCAPED_UNICODE);
+}
+
+/** Arizani olgan odamni xabarda belgilash (HTML): @username yoki ismi orqali havola. */
+function hs_tg_mention_html($lead)
+{
+    $who = (string) $lead['claimed_by'];
+    if ($who !== '' && $who[0] === '@') {
+        return htmlspecialchars($who, ENT_QUOTES, 'UTF-8');
+    }
+    $uid = isset($lead['claimed_uid']) ? (string) $lead['claimed_uid'] : '';
+    $name = htmlspecialchars($who !== '' ? $who : 'Siz', ENT_QUOTES, 'UTF-8');
+    return ctype_digit($uid) ? '<a href="tg://user?id=' . $uid . '">' . $name . '</a>' : $name;
 }
 
 function hs_tg_presser($q)
@@ -484,8 +510,9 @@ function hs_tg_handle_claim($q, $leadId)
         return;
     }
     $who = hs_tg_presser($q);
-    $st = hs_db()->prepare("UPDATE leads SET claimed_by = ?, claimed_at = ? WHERE id = ? AND claimed_by = ''");
-    $st->execute(array($who, hs_now(), (int) $leadId));
+    $uid = isset($q['from']['id']) ? (string) $q['from']['id'] : '';
+    $st = hs_db()->prepare("UPDATE leads SET claimed_by = ?, claimed_uid = ?, claimed_at = ? WHERE id = ? AND claimed_by = ''");
+    $st->execute(array($who, $uid, hs_now(), (int) $leadId));
     if ($st->rowCount() === 0) {
         $lead = hs_tg_get_lead($leadId);
         $answer($lead ? 'Bu arizani ' . $lead['claimed_by'] . ' allaqachon olgan.' : 'Ariza topilmadi.');
@@ -523,9 +550,18 @@ function hs_tg_handle_status($q, $leadId, $code)
     $from = $q['from'];
     $who = isset($from['username']) ? '@' . $from['username'] : hs_tg_chat_title($from);
     hs_db()->prepare('UPDATE leads SET status = ?, updated_at = ?, updated_by = ? WHERE id = ?')->execute(array($new, hs_now(), $who, (int) $leadId));
-    hs_db()->prepare("UPDATE leads SET claimed_by = ?, claimed_at = ? WHERE id = ? AND claimed_by = ''")->execute(array($who, hs_now(), (int) $leadId));
+    $uid = isset($from['id']) ? (string) $from['id'] : '';
+    hs_db()->prepare("UPDATE leads SET claimed_by = ?, claimed_uid = ?, claimed_at = ? WHERE id = ? AND claimed_by = ''")->execute(array($who, $uid, hs_now(), (int) $leadId));
     hs_audit('telegram ' . $who, 'ariza holati (botdan)', "#{$leadId}: {$lead['status']} -> {$new}");
     hs_tg_sync_lead($leadId);
+    // Eslatma xabaridan bosilgan bo'lsa — uning tugmalari endi kerak emas, natija yozib qo'yiladi.
+    if (isset($q['message']['reply_to_message'])) {
+        hs_tg_api('editMessageReplyMarkup', array(
+            'chat_id' => (string) $q['message']['chat']['id'],
+            'message_id' => (int) $q['message']['message_id'],
+            'reply_markup' => json_encode(array('inline_keyboard' => array(array(array('text' => '✔ ' . hs_lead_statuses()[$new] . ' — ' . $who, 'callback_data' => 'x')))), JSON_UNESCAPED_UNICODE),
+        ));
+    }
     $answer(hs_lead_statuses()[$new]);
 }
 
@@ -544,6 +580,11 @@ function hs_tg_handle_callback($q)
     }
     if (preg_match('/^m:(\d+)$/', $data, $m)) {
         hs_tg_handle_claim($q, (int) $m[1]);
+        return;
+    }
+    // Eslatmadagi "✔ Sotildi — @kim" yozuvi — shunchaki belgi.
+    if ($data === 'x') {
+        $answer('Natija belgilangan.');
         return;
     }
     // Qolgani — faqat boshqaruvchi.
