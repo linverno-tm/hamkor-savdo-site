@@ -1,25 +1,22 @@
 import { site } from "@/data/site";
+import { branches } from "@/data/branches";
 import { content, Rich } from "@/lib/content";
 
-/** To'rtta filial-zali, "uch yo'nalish"ning barchasini ko'rsatadigan tartibda. */
+/**
+ * Filiallarning tashqi ko'rinishi — "tarmoq" so'zini ko'rsatib beradi (egasi
+ * 2026-09-22: bu yerda tovar emas, filiallar aylansin). Markaziy bog' filialining
+ * surati hali yo'q, shuning uchun Ozodbek filiali ikki xil burchakdan.
+ */
 const ABOUT_PHOTOS = [
-  {
-    src: "/filiallar/andijon-amir-temur/zal-4",
-    alt: "HAMKOR SAVDO Andijon filiali — zargarlik peshtaxtasi va texnika bo'limi bir zalda",
-  },
-  {
-    src: "/filiallar/shahrixon-ozodbek/zal-1",
-    alt: "HAMKOR SAVDO Shahrixon (Ozodbek) filiali — tilla taqinchoqlar peshtaxtasi",
-  },
-  {
-    src: "/filiallar/andijon-amir-temur/zal-2",
-    alt: "HAMKOR SAVDO Andijon filiali — maishiy texnika qatorlari",
-  },
-  {
-    src: "/filiallar/shahrixon-ozodbek/zal-4",
-    alt: "HAMKOR SAVDO Shahrixon (Ozodbek) filiali — mebel bo'limi",
-  },
-];
+  { branch: "andijon-amir-temur", src: "/filiallar/andijon-amir-temur/tashqi-1" },
+  { branch: "shahrixon-ozodbek", src: "/filiallar/shahrixon-ozodbek/tashqi-1" },
+  { branch: "asaka-umid", src: "/filiallar/asaka-umid/tashqi-1" },
+  { branch: "shahrixon-ozodbek", src: "/filiallar/shahrixon-ozodbek/tashqi-2" },
+].map((p) => {
+  const b = branches.find((x) => x.id === p.branch);
+  const label = b ? `${b.city} — ${b.landmark}` : "";
+  return { ...p, label, alt: `HAMKOR SAVDO filiali: ${label}` };
+});
 
 /**
  * Scene 02 — "Ular nima qiladi?"
@@ -49,18 +46,22 @@ export function About() {
               (marquee va media-slot bilan bir xil yondashuv). */}
           <div className="photo-cycle mt-8 aspect-[4/3] w-full overflow-hidden rounded-[28px]">
             {ABOUT_PHOTOS.map((p) => (
-              <img
-                key={p.src}
-                src={`${p.src}-960.webp`}
-                srcSet={`${p.src}-480.webp 480w, ${p.src}-960.webp 960w`}
-                sizes="(max-width: 1024px) 100vw, 560px"
-                width={960}
-                height={720}
-                alt={p.alt}
-                className="object-cover"
-                loading="lazy"
-                decoding="async"
-              />
+              <figure key={p.src}>
+                <img
+                  src={`${p.src}-960.webp`}
+                  srcSet={`${p.src}-480.webp 480w, ${p.src}-960.webp 960w`}
+                  sizes="(max-width: 1024px) 100vw, 560px"
+                  width={960}
+                  height={720}
+                  alt={p.alt}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption className="absolute inset-x-0 bottom-0 p-5 pt-14 text-sm font-semibold text-white [background:linear-gradient(to_top,rgba(26,17,48,0.8),transparent)] sm:text-base">
+                  {p.label}
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>

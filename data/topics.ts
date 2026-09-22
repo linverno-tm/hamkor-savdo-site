@@ -165,6 +165,11 @@ export const topics: Topic[] = [
     id: "skuter",
     path: "/skuter",
     ruPath: "/ru/skutery",
+    // Pexels, bepul litsenziya: https://www.pexels.com/photo/15675779/
+    photo: {
+      src: "/yonalishlar/skuter-900.webp",
+      alt: { uz: "Elektr skuter", ru: "Электрический скутер" },
+    },
     uz: {
       title: `Skuter muddatli to'lovga — ${M} oygacha | Shahrixon, Asaka, Andijon | HAMKOR SAVDO`,
       description: `Skuterlar ${M} oygacha muddatli to'lovga (nasiya, rassrochka). Pasport va plastik karta kifoya, kafilsiz. ${FREE}da bepul yetkazib berish. ${cities("uz")}da ${B} ta filial.`,
