@@ -62,6 +62,23 @@ export function Reveal() {
     };
   }, []);
 
+  // Header soyasi: sahifa siljigach `data-scrolled` — uslubi globals.css da.
+  // `passive` tinglovchi, faqat holat o'zgarganda DOM'ga tegadi.
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>("[data-site-header]");
+    if (!header) return;
+    let scrolled = false;
+    const onScroll = () => {
+      const now = window.scrollY > 8;
+      if (now === scrolled) return;
+      scrolled = now;
+      header.toggleAttribute("data-scrolled", now);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // Progressive enhancement for the `:target` photo lightbox
   // (components/sections/BranchGallery.tsx), which already opens, closes and
   // navigates between photos without JS via plain anchor links. This only

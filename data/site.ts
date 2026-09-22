@@ -49,6 +49,26 @@ export const site = {
     instagramFollowers: s.instagramFollowers,
   },
 
+  /**
+   * Yandex Xaritadagi baho — Shahrixon (Ozodbek) filiali kartasi, 2026-09-22
+   * da tekshirilgan: 4,5, 65 ta baho. O'ylab topilgan sharh o'rniga shu
+   * haqiqiy raqam ko'rsatiladi; son o'sgani sari qo'lda yangilanadi.
+   */
+  reviews: {
+    rating: 4.5,
+    count: 65,
+    source: "Yandex Xarita",
+    readUrl: "https://yandex.uz/maps/org/165261916848/reviews/",
+    writeUrl: "https://yandex.uz/maps/org/165261916848/reviews/?add-review=true",
+  },
+
+  /**
+   * Yandex Xarita JS API 2.1 kaliti. Brauzerda ishlaydi, ya'ni sahifa kodida
+   * baribir ochiq turadi — maxfiy emas. Himoyasi: Yandex Developer kabinetida
+   * "HTTP Referer" cheklovi (hamkorsavdo.uz).
+   */
+  yandexMapsKey: "868c338e-c07c-4bf9-9adc-8f86a7625381",
+
   /** Egasi bermagan ma'lumot — bo'sh bo'lsa, UI uni ko'rsatmaydi. */
   unpublished: {
     warrantyMonths: s.warrantyMonths,

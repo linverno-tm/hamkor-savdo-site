@@ -47,7 +47,7 @@
   --dur-3: 620ms;
 
   --radius: 18px;
-  --radius-lg: 28px;
+  --radius-lg: 24px;
 }
 
 @theme inline {
@@ -191,7 +191,7 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
   gap: 0.5rem;
   min-height: 3rem;
   padding: 0 1.6rem;
-  border-radius: 999px;
+  border-radius: 14px;
   font-weight: 600;
   font-size: 1rem;
   text-align: center;
@@ -282,6 +282,44 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
   border-color: #fff;
 }
 
+/* ---------------- header ---------------- */
+
+/* Sahifa siljigach (Reveal.tsx `data-scrolled` qo'yadi) — yengil soya. */
+.site-header {
+  transition: box-shadow var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease);
+}
+.site-header[data-scrolled] {
+  border-color: transparent;
+  box-shadow: 0 10px 30px -18px rgba(47, 24, 72, 0.35);
+}
+.nav-link {
+  white-space: nowrap;
+  border-radius: 12px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+}
+.nav-link:hover,
+.nav-drop:focus-within > .nav-link {
+  color: var(--purple);
+  background: var(--ground-2);
+}
+/* "Katalog" ro'yxati: yashirin, lekin HTML'da — Tab bilan ichiga kirilsa ochiladi. */
+.nav-drop-panel {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 6px);
+  transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.nav-drop:hover > .nav-drop-panel,
+.nav-drop:focus-within > .nav-drop-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
 /* ---------------- mobile menu (no JavaScript required) ---------------- */
 
 .mobile-menu > summary {
@@ -321,6 +359,136 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
   padding-top: 5rem;
   overscroll-behavior: contain;
   overflow-y: auto;
+}
+
+/* ---------------- landing ---------------- */
+
+/* Hero foni: oq, ustida juda yengil binafsha nur — dekor emas, chuqurlik. */
+.hero-glow {
+  background:
+    radial-gradient(60rem 30rem at 85% 0%, color-mix(in srgb, var(--purple) 9%, transparent), transparent 70%),
+    radial-gradient(40rem 24rem at 0% 30%, color-mix(in srgb, var(--yellow) 7%, transparent), transparent 70%),
+    var(--ground);
+}
+
+/* Kategoriya kartochkasi: surat sekin kattalashadi, kartochka 5px ko'tariladi,
+   o'q oldinga siljiydi. Faqat transform/opacity — kompozitorda chiziladi. */
+.cat-card {
+  transition: transform var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+.cat-card-img,
+.cat-card-arrow {
+  transition: transform 600ms var(--ease);
+}
+.cat-card-arrow {
+  transition-duration: var(--dur-2);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .cat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 26px 50px -28px rgba(47, 24, 72, 0.6);
+  }
+  .cat-card:hover .cat-card-img {
+    transform: scale(1.06);
+  }
+  .cat-card:hover .cat-card-arrow {
+    transform: translateX(4px);
+  }
+}
+.cat-card:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+/* Xaritada tanlangan filial (BranchMap `data-active` qo'yadi). */
+.branch-item:hover {
+  border-color: var(--purple-100);
+}
+.branch-item[data-active] {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 1px var(--purple);
+}
+
+/* Filiallar xaritasi (BranchMap). Fon xiralashtiriladi — brend belgilari
+   ajralib tursin va xarita sayt ranglariga mos kelsin. */
+#filiallar [class*="ground-pane"] {
+  filter: saturate(0.35) brightness(1.04);
+}
+.hs-pin {
+  position: relative;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.hs-pin::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin-top: -7px;
+  background: var(--purple);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+.hs-pin-dot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: var(--purple);
+  color: #fff;
+  font: 700 13px/1 var(--font-sans);
+  box-shadow: 0 8px 18px -8px rgba(47, 24, 72, 0.7);
+  transition: transform var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+}
+.hs-pin-label {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  white-space: nowrap;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  padding: 6px 10px;
+  font: 600 12px/1.2 var(--font-sans);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.hs-pin:hover .hs-pin-dot {
+  transform: scale(1.08);
+}
+.hs-pin:hover .hs-pin-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hs-pin.is-active .hs-pin-dot {
+  background: var(--yellow);
+  color: var(--ink);
+}
+.hs-pin.is-active::after {
+  background: var(--yellow);
+}
+
+/* FAQ akkordeoni silliq ochiladi (qo'llaydigan brauzerlarda; qolganida — darhol). */
+.faq-item::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size var(--dur-2) var(--ease), content-visibility var(--dur-2) allow-discrete;
+}
+.faq-item[open]::details-content {
+  block-size: auto;
+}
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
 }
 
 /* ---------------- surfaces ---------------- */
@@ -478,7 +646,8 @@ footer a:not(.btn) {
   font-size: 0.9rem;
 }
 
-@media (max-width: 1699.98px) {
+/* Header telefon tugmasini xl (1280px) dan ko'rsatadi — undan kichikda shu qator. */
+@media (max-width: 1279.98px) {
   .action-bar {
     display: flex;
   }
