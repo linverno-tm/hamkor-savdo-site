@@ -78,6 +78,30 @@ function hs_csrf_field()
     return '<input type="hidden" name="csrf" value="' . h(hs_csrf_token()) . '">';
 }
 
+/**
+ * Sessiyani sekin tashqi so'rovdan (Metrika) OLDIN yopish.
+ *
+ * PHP sessiya faylini so'rov tugaguncha qulflab turadi. Sahifa Metrika'dan
+ * javob kutib turganda (u yerda pauzali qayta urinishlar ham bor) foydalanuvchi
+ * boshqa bo'limni bossa, yangi so'rov session_start() da qulfni kutib qoladi —
+ * bo'limlar orasida o'tish shuning uchun sekin edi.
+ *
+ * Yopishdan oldin sessiyaga yozilishi kerak bo'lgan ikki narsa bajariladi:
+ * CSRF token (keyin chiziladigan formalar uchun) va flash xabarlar olib
+ * qo'yiladi — hs_flash() ularni sessiyadan emas, shu yerdan qaytaradi.
+ * Faqat GET da chaqiring: POST ishlovchilari sessiyaga yozadi.
+ */
+function hs_session_release()
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+    hs_csrf_token();
+    $GLOBALS['hs_flash_olingan'] = isset($_SESSION['flash']) ? $_SESSION['flash'] : array();
+    unset($_SESSION['flash']);
+    session_write_close();
+}
+
 function hs_require_post_csrf()
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

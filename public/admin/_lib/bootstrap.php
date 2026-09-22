@@ -158,6 +158,12 @@ function hs_flash($message = null, $kind = 'ok')
         $_SESSION['flash'][] = array($kind, $message);
         return array();
     }
+    // hs_session_release() sessiyani erta yopgan bo'lsa, xabarlar o'sha yerda.
+    if (isset($GLOBALS['hs_flash_olingan'])) {
+        $all = $GLOBALS['hs_flash_olingan'];
+        unset($GLOBALS['hs_flash_olingan']);
+        return $all;
+    }
     $all = isset($_SESSION['flash']) ? $_SESSION['flash'] : array();
     unset($_SESSION['flash']);
     return $all;

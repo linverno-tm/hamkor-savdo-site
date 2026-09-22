@@ -66,13 +66,38 @@ function hs_tasks_run($fromCron = false)
 /** Cron bo'lmasa — sahifa yoki bot so'rovi tugagach, daqiqasiga ko'pi bilan bir marta. */
 function hs_tasks_maybe_run()
 {
+    /* Cron ishlab turgan bo'lsa (har 5 daqiqada), panel vazifalarni o'zi
+       qayta ishga tushirmaydi. Ilgari cron'dan qat'i nazar har daqiqada bir
+       marta sahifa ochilganda ham ishlardi — ikki marta ish, ustiga panelni
+       sekinlashtirardi (pastdagi izohga qarang). 10 daqiqa — cron bir marta
+       o'tkazib yuborsa ham shu yo'l yoqilib ketmasligi uchun zaxira. */
+    if (time() - (int) hs_setting('tasks_last_cron', '0') < 600) {
+        return;
+    }
     if (time() - (int) hs_setting('tasks_last_run', '0') < 60) {
         return;
     }
     register_shutdown_function(function () {
+        /* Sessiyani vazifalardan OLDIN yopamiz. PHP sessiya faylini so'rov
+           oxirigacha qulflab turadi: vazifalar Telegram'ga so'rov yuborib
+           turgan paytda foydalanuvchi boshqa bo'limni bossa, o'sha yangi
+           so'rov session_start() da qulf bo'shashini kutib qolardi. Panelda
+           bo'limlar orasida o'tish sekinligining sababi shu edi. Bu yerga
+           kelganda sahifa to'liq chizilgan, sessiyaga yoziladigan hamma
+           narsa (flash, CSRF) allaqachon yozilgan. */
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         // Javob foydalanuvchiga avval yetib borsin, vazifalar keyin.
         if (function_exists('fastcgi_finish_request')) {
             @fastcgi_finish_request();
+        } elseif (function_exists('litespeed_finish_request')) {
+            @litespeed_finish_request();
+        } else {
+            while (ob_get_level() > 0) {
+                @ob_end_flush();
+            }
+            @flush();
         }
         hs_tasks_run(false);
     });

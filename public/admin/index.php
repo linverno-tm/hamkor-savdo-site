@@ -44,6 +44,8 @@ $latest = $st->fetchAll();
 $m = null;
 $mError = '';
 if ($owner && hs_metrika_ready()) {
+    // Metrika javobini kutayotganda sessiya qulfi boshqa bo'limlarni to'sib qo'ymasin.
+    hs_session_release();
     $m = hs_metrika_overview('today', 'today', $mError);
 }
 

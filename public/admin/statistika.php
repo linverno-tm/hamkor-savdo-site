@@ -94,6 +94,10 @@ $names = hs_branch_names();
 $err = '';
 // 8 ta Metrika so'rovi ketma-ket emas, bir vaqtda — sahifa 5–10 soniya qotib turmasin.
 if (hs_metrika_ready()) {
+    // Metrika javobini kutayotganda sessiya qulfi boshqa bo'limlarni to'sib
+    // qo'ymasin (_lib/auth.php, hs_session_release). POST yuqorida allaqachon
+    // qayta yo'naltirilgan, bu yerga faqat GET yetib keladi.
+    hs_session_release();
     hs_metrika_prefetch_page($d1, $d2);
 }
 $ov = hs_metrika_ready() ? hs_metrika_overview($d1, $d2, $err) : null;
