@@ -4,14 +4,13 @@ import { content, Rich } from "@/lib/content";
 
 /**
  * Filiallarning tashqi ko'rinishi — "tarmoq" so'zini ko'rsatib beradi (egasi
- * 2026-09-22: bu yerda tovar emas, filiallar aylansin). Markaziy bog' filialining
- * surati hali yo'q, shuning uchun Ozodbek filiali ikki xil burchakdan.
+ * 2026-09-22: bu yerda tovar emas, filiallar aylansin) — to'rtta filial, har biri bittadan.
  */
 const ABOUT_PHOTOS = [
   { branch: "andijon-amir-temur", src: "/filiallar/andijon-amir-temur/tashqi-1" },
   { branch: "shahrixon-ozodbek", src: "/filiallar/shahrixon-ozodbek/tashqi-1" },
   { branch: "asaka-umid", src: "/filiallar/asaka-umid/tashqi-1" },
-  { branch: "shahrixon-ozodbek", src: "/filiallar/shahrixon-ozodbek/tashqi-2" },
+  { branch: "shahrixon-bog", src: "/filiallar/shahrixon-bog/tashqi-1" },
 ].map((p) => {
   const b = branches.find((x) => x.id === p.branch);
   const label = b ? `${b.city} — ${b.landmark}` : "";
