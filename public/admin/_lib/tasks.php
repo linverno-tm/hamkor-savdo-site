@@ -19,7 +19,7 @@ function hs_task_setting($key)
     $defaults = array(
         'remind_on' => '1',
         'remind_m1' => '15',   // shuncha daqiqada — ariza kelgan chatlarga (filial rahbari, guruh)
-        'remind_m2' => '30',   // shuncha daqiqada — boshqaruvchiga
+        'remind_m2' => '30',   // shuncha daqiqada — ariza turgan chatlarga va boshqaruvchiga
         'work_from' => '8',    // eslatmalar faqat ish vaqtida; tungi ariza ertalab hisoblanadi
         'work_to' => '21',
         'backup_on' => '1',
@@ -150,9 +150,24 @@ function hs_tasks_reminders()
             $db->prepare('UPDATE leads SET remind_level = 1 WHERE id = ?')->execute(array($id));
         }
 
-        // 2-bosqich: hali ham "Yangi" — boshqaruvchiga.
+        // 2-bosqich: hali ham "Yangi" — ariza turgan chatlarga (guruh ham ko'rsin, olgan odam
+        // holatni yangilashni unutgan bo'lishi mumkin) va boshqaruvchiga.
         if ($wait >= $m2) {
             $claim = $lead['claimed_by'] !== '' ? "\n🙋 Olgan: " . $lead['claimed_by'] . " — lekin holat hali o'zgarmagan." : "\nHech kim olmagan.";
+            foreach ($copies as $chatId => $mid) {
+                $chatId = (string) $chatId;
+                if (in_array($chatId, $admins, true)) {
+                    continue;
+                }
+                hs_tg_api('sendMessage', array(
+                    'chat_id' => $chatId,
+                    'reply_to_message_id' => $mid,
+                    'allow_sending_without_reply' => 'true',
+                    'text' => "⚠️ {$wait} daqiqa o'tdi — ariza hali ham \"Yangi\".\n{$who}" . $claim
+                        . ($lead['claimed_by'] !== '' ? "\n\nGaplashgan bo'lsangiz, holatini yangilang." : "\n\nQo'ng'iroq qiling va \"🙋 Men oldim\" ni bosing."),
+                ));
+                $sent++;
+            }
             foreach ($admins as $aid) {
                 $params = array(
                     'chat_id' => $aid,

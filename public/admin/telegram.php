@@ -230,7 +230,7 @@ echo '<div class="part-head"><span class="part-ico">' . hs_icon('clock') . '</sp
 echo '<label class="switch toggle-row"><input type="hidden" name="remind_on" value="0"><input type="checkbox" name="remind_on" value="1"' . $checked('remind_on') . '><span class="switch-ui" aria-hidden="true"></span><span>Javobsiz ariza eslatmasi</span></label>';
 echo '<div class="grid grid-4">';
 echo '<div><label for="t-remind_m1">1-eslatma (daqiqa)</label><input id="t-remind_m1" type="number" name="remind_m1" min="1" max="240" value="' . h(hs_task_setting('remind_m1')) . '"><p class="hint">Ariza kelgan chatlarga: "hali hech kim olmadi".</p></div>';
-echo '<div><label for="t-remind_m2">2-eslatma (daqiqa)</label><input id="t-remind_m2" type="number" name="remind_m2" min="2" max="480" value="' . h(hs_task_setting('remind_m2')) . '"><p class="hint">Boshqaruvchiga: "hali javob yo\'q".</p></div>';
+echo '<div><label for="t-remind_m2">2-eslatma (daqiqa)</label><input id="t-remind_m2" type="number" name="remind_m2" min="2" max="480" value="' . h(hs_task_setting('remind_m2')) . '"><p class="hint">Ariza turgan guruhlarga va boshqaruvchiga: "hali javob yo\'q" (kimdir olgan bo\'lsa ham).</p></div>';
 echo '<div><label for="t-work_from">Ish boshlanishi</label>' . $hourOpts('work_from', hs_task_setting('work_from'), 0, 23) . '</div>';
 echo '<div><label for="t-work_to">Ish tugashi</label>' . $hourOpts('work_to', hs_task_setting('work_to'), 1, 24) . '<p class="hint">Kechasi eslatma yuborilmaydi; tungi ariza ertalab hisoblanadi.</p></div>';
 echo '</div>';
