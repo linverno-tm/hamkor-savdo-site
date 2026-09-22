@@ -5,7 +5,7 @@ import { branches, mapsUrl } from "@/data/branches";
 import { categories } from "@/data/categories";
 import { site } from "@/data/site";
 import { absolute } from "@/lib/seo";
-import { branchPhotos } from "@/lib/photos";
+import { branchCover, branchPhotos } from "@/lib/photos";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
@@ -63,6 +63,8 @@ export default async function BranchPage({
   const phoneLabel = branch.phoneDisplay ?? site.phoneDisplay;
   const others = branches.filter((b) => b.id !== branch.id);
   const photos = branchPhotos(branch.id, branch.city);
+  // Sarlavha yonidagi asosiy surat — admin tanlagan muqova, bo'lmasa tashqi ko'rinish.
+  const cover = branchCover(photos, branch.id);
 
   const [hoursOpens, hoursCloses] = branch.hours.split("–").map((t) => {
     const [h, m = "00"] = t.trim().split(":");
@@ -135,109 +137,136 @@ export default async function BranchPage({
       <Header />
       <main id="asosiy" tabIndex={-1}>
         <section className="relative overflow-hidden pt-28 sm:pt-32">
-          <Logo
-            variant="mark"
-            className="pointer-events-none absolute right-12 top-28 hidden h-72 w-auto text-purple-50 lg:block"
-          />
-          <div className="relative mx-auto max-w-7xl px-5 pb-16 sm:px-8">
-            <nav aria-label="Qayerdaman" className="text-sm text-ink-3">
-              <Link href="/" className="hover:text-purple">
-                Bosh sahifa
-              </Link>
-              <span className="mx-2" aria-hidden="true">
-                /
-              </span>
-              {/* Bosh sahifadagi bo'limga emas, filiallar ro'yxatiga —
-                  "yuqoriga" bosgan odam shu sahifaning haqiqiy ota-sahifasiga
-                  tushsin (JSON-LD dagi BreadcrumbList ham shunga ishora
-                  qiladi). */}
-              <Link href="/filiallar" className="hover:text-purple">
-                Filiallar
-              </Link>
-              <span className="mx-2" aria-hidden="true">
-                /
-              </span>
-              <span className="text-ink-2">{branch.city}</span>
-            </nav>
+          {cover ? null : (
+            <Logo
+              variant="mark"
+              className="pointer-events-none absolute right-12 top-28 hidden h-72 w-auto text-purple-50 lg:block"
+            />
+          )}
+          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+            <div>
+              <nav aria-label="Qayerdaman" className="text-sm text-ink-3">
+                <Link href="/" className="hover:text-purple">
+                  Bosh sahifa
+                </Link>
+                <span className="mx-2" aria-hidden="true">
+                  /
+                </span>
+                {/* Bosh sahifadagi bo'limga emas, filiallar ro'yxatiga —
+                    "yuqoriga" bosgan odam shu sahifaning haqiqiy ota-sahifasiga
+                    tushsin (JSON-LD dagi BreadcrumbList ham shunga ishora
+                    qiladi). */}
+                <Link href="/filiallar" className="hover:text-purple">
+                  Filiallar
+                </Link>
+                <span className="mx-2" aria-hidden="true">
+                  /
+                </span>
+                <span className="text-ink-2">{branch.city}</span>
+              </nav>
 
-            <p className="kicker mt-8">Filial {branch.index}</p>
-            {/* Vizual katta shahar nomi bilan qoladi (brend uslubi), lekin
-                <h1> matni ikkala Shahrixon sahifasida bir xil bo'lmasin deb
-                mo'ljal ko'rinmas holda qo'shiladi — qidiruv tizimi va ekran
-                o'quvchisi uchun ikkalasi endi aniq farqlanadi. */}
-            <h1 className="display mt-3 text-5xl sm:text-6xl lg:text-7xl">
-              {branch.city}
-              <span className="sr-only"> — {branch.landmark}</span>
-            </h1>
-            <p className="mt-4 max-w-2xl text-xl text-ink-2">{branch.landmark}</p>
+              <p className="kicker mt-8">Filial {branch.index}</p>
+              {/* Vizual katta shahar nomi bilan qoladi (brend uslubi), lekin
+                  <h1> matni ikkala Shahrixon sahifasida bir xil bo'lmasin deb
+                  mo'ljal ko'rinmas holda qo'shiladi — qidiruv tizimi va ekran
+                  o'quvchisi uchun ikkalasi endi aniq farqlanadi. */}
+              <h1 className="display mt-3 text-5xl sm:text-6xl lg:text-7xl">
+                {branch.city}
+                <span className="sr-only"> — {branch.landmark}</span>
+              </h1>
+              <p className="mt-4 max-w-2xl text-xl text-ink-2">{branch.landmark}</p>
 
-            {branch.closed ? (
-              <p className="mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
-                <strong className="font-semibold">Filial vaqtincha yopiq.</strong>
-                {branch.closedNote ? ` ${branch.closedNote}` : null}
-              </p>
-            ) : null}
+              {branch.closed ? (
+                <p className="mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
+                  <strong className="font-semibold">Filial vaqtincha yopiq.</strong>
+                  {branch.closedNote ? ` ${branch.closedNote}` : null}
+                </p>
+              ) : null}
 
-            <dl className="mt-10 grid max-w-3xl gap-6 sm:grid-cols-3">
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Manzil
-                </dt>
-                <dd className="mt-2 text-ink-2">{branch.address}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Telefon
-                </dt>
-                <dd className="mt-2">
-                  <a href={`tel:${phone}`} className="font-semibold text-purple hover:underline">
-                    {phoneLabel}
-                  </a>
-                  {branch.phone ? null : (
-                    <span className="mt-1 block text-xs text-ink-3">
-                      Bu filial uchun umumiy raqam
-                    </span>
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                  Ish vaqti
-                </dt>
-                <dd className="mt-2 text-ink-2">{branch.hours}</dd>
-              </div>
-              {branch.instagram ? (
+              <dl className="mt-10 grid max-w-3xl gap-6 sm:grid-cols-3">
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                    Instagram
+                    Manzil
+                  </dt>
+                  <dd className="mt-2 text-ink-2">{branch.address}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                    Telefon
                   </dt>
                   <dd className="mt-2">
-                    <a
-                      href={branch.instagramUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-purple hover:underline"
-                    >
-                      @{branch.instagram}
+                    <a href={`tel:${phone}`} className="font-semibold text-purple hover:underline">
+                      {phoneLabel}
                     </a>
+                    {branch.phone ? null : (
+                      <span className="mt-1 block text-xs text-ink-3">
+                        Bu filial uchun umumiy raqam
+                      </span>
+                    )}
                   </dd>
                 </div>
-              ) : null}
-            </dl>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                    Ish vaqti
+                  </dt>
+                  <dd className="mt-2 text-ink-2">{branch.hours}</dd>
+                </div>
+                {branch.instagram ? (
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
+                      Instagram
+                    </dt>
+                    <dd className="mt-2">
+                      <a
+                        href={branch.instagramUrl!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-purple hover:underline"
+                      >
+                        @{branch.instagram}
+                      </a>
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
 
-            <div className="mt-10 flex flex-wrap gap-3">
-              <a
-                href={mapsUrl(branch)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary"
-              >
-                Xaritada ochish
-              </a>
-              <a href={`tel:${phone}`} className="btn btn-outline">
-                {phoneLabel}
-              </a>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <a
+                  href={mapsUrl(branch)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                >
+                  Xaritada ochish
+                </a>
+                <a href={`tel:${phone}`} className="btn btn-outline">
+                  {phoneLabel}
+                </a>
+              </div>
             </div>
+
+            {cover ? (
+              <figure className="relative lg:mt-10">
+                {/* Orqadagi sariq qatlam — brend rangida, surat "osilib" turmasin. */}
+                <div aria-hidden="true" className="absolute -bottom-4 -right-4 hidden h-full w-full rounded-[32px] bg-yellow sm:block" />
+                <div className="relative aspect-[4/3] overflow-hidden rounded-[32px] bg-ground-2 shadow-xl">
+                  <img
+                    src={cover.src}
+                    srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
+                    sizes="(max-width: 1024px) 100vw, 580px"
+                    width={960}
+                    height={720}
+                    alt={cover.alt}
+                    className="h-full w-full object-cover"
+                    fetchPriority="high"
+                    decoding="async"
+                  />
+                  <figcaption className="absolute left-4 top-4 rounded-full bg-ground/90 px-4 py-2 text-sm font-semibold text-ink backdrop-blur">
+                    {cover.label}
+                  </figcaption>
+                </div>
+              </figure>
+            ) : null}
           </div>
         </section>
 
