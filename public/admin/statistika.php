@@ -97,9 +97,13 @@ if (hs_metrika_ready()) {
     hs_metrika_prefetch_page($d1, $d2);
 }
 $ov = hs_metrika_ready() ? hs_metrika_overview($d1, $d2, $err) : null;
-$tokenYaroqsiz = hs_metrika_ready() && $err !== '';
+// "Ulash" bo'limi faqat token rostdan yaroqsiz bo'lsa (401/403) — oddiy 400 da emas.
+$tokenYaroqsiz = hs_metrika_ready() && strpos($err, 'tokeni yaroqsiz') !== false;
 if ($err !== '') {
     echo '<p class="flash flash-err">' . h($err) . '</p>';
+}
+if (hs_metrika_is_stale()) {
+    echo '<p class="flash flash-warn">Yandex Metrika hozir to\'liq javob bermayapti — ba\'zi raqamlar oxirgi saqlangan ma\'lumotdan ko\'rsatilmoqda. Birozdan keyin sahifani yangilang.</p>';
 }
 
 if (!hs_metrika_ready() || $tokenYaroqsiz) {
@@ -134,7 +138,7 @@ if (!hs_metrika_ready() || $tokenYaroqsiz) {
 echo '<div class="kpis">';
 if ($ov) {
     $g = $ov['goals'];
-    echo hs_kpi('eye', $ov['visits'], 'Tashriflar', (int) $ov['users'] . ' ta odam');
+    echo hs_kpi('eye', $ov['visits'], 'Tashriflar', $ov['users'] === null ? '' : (int) $ov['users'] . ' ta odam');
     echo hs_kpi('phone', $g['phone_click'] === null ? '—' : $g['phone_click'], '"Qo\'ng\'iroq" bosildi');
     echo hs_kpi('send', $g['telegram_click'] === null ? '—' : $g['telegram_click'], 'Telegram\'ga o\'tishdi');
 }
@@ -155,9 +159,12 @@ if ($ov) {
     }
 }
 
-if ($ov) {
+// Asosiy raqamlar yiqilsa ham qolgan bo'limlar (manba, shahar, qurilma...) chiqaveradi.
+if (hs_metrika_ready() && !$tokenYaroqsiz) {
     echo '<div class="grid grid-2">';
-    echo '<section class="card"><h2>Tashriflar — oxirgi 7 kun</h2>' . hs_bar_chart($ov['daily7'], 'Tashriflar') . '</section>';
+    if ($ov) {
+        echo '<section class="card"><h2>Tashriflar — oxirgi 7 kun</h2>' . hs_bar_chart($ov['daily7'], 'Tashriflar') . '</section>';
+    }
 
     $src = array();
     foreach (hs_metrika_breakdown('ym:s:lastTrafficSource', $d1, $d2, 10, $err) as $r) {

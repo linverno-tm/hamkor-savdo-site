@@ -138,6 +138,7 @@ function hs_metrika_prefetch($requests)
             $data = json_decode((string) curl_multi_getcontent($ch), true);
             if (is_array($data)) {
                 hs_cache_set($key, $data, 600);
+                hs_cache_set('ymlast:' . $key, $data, 7 * 86400);
             }
         }
         curl_multi_remove_handle($mh, $ch);
@@ -174,25 +175,43 @@ function hs_metrika_request($endpoint, $params, &$error = null)
         return $cached;
     }
     list($code, $body) = hs_http('GET', $url, array('Authorization: OAuth ' . hs_metrika_token(), 'Accept: application/json'), null, 20);
-    /* "Query is too complicated. Please reduce the date interval or sampling" —
-       tashriflar ko'paygach `accuracy=full` (tanlanmagan, 100% aniq) og'ir
-       bo'lib qoladi. Shunda o'sha so'rov pastroq aniqlik bilan qayta yuboriladi
-       va natija ASL kalit ostida ham keshlanadi — keyingi 10 daqiqada og'ir
-       so'rov qayta urilmaydi. Raqamlar tanlanma bo'yicha — juda yaqin, lekin
-       bir-ikki tashrifga farq qilishi mumkin. */
+    /* "Query is too complicated. Please reduce the date interval or sampling".
+       Kichik hisoblagichda ham chiqadi: bu Yandex serverlari band paytdagi
+       vaqtinchalik rad javobi (Metrika klubi, 2020–2026 muhokamalari) — bir xil
+       so'rov biroz kutib qayta yuborilsa o'tadi. Shuning uchun: pauza bilan
+       qayta urinish, har safar aniqlikni pasaytirib (oxirgisi 0.1 — 10%
+       tanlanma). Natija ASL kalit ostida keshlanadi. Bir sahifa uchun umumiy
+       kutish 8 soniyadan oshmaydi — panel qotib qolmasin. */
+    static $budget = 8.0;
     if ($code === 400 && isset($params['accuracy']) && stripos((string) $body, 'too complicated') !== false) {
-        foreach (array('high', 'medium', 'low') as $acc) {
-            $try = hs_metrika_url($endpoint, array_merge($params, array('accuracy' => $acc)));
+        foreach (array(array(1, 'high'), array(2, 'medium'), array(2, '0.1')) as $step) {
+            if ($budget < $step[0]) {
+                break;
+            }
+            $budget -= $step[0];
+            sleep($step[0]);
+            $try = hs_metrika_url($endpoint, array_merge($params, array('accuracy' => $step[1])));
             list($code, $body) = hs_http('GET', $try, array('Authorization: OAuth ' . hs_metrika_token(), 'Accept: application/json'), null, 20);
             if ($code === 200) {
                 $data = json_decode($body, true);
                 hs_cache_set($key, $data, 600);
                 hs_cache_set('ym:' . md5($try), $data, 600);
+                hs_cache_set('ymlast:' . $key, $data, 7 * 86400);
                 return $data;
             }
             if ($code !== 400) {
                 break;
             }
+        }
+    }
+    /* Yandex baribir javob bermasa (token muammosidan tashqari) — oxirgi
+       muvaffaqiyatli natija (7 kungacha saqlanadi). Panel bo'sh qolmaydi;
+       sahifa `hs_metrika_is_stale()` orqali "eski ma'lumot" deb ogohlantiradi. */
+    if ($code !== 200 && $code !== 401 && $code !== 403) {
+        $last = hs_cache_get('ymlast:' . $key);
+        if ($last !== null) {
+            hs_metrika_is_stale(true);
+            return $last;
         }
     }
     if ($code !== 200) {
@@ -204,7 +223,10 @@ function hs_metrika_request($endpoint, $params, &$error = null)
            talablari ham har xil bo'lishi mumkin. Yandex javobining
            sababi `message` maydonida keladi. */
         $sabab = hs_metrika_error_message($body);
-        $quyruq = $endpoint . ($sabab !== '' ? ' — ' . $sabab : '') . ' [token: ' . hs_metrika_token_source() . ']';
+        // Qaysi so'rov yiqilgani — keyingi safar tashxis aniq bo'lsin.
+        $qaysi = isset($params['dimensions']) ? $params['dimensions'] : (isset($params['metrics']) ? $params['metrics'] : '');
+        $qaysi = $qaysi !== '' ? ' {' . mb_substr($qaysi, 0, 60) . (isset($params['date1']) ? ', ' . $params['date1'] . '…' . $params['date2'] : '') . '}' : '';
+        $quyruq = $endpoint . $qaysi . ($sabab !== '' ? ' — ' . $sabab : '') . ' [token: ' . hs_metrika_token_source() . ']';
         $error = $code === 401 || $code === 403
             ? "Metrika tokeni yaroqsiz yoki ruxsati yetmaydi (HTTP {$code}): {$quyruq}"
             : "Metrika'dan ma'lumot olinmadi (HTTP {$code}): {$quyruq}";
@@ -212,7 +234,18 @@ function hs_metrika_request($endpoint, $params, &$error = null)
     }
     $data = json_decode($body, true);
     hs_cache_set($key, $data, 600);
+    hs_cache_set('ymlast:' . $key, $data, 7 * 86400);
     return $data;
+}
+
+/** Shu sahifada biror so'rov eski (zaxiradagi) natija bilan to'ldirildimi. */
+function hs_metrika_is_stale($set = null)
+{
+    static $stale = false;
+    if ($set !== null) {
+        $stale = (bool) $set;
+    }
+    return $stale;
 }
 
 /** Maqsad identifikatori (phone_click, lead_sent) -> Metrika ichki ID raqami. */
@@ -294,22 +327,53 @@ function hs_metrika_top_pages_params($date1, $date2)
 function hs_metrika_overview($date1, $date2, &$error = null)
 {
     $goals = hs_metrika_goal_ids($error);
-    $d = hs_metrika_request('/stat/v1/data', hs_metrika_overview_params($goals, $date1, $date2), $error);
-    if (!$d) {
-        return null;
-    }
-    $t = isset($d['totals']) ? $d['totals'] : array();
     $out = array(
-        'visits' => isset($t[0]) ? (int) $t[0] : 0,
-        'users' => isset($t[1]) ? (int) $t[1] : 0,
+        'visits' => 0,
+        'users' => 0,
         'goals' => array('phone_click' => null, 'telegram_click' => null, 'lead_sent' => null),
         'daily7' => array(),
     );
-    $i = 2;
-    foreach ($goals as $name => $gid) {
-        if ($gid) {
-            $out['goals'][$name] = isset($t[$i]) ? (int) $t[$i] : 0;
-            $i++;
+    $d = hs_metrika_request('/stat/v1/data', hs_metrika_overview_params($goals, $date1, $date2), $error);
+    if ($d) {
+        $t = isset($d['totals']) ? $d['totals'] : array();
+        $out['visits'] = isset($t[0]) ? (int) $t[0] : 0;
+        $out['users'] = isset($t[1]) ? (int) $t[1] : 0;
+        $i = 2;
+        foreach ($goals as $name => $gid) {
+            if ($gid) {
+                $out['goals'][$name] = isset($t[$i]) ? (int) $t[$i] : 0;
+                $i++;
+            }
+        }
+    } else {
+        /* Birlashgan so'rov (tashrif + odam + 3 maqsad) katta davrda Metrika
+           uchun "too complicated" bo'lishi mumkin — hatto past aniqlikda ham.
+           Shunda bo'laklab: avval tashrif+odam (u ham yiqilsa — faqat tashrif),
+           keyin har bir maqsad alohida. Hech bo'lmasa tashriflar olinsa — xato
+           xabari o'chiriladi, sahifa odatdagidek chiqadi. */
+        $base = null;
+        foreach (array('ym:s:visits,ym:s:users', 'ym:s:visits') as $m) {
+            $e = null;
+            $base = hs_metrika_stat(array('metrics' => $m, 'date1' => $date1, 'date2' => $date2), $e);
+            if ($base) {
+                break;
+            }
+        }
+        if (!$base) {
+            return null;
+        }
+        $error = '';
+        $t = isset($base['totals']) ? $base['totals'] : array();
+        $out['visits'] = isset($t[0]) ? (int) $t[0] : 0;
+        // Faqat tashrif olingan bo'lsa — odamlar soni noma'lum (0 emas).
+        $out['users'] = isset($t[1]) ? (int) $t[1] : null;
+        foreach ($goals as $name => $gid) {
+            if (!$gid) {
+                continue;
+            }
+            $e = null;
+            $g = hs_metrika_stat(array('metrics' => 'ym:s:goal' . $gid . 'reaches', 'date1' => $date1, 'date2' => $date2), $e);
+            $out['goals'][$name] = $g && isset($g['totals'][0]) ? (int) $g['totals'][0] : 0;
         }
     }
     $daily = hs_metrika_request('/stat/v1/data', hs_metrika_daily_params(), $error);
