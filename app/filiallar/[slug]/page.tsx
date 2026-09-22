@@ -143,8 +143,31 @@ export default async function BranchPage({
               className="pointer-events-none absolute right-12 top-28 hidden h-72 w-auto text-purple-50 lg:block"
             />
           )}
-          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
-            <div>
+          {/* Filial surati — ekranning o'ng chetigacha yoyilgan, chapga (matnga)
+              va pastga qarab fonga singib ketadi. Kirishda oqarib-tiniqlashadi,
+              keyin sekin "nafas oladi"; ustidan yumshoq nur o'tadi. Hammasi
+              CSS (globals.css > .branch-hero-photo) — JS ham, WebGL ham yo'q.
+              Telefonda — matn tepasida to'liq kenglikdagi banner. */}
+          {cover ? (
+            <figure className="branch-hero-photo relative h-64 w-full sm:h-80 lg:absolute lg:inset-y-0 lg:right-0 lg:h-auto lg:w-[56%]">
+              <img
+                src={cover.src}
+                srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
+                sizes="(max-width: 1024px) 100vw, 56vw"
+                width={960}
+                height={720}
+                alt={cover.alt}
+                className="h-full w-full object-cover"
+                fetchPriority="high"
+                decoding="async"
+              />
+              <figcaption className="absolute bottom-6 right-5 z-10 rounded-full bg-ground/90 px-4 py-2 text-sm font-semibold text-ink backdrop-blur sm:right-8 lg:bottom-24">
+                {cover.label}
+              </figcaption>
+            </figure>
+          ) : null}
+          <div className="relative mx-auto max-w-7xl px-5 pb-16 sm:px-8">
+            <div className={cover ? "lg:w-[48%] lg:pb-10" : undefined}>
               <nav aria-label="Qayerdaman" className="text-sm text-ink-3">
                 <Link href="/" className="hover:text-purple">
                   Bosh sahifa
@@ -245,28 +268,6 @@ export default async function BranchPage({
               </div>
             </div>
 
-            {cover ? (
-              <figure className="relative lg:mt-10">
-                {/* Orqadagi sariq qatlam — brend rangida, surat "osilib" turmasin. */}
-                <div aria-hidden="true" className="absolute -bottom-4 -right-4 hidden h-full w-full rounded-[32px] bg-yellow sm:block" />
-                <div className="relative aspect-[4/3] overflow-hidden rounded-[32px] bg-ground-2 shadow-xl">
-                  <img
-                    src={cover.src}
-                    srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
-                    sizes="(max-width: 1024px) 100vw, 580px"
-                    width={960}
-                    height={720}
-                    alt={cover.alt}
-                    className="h-full w-full object-cover"
-                    fetchPriority="high"
-                    decoding="async"
-                  />
-                  <figcaption className="absolute left-4 top-4 rounded-full bg-ground/90 px-4 py-2 text-sm font-semibold text-ink backdrop-blur">
-                    {cover.label}
-                  </figcaption>
-                </div>
-              </figure>
-            ) : null}
           </div>
         </section>
 

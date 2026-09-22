@@ -676,6 +676,79 @@ footer a:not(.btn) {
    zahoti allaqachon o'z navbatini kutayotgan holatda boshlanadi, hammasi
    bitta umumiy tsiklda sinxron aylanadi. Marquee'dagi bilan bir xil uslub:
    kutubxonasiz, faqat CSS. */
+/* Filial sahifasi: ekranga yoyilgan surat (app/filiallar/[slug]/page.tsx). */
+.branch-hero-photo {
+  margin: 0;
+  overflow: hidden;
+}
+/* Fonga singish — niqob (mask) emas, fon rangidagi gradient qatlam: niqob
+   surat chetida 1px tirqish qoldirardi. Qorong'i rejimda --ground o'zi almashadi. */
+.branch-hero-photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--ground), transparent 32%);
+}
+@media (min-width: 1024px) {
+  .branch-hero-photo::before {
+    inset: 0 0 0 -2px;
+    background:
+      linear-gradient(to right, var(--ground) 2%, color-mix(in srgb, var(--ground) 80%, transparent) 14%, color-mix(in srgb, var(--ground) 40%, transparent) 28%, transparent 48%),
+      linear-gradient(to top, var(--ground), transparent 24%);
+  }
+}
+/* Ustidan o'tadigan yumshoq nur — shader'ga o'xshash yaltirash. */
+.branch-hero-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 45% 60% at 50% 40%, rgba(255, 255, 255, 0.28), transparent 70%);
+  background-size: 220% 100%;
+  background-position: 100% 0;
+  mix-blend-mode: soft-light;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .branch-hero-photo img {
+    animation:
+      branch-in 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both,
+      branch-breathe 26s ease-in-out 1.8s infinite alternate;
+  }
+  .branch-hero-photo::after {
+    animation: branch-glow 9s ease-in-out 1.2s infinite alternate;
+  }
+}
+@keyframes branch-in {
+  from {
+    opacity: 0;
+    filter: blur(14px) brightness(1.6) saturate(0.4);
+    transform: scale(1.14);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: scale(1.03);
+  }
+}
+@keyframes branch-breathe {
+  from {
+    transform: scale(1.03) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.1) translate3d(-2%, -1.5%, 0);
+  }
+}
+@keyframes branch-glow {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
 .photo-cycle {
   position: relative;
 }
