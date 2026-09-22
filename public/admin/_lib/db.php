@@ -146,6 +146,12 @@ function hs_db_migrate(PDO $pdo)
             // zahoti eski "Yangi" arizalar bo'yicha xabarlar yog'ilib ketadi.
             "UPDATE leads SET remind_level = 2",
         ),
+        // Arizani olgan odamning Telegram ID'si — eslatmada uni belgilash (username'i bo'lmasa ham).
+        6 => array(
+            "ALTER TABLE leads ADD COLUMN claimed_uid TEXT NOT NULL DEFAULT ''",
+            // Eski arizalar bo'yicha yangi, takroriy eslatmalar boshlanib ketmasin.
+            "UPDATE leads SET remind_level = 9 WHERE remind_level >= 2",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

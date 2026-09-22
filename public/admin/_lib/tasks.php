@@ -1,7 +1,7 @@
 <?php
 /**
  * Vaqt bo'yicha ishlaydigan vazifalar:
- *   - javobsiz ariza eslatmasi (15 va 30 daqiqa, sozlanadi);
+ *   - javobsiz ariza eslatmasi (15 va 30 daqiqa, sozlanadi; 30 daqiqalik — 3 martagacha takrorlanadi);
  *   - arizalarning kechki zaxira nusxasi (boshqaruvchiga Telegram'da fayl);
  *   - kunlik hisobot (avval cron/hisobot.php qilardi).
  *
@@ -114,7 +114,7 @@ function hs_tasks_reminders()
     $m2 = max($m1 + 1, (int) hs_task_setting('remind_m2'));
     $db = hs_db();
     // Oxirgi 3 kun — undan eskisi uchun eslatishning ma'nosi yo'q.
-    $st = $db->prepare("SELECT * FROM leads WHERE status = 'yangi' AND remind_level < 2 AND created_at >= ? ORDER BY id");
+    $st = $db->prepare("SELECT * FROM leads WHERE status = 'yangi' AND remind_level < 4 AND created_at >= ? ORDER BY id");
     $st->execute(array(date('Y-m-d H:i:s', time() - 3 * 86400)));
     $admins = hs_tg_admin_ids();
     $sent = 0;
@@ -150,38 +150,65 @@ function hs_tasks_reminders()
             $db->prepare('UPDATE leads SET remind_level = 1 WHERE id = ?')->execute(array($id));
         }
 
-        // 2-bosqich: hali ham "Yangi" — ariza turgan chatlarga (guruh ham ko'rsin, olgan odam
-        // holatni yangilashni unutgan bo'lishi mumkin) va boshqaruvchiga.
-        if ($wait >= $m2) {
-            $claim = $lead['claimed_by'] !== '' ? "\n🙋 Olgan: " . $lead['claimed_by'] . " — lekin holat hali o'zgarmagan." : "\nHech kim olmagan.";
+        // 2-bosqich va takrorlar: hali ham "Yangi". Ariza turgan chatlarga (boshqaruvchidan
+        // tashqari): olgan odam belgilanadi va natija tugmalari bilan so'raladi. Har $m2
+        // daqiqada, ko'pi bilan 3 marta (daraja 2, 3, 4). Boshqaruvchiga — faqat birinchisida.
+        $level = (int) $lead['remind_level'];
+        $step = $level < 2 ? 2 : $level + 1;
+        if ($step <= 4 && $wait >= $m2 * ($step - 1)) {
+            $claimed = $lead['claimed_by'] !== '';
+            $whoHtml = htmlspecialchars($who, ENT_QUOTES, 'UTF-8');
+            $html = $claimed
+                ? '⚠️ ' . hs_tg_mention_html($lead) . ", siz bu arizani olgandingiz — suhbat nima bilan yakunlandi?
+Pastdagi tugmalardan birini bosing.
+
+{$whoHtml}
+⏱ {$wait} daqiqadan beri holat \"Yangi\"."
+                : "⚠️ {$wait} daqiqa o'tdi — bu arizaga hali hech kim javob bermadi.
+{$whoHtml}
+
+Qo'ng'iroq qiling va \"🙋 Men oldim\" ni bosing.";
             foreach ($copies as $chatId => $mid) {
                 $chatId = (string) $chatId;
                 if (in_array($chatId, $admins, true)) {
                     continue;
                 }
-                hs_tg_api('sendMessage', array(
+                $params = array(
                     'chat_id' => $chatId,
                     'reply_to_message_id' => $mid,
                     'allow_sending_without_reply' => 'true',
-                    'text' => "⚠️ {$wait} daqiqa o'tdi — ariza hali ham \"Yangi\".\n{$who}" . $claim
-                        . ($lead['claimed_by'] !== '' ? "\n\nGaplashgan bo'lsangiz, holatini yangilang." : "\n\nQo'ng'iroq qiling va \"🙋 Men oldim\" ni bosing."),
-                ));
-                $sent++;
-            }
-            foreach ($admins as $aid) {
-                $params = array(
-                    'chat_id' => $aid,
-                    'text' => "⚠️ Ariza #{$id} ga {$wait} daqiqadan beri javob yo'q.\n{$who}\n📍 " . hs_tg_branch_short((string) $lead['branch']) . $claim
-                        . (isset($copies[$aid]) ? '' : "\n\n" . hs_site_url() . '/admin/ariza.php?id=' . $id),
+                    'parse_mode' => 'HTML',
+                    'text' => $html,
                 );
-                if (isset($copies[$aid])) {
-                    $params['reply_to_message_id'] = $copies[$aid];
-                    $params['allow_sending_without_reply'] = 'true';
+                if ($claimed) {
+                    $params['reply_markup'] = hs_tg_result_keyboard($id);
                 }
                 hs_tg_api('sendMessage', $params);
                 $sent++;
             }
-            $db->prepare('UPDATE leads SET remind_level = 2 WHERE id = ?')->execute(array($id));
+            if ($step === 2) {
+                $claim = $claimed ? "
+🙋 Olgan: " . $lead['claimed_by'] . " — lekin holat hali o'zgarmagan." : "
+Hech kim olmagan.";
+                foreach ($admins as $aid) {
+                    $params = array(
+                        'chat_id' => $aid,
+                        'text' => "⚠️ Ariza #{$id} ga {$wait} daqiqadan beri javob yo'q.
+{$who}
+📍 " . hs_tg_branch_short((string) $lead['branch']) . $claim
+                            . (isset($copies[$aid]) ? '' : "
+
+" . hs_site_url() . '/admin/ariza.php?id=' . $id),
+                    );
+                    if (isset($copies[$aid])) {
+                        $params['reply_to_message_id'] = $copies[$aid];
+                        $params['allow_sending_without_reply'] = 'true';
+                    }
+                    hs_tg_api('sendMessage', $params);
+                    $sent++;
+                }
+            }
+            $db->prepare('UPDATE leads SET remind_level = ? WHERE id = ?')->execute(array($step, $id));
         }
     }
     return $sent;
