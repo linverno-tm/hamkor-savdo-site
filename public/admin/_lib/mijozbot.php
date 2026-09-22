@@ -340,6 +340,9 @@ function hs_mb_store_facts()
         "Do'kon: HAMKOR SAVDO — Andijon viloyatidagi savdo tarmog'i: texnika, tilla, mebel, skuterlar.",
         'Sayt: ' . hs_site_url() . ' (saytda ariza qoldirish mumkin).',
         "Umumiy telefon: " . $s['phoneDisplay'],
+        // data/categories.ts dagi tasdiqlangan yo'nalishlar (egasi: skuterlar texnika bo'limida).
+        "Sotiladigan yo'nalishlar (rasmiy): maishiy texnika (muzlatgich, kir yuvish mashinasi, konditsioner, televizor, pylesos, "
+            . "gaz plita va h.k.), skuterlar, tilla taqinchoqlar, mebel. Jami " . (isset($s['productCount']) ? $s['productCount'] : '') . ' mahsulot.',
         "Muddatli to'lov: {$oy} oygacha. Hujjat: pasport va plastik karta.",
         "Bepul yetkazish va o'rnatish: " . (isset($s['freeDeliveryArea']) ? $s['freeDeliveryArea'] : '') . '; yetkazish hududi: ' . (isset($s['deliveryArea']) ? $s['deliveryArea'] : '') . '.',
         'Filiallar:',
@@ -374,8 +377,12 @@ function hs_mb_system_prompt()
         . "ishonching komil bo'lmasa — bo'sh qoldir. Yangi postlarni afzal ko'r. Muddati o'tgan aksiya postini (masalan \"23–28-iyun\" "
         . "va bugungi sana undan keyin) tanlama.\n"
         . "3. reply: mijozga qisqa javob (1–3 gap, 350 belgidan oshmasin), mijoz yozgan yozuvda (lotin yoki kirill). "
-        . "Faqat DO'KON FAKTLARI va KATALOGda yozilganini ayt; narx, muddat, mavjudlikni O'YLAB TOPMA. "
-        . "Mos post bo'lsa — \"quyidagi postlarni ko'ring\" mazmunida; bo'lmasa — operator tez orada aniqlik kiritishini ayt. "
+        . "Faqat DO'KON FAKTLARI va KATALOGda yozilganini ayt; narx, muddat, aniq model yoki brend borligini O'YLAB TOPMA. "
+        . "So'ralgan mahsulot TURI rasmiy yo'nalishlarga kirsa (masalan skuter, kir mashina, muzlatgich, divan, uzuk) — "
+        . "avval ishonch bilan \"Ha, bizda <tur> bor\" de. Keyin: mos post bo'lsa — \"quyidagi postlarni ko'ring\"; bo'lmasa — "
+        . "\"aniq modellar va narxini operator yozib beradi\" yoki filialga kelib ko'rish mumkinligini ayt. "
+        . "Muayyan model/brend (masalan \"S21 Ultra\", \"LG 9 kg\") so'ralsa va katalogda yo'q bo'lsa — borligini tasdiqlama, "
+        . "operator aniqlab berishini ayt. Yo'nalishlarga kirmaydigan narsa so'ralsa — operator aniqlashini ayt. "
         . "Havola, telefon raqami yoki emoji qo'shma — tizim o'zi qo'shadi.\n"
         . "4. needs_operator: aniq narx/mavjudlik/limit/buyurtma kabi javobni faqat xodim bera oladigan bo'lsa yoki mos post topilmasa — true.\n"
         . "5. kind: mahsulot | shartlar | filial | yetkazish | ish | boshqa.\n\n"
@@ -479,12 +486,14 @@ function hs_mb_ask_claude($text, $context, $rows)
 function hs_mb_normalize($s)
 {
     $s = mb_strtolower((string) $s);
-    $map = array('ў' => 'o', 'ғ' => 'g', 'қ' => 'k', 'ҳ' => 'h', 'ш' => 'sh', 'ч' => 'ch', 'ё' => 'yo', 'ю' => 'yu', 'я' => 'ya', 'ц' => 's',
+    // 1) kirill -> lotin; 2) lotindagi xato yozuvlarni bir xil qilish. Ikki bosqich — kirill "ш" (-> "sh")
+    // ham, lotin "sh"/"w" ham oxirida bir xil ("sx") bo'lishi uchun.
+    $s = strtr($s, array('ў' => 'o', 'ғ' => 'g', 'қ' => 'k', 'ҳ' => 'h', 'ш' => 'sh', 'ч' => 'ch', 'ё' => 'yo', 'ю' => 'yu', 'я' => 'ya', 'ц' => 's',
         'щ' => 'sh', 'ж' => 'j', 'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'з' => 'z', 'и' => 'i', 'й' => 'y',
         'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f',
-        'х' => 'x', 'ы' => 'i', 'э' => 'e', 'ъ' => '', 'ь' => '', "o'" => 'o', "g'" => 'g', 'q' => 'k', 'h' => 'x', 'w' => 'sh');
-    $s = strtr($s, $map);
-    return preg_replace("/['‘’ʻ`]/u", '', $s);
+        'х' => 'x', 'ы' => 'i', 'э' => 'e', 'ъ' => '', 'ь' => ''));
+    $s = preg_replace("/['‘’ʻ`]/u", '', $s);
+    return strtr($s, array('q' => 'k', 'h' => 'x', 'w' => 'sx'));
 }
 
 function hs_mb_keyword_search($text, $rows, $limit = 3)
@@ -518,6 +527,34 @@ function hs_mb_keyword_search($text, $rows, $limit = 3)
     return array_map(function ($x) {
         return $x[1];
     }, array_slice($scored, 0, $limit));
+}
+
+/**
+ * AI siz: savoldagi mahsulot turi rasmiy yo'nalishlarga kirsa — uning nomi ("skuterlar"), aks holda ''.
+ * Kalitlar hs_mb_normalize() dan o'tgan (lotin, kichik harf) so'z boshlari.
+ */
+function hs_mb_known_type($text)
+{
+    $types = array(
+        // Faqat saytda tasdiqlangan yo'nalishlar (data/categories.ts) — sotilishi aniq bo'lmagan turga "bor" demaymiz.
+        'skuter' => 'skuterlar', 'skooter' => 'skuterlar', 'moped' => 'skuterlar',
+        'kirmo' => 'kir yuvish mashinalari', 'kir yuv' => 'kir yuvish mashinalari', 'kirmash' => 'kir yuvish mashinalari', 'kir mash' => 'kir yuvish mashinalari', 'kir mosh' => 'kir yuvish mashinalari', 'stiraln' => 'kir yuvish mashinalari',
+        'xolodil' => 'muzlatgichlar', 'xaladil' => 'muzlatgichlar', 'muzlat' => 'muzlatgichlar', 'morozil' => 'muzlatgichlar', 'marazil' => 'muzlatgichlar',
+        'konditsi' => 'konditsionerlar', 'kondisi' => 'konditsionerlar', 'kandisa' => 'konditsionerlar', 'kanditsa' => 'konditsionerlar', 'kondits' => 'konditsionerlar',
+        'televiz' => 'televizorlar', 'tilivi' => 'televizorlar', 'televi' => 'televizorlar',
+        'pilesos' => 'changyutgichlar', 'pylesos' => 'changyutgichlar', 'plisos' => 'changyutgichlar', 'changyut' => 'changyutgichlar',
+        'gaz plit' => 'gaz plitalar', 'gazplit' => 'gaz plitalar',
+        'divan' => 'divanlar', 'krovat' => 'krovatlar', 'kravat' => 'krovatlar', 'shkaf' => 'shkaflar', 'mebel' => 'mebellar', 'stol stul' => 'stol-stullar',
+        'tilla' => 'tilla taqinchoqlar', 'uzuk' => 'tilla taqinchoqlar', 'zira' => 'tilla taqinchoqlar', 'bilaguz' => 'tilla taqinchoqlar', 'sirg' => 'tilla taqinchoqlar',
+    );
+    $t = hs_mb_normalize($text);
+    foreach ($types as $k => $name) {
+        // Kalit ham xuddi shunday normallashtiriladi (masalan "sh" -> "sx"), aks holda lotin "mashina" topilmaydi.
+        if (mb_strpos($t, hs_mb_normalize($k)) !== false) {
+            return $name;
+        }
+    }
+    return '';
 }
 
 /** AI siz ham ko'rinadigan savol belgisi. */
@@ -618,8 +655,10 @@ function hs_mb_process_question($qid)
             return;
         }
         $ids = hs_mb_keyword_search($q['text'] . ' ' . $q['context'], $rows);
-        $d = array('is_question' => true, 'kind' => 'boshqa', 'post_ids' => $ids, 'needs_operator' => true,
-            'reply' => $ids ? "Savolingiz uchun rahmat! Mos bo'lishi mumkin bo'lgan postlar quyida, aniq ma'lumotni operator beradi." : "Savolingiz uchun rahmat! Operator tez orada javob beradi.");
+        $type = hs_mb_known_type($q['text']);
+        $reply = $type !== '' ? 'Ha, bizda ' . $type . ' bor! ' : 'Savolingiz uchun rahmat! ';
+        $reply .= $ids ? "Mos bo'lishi mumkin bo'lgan postlar quyida, aniq model va narxini operator yozib beradi." : 'Aniq model va narxini operator tez orada yozib beradi.';
+        $d = array('is_question' => true, 'kind' => $type !== '' ? 'mahsulot' : 'boshqa', 'post_ids' => $ids, 'needs_operator' => true, 'reply' => $reply);
     }
     if (empty($d['is_question'])) {
         hs_db()->prepare("UPDATE mb_questions SET status = 'tashlandi', kind = ?, error = ? WHERE id = ?")->execute(array((string) $d['kind'], $err, $qid));
