@@ -1,99 +1,88 @@
 import Link from "next/link";
-import { categories } from "@/data/categories";
-import { site } from "@/data/site";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
- * Scene 04 — "Nimalar bor?" The three verified directions.
- * Each panel is a real link target (`#yonalish-<id>`) so the jump pills give a
- * direct path without scrolling through the whole page.
+ * "Mahsulot kategoriyalari" — to'rtta yo'nalish, har biri o'z sahifasiga.
+ * Hero'ning pastida turadi: sahifa ochilishi bilan do'kon nima sotishi ko'rinadi.
+ *
+ * Katta surat, ustida to'q gradient, nom, qisqa tavsif va o'q. Hover:
+ * surat sekin kattalashadi, kartochka 5px ko'tariladi, o'q oldinga siljiydi
+ * (globals.css > .cat-card). Skuter surati — Pexels (bepul litsenziya):
+ * https://www.pexels.com/photo/15675779/; do'konning o'z surati bo'lsa,
+ * public/yonalishlar/skuter-*.webp ni almashtiring.
  */
-export function Categories() {
+const CATEGORIES = [
+  {
+    href: "/texnika",
+    title: "Texnika",
+    text: "Muzlatgich, kir yuvish mashinasi, konditsioner va boshqa texnikalar.",
+    photo: "texnika",
+    alt: "HAMKOR SAVDO maishiy texnika bo'limi",
+    pos: "object-center",
+  },
+  {
+    href: "/tilla",
+    title: "Tilla",
+    text: "Uzuk, sirg'a, zanjir va boshqa zargarlik buyumlari.",
+    photo: "tilla",
+    alt: "HAMKOR SAVDO zargarlik peshtaxtasi",
+    // Suratning pastidagi "HAMKOR TILLA BUYUMLARI" yozuvi matn ostida qolmasin.
+    pos: "object-[center_25%]",
+  },
+  {
+    href: "/mebel",
+    title: "Mebel",
+    text: "Yotoqxona, oshxona, yumshoq mebel va boshqa mahsulotlar.",
+    photo: "mebel",
+    alt: "HAMKOR SAVDO mebel bo'limi — stol va o'rindiqlar",
+    pos: "object-center",
+  },
+  {
+    href: "/skuter",
+    title: "Skuterlar",
+    text: "Ishga, o'qishga va bozorga qulay transport.",
+    photo: "skuter",
+    alt: "Elektr skuter",
+    pos: "object-center",
+  },
+];
+
+/** Hero ichidagi to'liq kenglikdagi qator (`id="yonalishlar"` — hero CTA shu yerga olib boradi). */
+export function CategoryCards() {
   return (
-    <section id="yonalishlar" aria-labelledby="categories-title" className="bg-ground py-16 sm:py-24">
-      <div className="mx-auto max-w-[96rem] px-5 sm:px-8 lg:px-12">
-        <SectionHeading
-          id="categories-title"
-          kicker="Yo'nalishlar"
-          title={
-            <>
-              Bitta do&apos;konda uch yo&apos;nalish
-            </>
-          }
-          lead={`Uy uchun kerakli hamma narsa — ${site.facts.productCount} mahsulot orasidan tanlaysiz.`}
-        />
-
-        <nav aria-label="Yo'nalishlarga o'tish" className="mt-9 flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <a
-              key={c.id}
-              href={`#yonalish-${c.id}`}
-              className="tap numeral rounded-full border-2 border-purple-100 px-5 py-2 text-lg tracking-[0.12em] text-purple transition-colors hover:border-purple hover:bg-purple hover:text-white"
+    <nav id="yonalishlar" aria-label="Mahsulot kategoriyalari" className="scroll-mt-24">
+      <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        {CATEGORIES.map((c) => (
+          <li key={c.href}>
+            <Link
+              href={c.href}
+              className="cat-card group relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-ground-2 lg:aspect-[5/6]"
             >
-              {c.name}
-            </a>
-          ))}
-        </nav>
-
-        <div data-reveal className="mt-10 grid gap-6 lg:grid-cols-3 lg:gap-8">
-          {categories.map((c) => (
-            <article
-              key={c.id}
-              id={`yonalish-${c.id}`}
-              className="card card-hover group scroll-mt-28 overflow-hidden"
-            >
-              {/* The department itself. The name sits on the photograph over a
-                  dark gradient rather than beside it — the frame and the label
-                  then read as one object instead of two stacked boxes. */}
-              <div className="photo relative rounded-none">
-                <img
-                  src={c.photo.src}
-                  srcSet={`${c.photo.srcSmall} 480w, ${c.photo.src} 900w`}
-                  sizes="(max-width: 1024px) 100vw, 560px"
-                  width={900}
-                  height={675}
-                  alt={c.photo.alt}
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-6 pt-16 [background:linear-gradient(to_top,rgba(26,17,48,0.88),rgba(26,17,48,0.35)_45%,transparent)]">
-                  <div>
-                    <span
-                      className="numeral text-sm tracking-[0.3em] text-white/70"
-                      aria-hidden="true"
-                    >
-                      {c.index}
-                    </span>
-                    <h3 className="numeral mt-1 text-5xl tracking-[0.04em] text-white">{c.name}</h3>
-                    {c.id === "texnika" ? (
-                      <span className="numeral mt-2 inline-block rounded-full bg-yellow px-3 py-1 text-xs tracking-[0.08em] text-ink">
-                        + Skuterlar ham bor
-                      </span>
-                    ) : null}
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className="mb-2 h-3 w-10 shrink-0 rounded-full bg-yellow transition-all duration-300 group-hover:w-16"
-                  />
-                </div>
-              </div>
-              <div className="px-7 pb-7 pt-6">
-                <p className="font-semibold text-ink">{c.kicker}</p>
-                <p className="mt-3 leading-relaxed text-ink-2">{c.description}</p>
-                {/* Yo'nalishning o'z sahifasiga: u yerda shartlar, savol-javob va
-                    ariza bor — qidiruvda ham aynan o'sha sahifa chiqadi. */}
-                <Link
-                  href={`/${c.id}`}
-                  className="tap mt-6 inline-flex items-center gap-2 font-semibold text-purple underline-offset-4 hover:underline"
+              <img
+                src={`/yonalishlar/${c.photo}-900.webp`}
+                srcSet={`/yonalishlar/${c.photo}-480.webp 480w, /yonalishlar/${c.photo}-900.webp 900w`}
+                sizes="(max-width: 1024px) 50vw, 300px"
+                width={900}
+                height={675}
+                alt={c.alt}
+                decoding="async"
+                className={`cat-card-img h-full w-full object-cover ${c.pos}`}
+              />
+              <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 pt-20 text-white [background:linear-gradient(to_top,rgba(26,17,48,0.92),rgba(26,17,48,0.45)_55%,transparent)] sm:p-6 sm:pt-28">
+                <span>
+                  <span className="display block text-xl sm:text-3xl">{c.title}</span>
+                  <span className="mt-1.5 hidden text-sm leading-snug text-white/80 sm:block">{c.text}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="cat-card-arrow hidden h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-yellow text-lg text-ink sm:flex"
                 >
-                  Muddatli to&apos;lov shartlari
-                  <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
+                  &rarr;
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

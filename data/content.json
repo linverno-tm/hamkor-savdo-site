@@ -15,7 +15,7 @@
     "yearFounded": null
   },
   "texts": {
-    "heroLead": "Tilla, texnika va mebel — {mahsulot} mahsulot bitta do'konda. **{oy} oygacha muddatli to'lov**, rasmiylashtirish uchun pasport va plastik kifoya.",
+    "heroLead": "Texnika, tilla, mebel va skuterlar — {mahsulot} mahsulot bir do'konda. **{oy} oygacha muddatli to'lov** imkoniyati.",
     "aboutParagraphs": [
       "HAMKOR SAVDO — Andijon viloyatidagi savdo do'konlari tarmog'i. Shahrixon, Asaka va Andijonda jami **{filial} ta filial** ishlaydi, ularda uch yo'nalish birlashgan: **tilla**, **texnika** va **mebel**.",
       "Nomimiz bejiz emas. Katta xaridlar — sovchilik, ko'chish, uy jihozlash — bir kunda hal bo'lmaydi. Shuning uchun biz sotuvchi emas, **oilangizning hamkori** bo'lishga harakat qilamiz: mahsulotni bugun olib ketasiz, to'lovni esa {oy} oygacha bo'lib to'laysiz.",
@@ -23,7 +23,7 @@
     ],
     "companyStory": "",
     "specialOrderLead": "Boshqa do'konda, bozorda yoki internetda ko'rgan mahsulotingizni siz uchun rasmiylashtirib beramiz. Naqd pul yig'ib yurish shart emas.",
-    "finalCtaLead": "Keyingi xaridingizni HAMKOR SAVDO bilan boshlang — eng yaqin filialga keling yoki hoziroq qo'ng'iroq qiling."
+    "finalCtaLead": "Ariza qoldiring — mutaxassislarimiz siz bilan bog'lanib, eng qulay variantni topishga yordam beradi."
   },
   "branches": [
     {
@@ -101,6 +101,10 @@
   },
   "faq": [
     {
+      "q": "Muddatli to'lov qanday ishlaydi?",
+      "a": "Mahsulotni bugun olib ketasiz, pulini {oy} oygacha oylarga bo'lib to'laysiz. Pasport va plastik karta bilan filialda joyida rasmiylashtiramiz. Oylik to'lov mahsulot narxi va tanlangan muddatga qarab hisoblanadi."
+    },
+    {
       "q": "Muddatli to'lov uchun qanday hujjatlar kerak?",
       "a": "Pasport va plastik kartaning o'zi kifoya — kafil ham, ma'lumotnoma ham kerak emas."
     },
@@ -111,6 +115,14 @@
     {
       "q": "Yetkazib berish va o'rnatish bepulmi?",
       "a": "{bepul_hudud}da yetkazish va o'rnatish bepul. Boshqa viloyatlarga ham yetkazib beramiz — shartlarini qo'ng'iroqda aytamiz."
+    },
+    {
+      "q": "Qaysi shaharlarda filial mavjud?",
+      "a": "Shahrixonda (2 ta filial), Asakada va Andijonda. Har bir filialning manzili, telefoni va ish vaqti \"Filiallar\" bo'limida."
+    },
+    {
+      "q": "Mahsulotni qanday tanlash mumkin?",
+      "a": "Eng yaqin filialga kelib, mahsulotni ko'rib tanlaysiz. Kelishga vaqtingiz bo'lmasa, ariza qoldiring yoki qo'ng'iroq qiling — mutaxassisimiz telefon orqali tanlashga yordam beradi."
     },
     {
       "q": "Do'koningizda yo'q mahsulotni muddatli to'lovga olsam bo'ladimi?",

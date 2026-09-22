@@ -6,20 +6,18 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { Hero } from "@/components/sections/Hero";
-import { About } from "@/components/sections/About";
-import { Scale } from "@/components/sections/Scale";
-import { Categories } from "@/components/sections/Categories";
-import { Why } from "@/components/sections/Why";
-import { Installment } from "@/components/sections/Installment";
-import { SpecialOrder } from "@/components/sections/SpecialOrder";
-import { Branches } from "@/components/sections/Branches";
-import { Store } from "@/components/sections/Store";
-import { LeadForm } from "@/components/sections/LeadForm";
-import { Contact } from "@/components/sections/Contact";
-import { FinalCta } from "@/components/sections/FinalCta";
+import { Trust } from "@/components/sections/Trust";
 import { Promotions } from "@/components/sections/Promotions";
 import { Catalog } from "@/components/sections/Catalog";
+import { Installment } from "@/components/sections/Installment";
+import { HowItWorks } from "@/components/sections/HowItWorks";
+import { SpecialOrder } from "@/components/sections/SpecialOrder";
+import { LeadForm } from "@/components/sections/LeadForm";
+import { About } from "@/components/sections/About";
+import { Branches } from "@/components/sections/Branches";
+import { Reviews } from "@/components/sections/Reviews";
 import { Faq } from "@/components/sections/Faq";
+import { FinalCta } from "@/components/sections/FinalCta";
 
 /** "8:00–18:00" -> {opens:"08:00", closes:"18:00"} — schema.org soat qatori uchun. */
 function parseHours(hours: string) {
@@ -115,20 +113,22 @@ export default function Home() {
       </a>
       <Header />
       <main id="asosiy" tabIndex={-1}>
+        {/* Tartib: kim va nima (hero + kategoriyalar) → ishonch → aksiya va
+            katalog (bo'sh bo'lsa ko'rinmaydi) → muddatli to'lov → qanday
+            xarid qilinadi → "bizda yo'q" va ariza → biz haqimizda → filiallar
+            va xarita → sharhlar → savollar → yakuniy chaqiriq. */}
         <Hero />
+        <Trust />
         <Promotions />
-        <About />
-        <Scale />
-        <Categories />
         <Catalog />
-        <Why />
         <Installment />
+        <HowItWorks />
         <SpecialOrder />
-        <Branches />
-        <Store />
-        <Faq />
         <LeadForm />
-        <Contact />
+        <About />
+        <Branches />
+        <Reviews />
+        <Faq />
         <FinalCta />
       </main>
       <Footer />

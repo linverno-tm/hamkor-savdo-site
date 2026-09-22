@@ -30,7 +30,7 @@ export function HeroLead() {
       method="post"
       onSubmit={onSubmit}
       aria-labelledby="hero-lead-title"
-      className="stat-card on-purple relative rounded-[28px] bg-purple p-7 text-white sm:p-9"
+      className="on-purple relative rounded-[24px] bg-purple p-6 text-white shadow-[0_30px_60px_-30px_rgba(47,24,72,0.6)] sm:p-8"
     >
       <div aria-hidden="true" className="pointer-events-none absolute left-[-9999px] top-0 h-0 w-0 overflow-hidden">
         <label htmlFor="hero-website">Saytingiz</label>
@@ -39,18 +39,17 @@ export function HeroLead() {
       <input type="hidden" name="page" value="/" />
       <input type="hidden" name="src" defaultValue="" />
 
-      <p className="kicker">Ariza qoldiring</p>
-      <p id="hero-lead-title" className="display mt-3 text-2xl leading-tight sm:text-3xl">
-        Sizga o&apos;zimiz qo&apos;ng&apos;iroq qilamiz
+      <p id="hero-lead-title" className="display text-2xl leading-tight sm:text-[1.75rem]">
+        Ariza qoldiring
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-on-purple-2">
-        Ism va raqamingizni qoldiring — mahsulotni tanlashda yordam beramiz va
-        muddatli to&apos;lov shartlarini tushuntiramiz.
+      <p className="mt-2 text-sm leading-relaxed text-on-purple-2">
+        Ism va telefon raqamingizni qoldiring — sizga qo&apos;ng&apos;iroq qilamiz va mahsulot
+        tanlashda yordam beramiz.
       </p>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-3.5">
         <div>
-          <label htmlFor="hero-name" className="block text-sm font-semibold">
+          <label htmlFor="hero-name" className="block text-sm font-medium">
             Ismingiz
           </label>
           <input
@@ -61,13 +60,13 @@ export function HeroLead() {
             minLength={2}
             maxLength={80}
             autoComplete="name"
-            className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors placeholder:text-on-purple-2 focus:border-yellow"
+            className="ym-disable-keys mt-1.5 h-12 w-full rounded-[12px] border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors placeholder:text-on-purple-2 focus:border-yellow"
             placeholder="Anvar"
           />
         </div>
 
         <div>
-          <label htmlFor="hero-phone" className="block text-sm font-semibold">
+          <label htmlFor="hero-phone" className="block text-sm font-medium">
             Telefon
           </label>
           <input
@@ -80,20 +79,20 @@ export function HeroLead() {
             autoComplete="tel"
             pattern="[+]?[0-9()\-\s]{9,24}"
             title="Telefon raqamini kiriting, masalan: +998 90 123 45 67"
-            className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors placeholder:text-on-purple-2 focus:border-yellow"
+            className="ym-disable-keys mt-1.5 h-12 w-full rounded-[12px] border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors placeholder:text-on-purple-2 focus:border-yellow"
             placeholder="+998 90 123 45 67"
           />
         </div>
 
         <div>
-          <label htmlFor="hero-branch" className="block text-sm font-semibold">
+          <label htmlFor="hero-branch" className="block text-sm font-medium">
             Qaysi filial <span className="font-normal text-on-purple-2">— ixtiyoriy</span>
           </label>
           <select
             id="hero-branch"
             name="branch"
             defaultValue=""
-            className="mt-2 h-12 w-full rounded-xl border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors focus:border-yellow"
+            className="mt-1.5 h-12 w-full rounded-[12px] border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors focus:border-yellow"
           >
             {/* Ro'yxatdagi matn oq fonli ochiluvchi oynada ko'rinadi, shuning
                 uchun rangi ataylab to'q — merosga o'tgan oq rang u yerda
@@ -113,12 +112,12 @@ export function HeroLead() {
       <button
         type="submit"
         disabled={status.kind === "sending"}
-        className="btn btn-yellow btn-lift mt-6 w-full disabled:opacity-60"
+        className="btn btn-yellow btn-lift mt-5 w-full disabled:opacity-60"
       >
         {status.kind === "sending" ? "Yuborilmoqda…" : "Arizani yuborish"}
       </button>
 
-      <p className="mt-4 text-xs leading-relaxed text-on-purple-2">
+      <p className="mt-3 text-xs leading-relaxed text-on-purple-2">
         Yuborish orqali{" "}
         <Link href="/maxfiylik" className="font-semibold text-white underline-offset-2 hover:underline">
           shaxsiy ma&apos;lumotlarni qayta ishlashga
