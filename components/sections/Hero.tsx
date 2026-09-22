@@ -28,10 +28,11 @@ import { HeroLead } from "@/components/sections/HeroLead";
  * skuter surati bo'lsa, public/yonalishlar/skuter-*.webp ni almashtiring.
  */
 const HERO_TOPICS = [
-  { href: "/texnika", label: "Texnika", photo: "/yonalishlar/texnika-480.webp" },
-  { href: "/tilla", label: "Tilla", photo: "/yonalishlar/tilla-480.webp" },
-  { href: "/mebel", label: "Mebel", photo: "/yonalishlar/mebel-480.webp" },
-  { href: "/skuter", label: "Skuterlar", photo: "/yonalishlar/skuter-480.webp" },
+  { href: "/texnika", label: "Texnika", line: "Muzlatgich, kir mashina, konditsioner", photo: "texnika", pos: "object-center" },
+  // Suratning pastida "HAMKOR TILLA BUYUMLARI" yozuvi bor — yorliq ustiga tushmasin.
+  { href: "/tilla", label: "Tilla", line: "Uzuk, sirg'a, zanjir", photo: "tilla", pos: "object-[center_20%]" },
+  { href: "/mebel", label: "Mebel", line: "Yotoqxona, oshxona, yumshoq mebel", photo: "mebel", pos: "object-center" },
+  { href: "/skuter", label: "Skuterlar", line: "Ishga, o'qishga, bozorga", photo: "skuter", pos: "object-center" },
 ];
 
 export function Hero() {
@@ -120,30 +121,6 @@ export function Hero() {
               </a>
             </div>
 
-            <nav aria-label="Nima sotamiz" className="rise mt-8" style={{ ["--i" as string]: 5 }}>
-              <ul className="grid max-w-xl grid-cols-4 gap-2 sm:gap-3">
-                {HERO_TOPICS.map((t) => (
-                  <li key={t.href}>
-                    <Link
-                      href={t.href}
-                      className="group btn-lift relative block aspect-[4/5] overflow-hidden rounded-2xl bg-ground-2"
-                    >
-                      <img
-                        src={t.photo}
-                        alt=""
-                        width={480}
-                        height={360}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        decoding="async"
-                      />
-                      <span className="absolute inset-x-0 bottom-0 px-2 pb-2 pt-8 text-center text-xs font-semibold text-white [background:linear-gradient(to_top,rgba(26,17,48,0.85),transparent)] sm:text-sm">
-                        {t.label}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
           </div>
 
           {/* O'ng ustun: qisqa ariza formasi.
@@ -153,10 +130,46 @@ export function Hero() {
               sahifalarida qoladi. Muddatli to'lovda mijoz saytdan xarid
               qilmaydi — qo'ng'iroq kutadi, shuning uchun eng ko'rinadigan
               joyni saytning maqsadi egallaydi. */}
-          <div className="rise" style={{ ["--i" as string]: 6 }}>
+          <div className="rise" style={{ ["--i" as string]: 5 }}>
             <HeroLead />
           </div>
         </div>
+
+        <nav aria-label="Nima sotamiz" className="rise mt-14 lg:mt-16" style={{ ["--i" as string]: 6 }}>
+          <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+            {HERO_TOPICS.map((t) => (
+              <li key={t.href}>
+                <Link
+                  href={t.href}
+                  className="group btn-lift relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-ground-2 sm:aspect-square"
+                >
+                  <img
+                    src={`/yonalishlar/${t.photo}-900.webp`}
+                    srcSet={`/yonalishlar/${t.photo}-480.webp 480w, /yonalishlar/${t.photo}-900.webp 900w`}
+                    sizes="(max-width: 1024px) 50vw, 300px"
+                    alt=""
+                    width={900}
+                    height={675}
+                    className={`h-full w-full object-cover ${t.pos} transition-transform duration-500 group-hover:scale-105`}
+                    decoding="async"
+                  />
+                  <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 pt-20 text-white [background:linear-gradient(to_top,rgba(26,17,48,0.9),rgba(26,17,48,0.4)_55%,transparent)] sm:p-6 sm:pt-24">
+                    <span>
+                      <span className="display block text-xl sm:text-3xl">{t.label}</span>
+                      <span className="mt-1 block text-xs leading-snug text-white/80 sm:text-sm">{t.line}</span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full bg-yellow text-ink transition-transform duration-300 group-hover:translate-x-1 sm:flex"
+                    >
+                      &rarr;
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
 
       {/* Brand marquee — the guidebook's bold, confident voice, as one CSS keyframe. */}
