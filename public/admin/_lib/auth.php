@@ -215,8 +215,16 @@ function hs_owner_hash()
     return $fileHash;
 }
 
-function hs_password_problem($p)
+/**
+ * Parol talabi. Egasi va savdo operatorlari: kamida 10 belgi, harf va raqam.
+ * Ijara xodimlari: egasining qarori bilan kamida 4 belgi (5 xato urinishdan keyin
+ * qurilma bloklanishi baribir ishlaydi).
+ */
+function hs_password_problem($p, $kind = '')
 {
+    if (strpos((string) $kind, 'ijara_') === 0) {
+        return mb_strlen($p) < 4 ? "Parol kamida 4 belgi bo'lsin." : null;
+    }
     if (mb_strlen($p) < 10) {
         return "Parol kamida 10 belgi bo'lsin.";
     }
