@@ -411,8 +411,13 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
 
 /* Filiallar xaritasi (BranchMap). Fon xiralashtiriladi — brend belgilari
    ajralib tursin va xarita sayt ranglariga mos kelsin. */
+/* Oq-qora qilib, ustiga binafsha tus beriladi — brend ranglaridagi sokin xarita. */
 #filiallar [class*="ground-pane"] {
-  filter: saturate(0.35) brightness(1.04);
+  filter: grayscale(1) sepia(0.22) hue-rotate(215deg) saturate(1.5) brightness(1.05) contrast(0.95);
+}
+/* Yandex'ning pastki yozuvlari va tugmalari ham xaritadek yumshoq ko'rinsin. */
+#filiallar [class*="copyrights-pane"] {
+  opacity: 0.7;
 }
 .hs-pin {
   position: relative;
