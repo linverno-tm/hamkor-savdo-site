@@ -1272,3 +1272,215 @@ footer a:not(.btn) {
     opacity: 1;
   }
 }
+
+/* ==================================================================
+   DARK MODE — `<html data-theme="dark">`. Uni <head> dagi kichik skript
+   sahifa chizilishidan OLDIN qo'yadi: tanlov saqlangan bo'lsa — o'sha, yo'qsa
+   qurilma sozlamasi (prefers-color-scheme). Header'dagi ThemeToggle almashtiradi.
+   Admin panel palitrasi bilan bir oila.
+
+   Qoidalar:
+   - Fon qora emas, binafshaga moyil to'q kulrang; muqobil bo'limlar
+     (ground-2) sahifadan TO'QROQ — ustidagi kartochkalar "ko'tarilgan"
+     ko'rinadi.
+   - `--purple` ikki vazifada edi: tugma/yuza foni va matn. Dark fonda
+     to'q binafsha matn o'qilmaydi, shuning uchun matn, logotip va chiziqli
+     tugmalar och lavandaga (`--purple-ink`) o'tadi; yuzalar binafshaligicha.
+   - Sariq o'zgarmaydi — dark fonda ham urg'u.
+   - Suratlar biroz xiralashadi (ko'zni qamashtirmasin), xarita teskari
+     rangga o'tadi.
+   ================================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #17121f;
+  --ground-2: #0f0b16;
+  --ink: #efebf6;
+  --ink-2: #c7c0d4;
+  --ink-3: #958da6;
+  --line: #2c2438;
+
+  --purple: #6b3aa6;
+  --purple-dark: #7c48ba;
+  --purple-soft: #9a72cf;
+  --purple-100: rgba(167, 125, 235, 0.28);
+  --purple-50: rgba(167, 125, 235, 0.14);
+  --purple-ink: #c9aef3;
+  --on-purple-2: #d6c6ea;
+}
+
+/* Matn sifatidagi binafsha — lavanda. Rangni bosib ketmaymiz: element
+   ichida `--purple` o'zgaruvchisini almashtiramiz (utility'lar `@theme
+   inline` bilan aynan shu o'zgaruvchini o'qiydi) — hover holatlari buzilmaydi.
+   Oq chip ichida asl to'q binafsha qoladi. */
+[data-theme="dark"] .text-purple,
+[data-theme="dark"] .hover\:text-purple:hover,
+[data-theme="dark"] .hover\:border-purple:hover,
+[data-theme="dark"] .group:hover .group-hover\:text-purple {
+  --purple: var(--purple-ink);
+}
+[data-theme="dark"] .bg-white .text-purple,
+[data-theme="dark"] .bg-white.text-purple {
+  --purple: #5a3089;
+}
+[data-theme="dark"] .kicker,
+[data-theme="dark"] .nav-link:hover,
+[data-theme="dark"] .nav-drop:focus-within > .nav-link {
+  color: var(--purple-ink);
+}
+/* Binafsha panellar (forma, muddatli to'lov...) qorong'i fonda "yonib"
+   ketmasin — panelning o'zi to'qroq; undagi tugmalar yorqinligicha. */
+[data-theme="dark"] .on-purple.bg-purple {
+  --purple: #53298a;
+}
+[data-theme="dark"] .on-purple .btn-primary {
+  --purple: #6b3aa6;
+}
+/* Sariq va oq yuzalar o'zgarmaydi — ular ustidagi "ink" matn to'q qoladi
+   (aks holda sariq tugmada och kulrang yozuv o'qilmaydi). */
+[data-theme="dark"] .bg-yellow,
+[data-theme="dark"] .btn-yellow,
+[data-theme="dark"] .bg-white {
+  --ink: #1a1130;
+  --ink-2: #55506b;
+}
+[data-theme="dark"] .btn-outline {
+  border-color: var(--purple-ink);
+  color: var(--purple-ink);
+}
+[data-theme="dark"] .btn-outline:hover {
+  border-color: var(--purple);
+  background: var(--purple);
+  color: #fff;
+}
+/* Soyalar qora fonda binafsha emas, chuqur qora bo'lsin. */
+[data-theme="dark"] .card-hover:hover,
+[data-theme="dark"] .cat-card:hover {
+  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.8);
+}
+[data-theme="dark"] .site-header[data-scrolled] {
+  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.9);
+}
+
+[data-theme="dark"] .hero-glow {
+  background:
+    radial-gradient(60rem 30rem at 85% 0%, rgba(122, 79, 176, 0.28), transparent 70%),
+    radial-gradient(40rem 24rem at 0% 30%, rgba(223, 208, 31, 0.05), transparent 70%),
+    var(--ground);
+}
+
+/* Suratlar biroz yumshoqroq — oq devorlar qorong'ida ko'zni qamashtirmasin. */
+[data-theme="dark"] main img {
+  filter: brightness(0.9) saturate(0.95);
+}
+
+/* Binafsha panellar qorong'i sahifada "yonib" ketmasin — biroz to'qroq. */
+[data-theme="dark"] .cta-panel {
+  background:
+    radial-gradient(38rem 26rem at 88% 8%, rgba(223, 208, 31, 0.1), transparent 60%),
+    linear-gradient(135deg, #5b3190 0%, #45246a 55%, #2f1848 100%);
+  box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.9);
+}
+[data-theme="dark"] .site-footer {
+  background: linear-gradient(180deg, #120c1c 0%, #09060e 100%);
+  border-top: 1px solid var(--line);
+}
+
+/* Xarita: teskari rang + binafsha tus = tungi xarita. */
+[data-theme="dark"] #filiallar [class*="ground-pane"] {
+  filter: invert(1) hue-rotate(180deg) grayscale(0.6) sepia(0.15) hue-rotate(215deg) brightness(0.9) contrast(0.9);
+}
+[data-theme="dark"] .hs-pin-dot {
+  border-color: #17121f;
+}
+
+/* Oq-qizil ogohlantirish (vaqtincha yopiq filial) qorong'ida. */
+[data-theme="dark"] .bg-red-50 {
+  background: rgba(255, 96, 96, 0.12);
+}
+[data-theme="dark"] .border-red-200 {
+  border-color: rgba(255, 96, 96, 0.3);
+}
+[data-theme="dark"] .text-red-800 {
+  color: #ff9a9a;
+}
+
+/* Binafsha panellar ichida light rejimdagi qoidalar ustun turadi: sariq
+   kicker va oq chiziqli tugma (yuqoridagi dark qoidalari bilan kuchi teng,
+   shuning uchun bu yerda aniq qaytariladi). */
+[data-theme="dark"] .on-purple .kicker {
+  color: var(--yellow);
+}
+[data-theme="dark"] .on-purple .btn-outline {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+[data-theme="dark"] .on-purple .btn-outline:hover {
+  border-color: #fff;
+  background: #fff;
+  color: #5a3089;
+}
+
+/* ---------------- tungi rejim tugmasi (ThemeToggle) ---------------- */
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 3.5rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--ground-2);
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background-color var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease);
+}
+.theme-toggle:hover {
+  border-color: var(--purple-100);
+}
+.theme-toggle-icon {
+  position: absolute;
+  top: 50%;
+  width: 0.85rem;
+  height: 0.85rem;
+  transform: translateY(-50%);
+  opacity: 0.55;
+}
+.theme-toggle-icon.is-sun {
+  left: 0.5rem;
+}
+.theme-toggle-icon.is-moon {
+  right: 0.5rem;
+}
+.theme-toggle-knob {
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: #1a1130;
+  box-shadow: 0 2px 6px rgba(26, 17, 48, 0.25);
+  transition: transform var(--dur-2) var(--ease), background-color var(--dur-2) var(--ease);
+}
+.theme-toggle-knob .is-moon,
+[data-theme="dark"] .theme-toggle-knob .is-sun {
+  display: none;
+}
+[data-theme="dark"] .theme-toggle-knob .is-moon {
+  display: block;
+}
+[data-theme="dark"] .theme-toggle-knob {
+  transform: translateX(1.5rem);
+  background: var(--purple-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-knob {
+    transition: none;
+  }
+}

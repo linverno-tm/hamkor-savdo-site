@@ -2,6 +2,7 @@ import Link from "next/link";
 import { catalogNav, mainNav } from "@/data/navigation";
 import { site } from "@/data/site";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 /**
  * Sticky navigation — a server component with no JavaScript of its own.
@@ -66,6 +67,7 @@ export function Header() {
         </nav>
 
         <div className="hidden shrink-0 items-center gap-3 xl:flex">
+          <ThemeToggle />
           <a
             href="/uz-kr/"
             data-lang-link
@@ -92,68 +94,71 @@ export function Header() {
           </a>
         </div>
 
-        {/* Mobile: native disclosure, works without JS */}
-        <details id="mobile-menu" className="mobile-menu xl:hidden">
-          <summary
-            className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl border border-line text-purple"
-            aria-label="Menyu"
-          >
-            <svg className="menu-open-icon" width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
-              <path d="M1 1h18M1 7h18M1 13h18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-            </svg>
-            <svg className="menu-close-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-            </svg>
-          </summary>
+        {/* Mobile: rejim tugmasi doim ko'rinadi; menyu — native disclosure, JS'siz ishlaydi */}
+        <div className="flex items-center gap-3 xl:hidden">
+          <ThemeToggle />
+          <details id="mobile-menu" className="mobile-menu">
+            <summary
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl border border-line text-purple"
+              aria-label="Menyu"
+            >
+              <svg className="menu-open-icon" width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+                <path d="M1 1h18M1 7h18M1 13h18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+              <svg className="menu-close-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            </summary>
 
-          <div className="on-purple mobile-menu-panel bg-purple text-white">
-            <nav aria-label="Mobil menyu" className="flex flex-1 flex-col gap-8 px-6 py-6">
-              <div>
-                <p className="kicker">Katalog</p>
-                <ul className="mt-3 grid grid-cols-2 gap-2">
-                  {catalogNav.map((item) => (
+            <div className="on-purple mobile-menu-panel bg-purple text-white">
+              <nav aria-label="Mobil menyu" className="flex flex-1 flex-col gap-8 px-6 py-6">
+                <div>
+                  <p className="kicker">Katalog</p>
+                  <ul className="mt-3 grid grid-cols-2 gap-2">
+                    {catalogNav.map((item) => (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className="flex min-h-12 items-center rounded-xl bg-white/10 px-4 font-semibold transition-colors hover:bg-white/20"
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <ul className="flex flex-col">
+                  {mainNav.map((item) => (
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        className="flex min-h-12 items-center rounded-xl bg-white/10 px-4 font-semibold transition-colors hover:bg-white/20"
+                        className="flex items-center justify-between border-b border-white/15 py-4 transition-colors hover:text-yellow"
                       >
-                        {item.label}
+                        <span className="display text-2xl">{item.label}</span>
+                        <span aria-hidden="true">&rarr;</span>
                       </Link>
                     </li>
                   ))}
                 </ul>
+              </nav>
+              <div className="grid gap-3 px-6 pb-10 sm:grid-cols-2">
+                <a href={`tel:${site.phone}`} className="btn btn-yellow">
+                  {site.phoneDisplay}
+                </a>
+                <a href={site.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+                  Telegram
+                </a>
+                <a href="/uz-kr/" data-lang-link className="lang-to-cyrl btn btn-outline">
+                  Kirillcha
+                </a>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/" data-lang-link className="lang-to-latin btn btn-outline">
+                  Lotincha
+                </a>
               </div>
-              <ul className="flex flex-col">
-                {mainNav.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center justify-between border-b border-white/15 py-4 transition-colors hover:text-yellow"
-                    >
-                      <span className="display text-2xl">{item.label}</span>
-                      <span aria-hidden="true">&rarr;</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            <div className="grid gap-3 px-6 pb-10 sm:grid-cols-2">
-              <a href={`tel:${site.phone}`} className="btn btn-yellow">
-                {site.phoneDisplay}
-              </a>
-              <a href={site.telegramUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-                Telegram
-              </a>
-              <a href="/uz-kr/" data-lang-link className="lang-to-cyrl btn btn-outline">
-                Kirillcha
-              </a>
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-              <a href="/" data-lang-link className="lang-to-latin btn btn-outline">
-                Lotincha
-              </a>
             </div>
-          </div>
-        </details>
+          </details>
+        </div>
       </div>
     </header>
   );

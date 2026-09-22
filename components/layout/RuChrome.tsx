@@ -3,6 +3,7 @@ import { site } from "@/data/site";
 import { branches } from "@/data/branches";
 import { topics } from "@/data/topics";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 /**
  * Ruscha sahifalar (/ru/...) uchun sarlavha va pastki qism.
@@ -43,6 +44,7 @@ export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle lang="ru" />
           {/* Til almashtirish — oddiy <a>: o'zbekcha sahifa boshqa til nusxasi. */}
           <a
             href={uzHref}

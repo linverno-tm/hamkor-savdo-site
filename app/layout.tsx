@@ -124,6 +124,20 @@ if (location.pathname.indexOf('/rahmat') >= 0) ym(${YM_ID}, 'reachGoal', 'lead_s
  * formaning `src` maydoniga yoziladi. Admin panel "qaysi manba ariza
  * keltiradi" hisobotini shundan tuzadi.
  */
+/**
+ * Tungi rejim — sahifa chizilishidan OLDIN, "oq miltillash" bo'lmasin.
+ * Saqlangan tanlov (ThemeToggle) bo'lsa — o'sha, yo'qsa qurilma sozlamasi.
+ * Tanlov yo'q paytda qurilma rejimi o'zgarsa (masalan kechqurun avtomatik),
+ * sayt ham ergashadi.
+ */
+const THEME_SCRIPT = `(function(){try{
+var k='hs-theme',d=document.documentElement,m=window.matchMedia('(prefers-color-scheme: dark)');
+var s=null;try{s=localStorage.getItem(k)}catch(e){}
+d.dataset.theme=(s==='dark'||s==='light')?s:(m.matches?'dark':'light');
+var f=function(e){var v=null;try{v=localStorage.getItem(k)}catch(x){}if(!v)d.dataset.theme=e.matches?'dark':'light'};
+if(m.addEventListener)m.addEventListener('change',f);else if(m.addListener)m.addListener(f);
+}catch(e){}})();`;
+
 const SOURCE_SCRIPT = `(function(){try{
 var src = sessionStorage.getItem('hs_src');
 if (!src) {
@@ -173,8 +187,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="uz" className={`${outfit.variable} ${bebas.variable}`}>
+    // data-theme'ni <head> skripti hidratsiyadan oldin qo'yadi — React buni xato demasin.
+    <html lang="uz" className={`${outfit.variable} ${bebas.variable}`} suppressHydrationWarning>
       <head>
+        <script data-keep dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: LANG_DETECT_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: SOURCE_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: METRIKA_SCRIPT }} />
