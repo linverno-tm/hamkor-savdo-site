@@ -111,7 +111,7 @@ echo '</section>';
 echo '<section class="card"><div class="card-head"><h2>Bo\'limlar</h2></div><div class="tiles">';
 foreach (hs_nav_groups() as $items) {
     foreach ($items as $it) {
-        if ($it[0] === '/admin/' || ($it[3] && !$owner)) {
+        if ($it[0] === '/admin/' || !hs_nav_visible($user, $it[3])) {
             continue;
         }
         echo '<a class="tile" href="' . h($it[0]) . '">' . hs_icon($it[2]) . '<span><b>' . h($it[1]) . '</b><small class="muted">' . h($it[4]) . '</small></span></a>';

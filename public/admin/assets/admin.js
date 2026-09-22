@@ -279,3 +279,104 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+// Ijara: dollar kursi sahifa ochiq tursa har 5 daqiqada yangilanadi (server 10 daqiqa keshlaydi).
+document.addEventListener("DOMContentLoaded", function () {
+  var boxes = document.querySelectorAll("[data-ij-rate]");
+  if (!boxes.length || !window.fetch) return;
+  setInterval(function () {
+    if (document.hidden) return;
+    fetch("/ijara/kurs.php", { credentials: "same-origin", headers: { Accept: "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || typeof j.html !== "string") return;
+        boxes.forEach(function (b) {
+          var body = b.querySelector("[data-ij-rate-body]");
+          var at = b.querySelector("[data-ij-rate-at]");
+          if (body) body.innerHTML = j.html;
+          if (at) at.textContent = j.source || "";
+        });
+      })
+      .catch(function () {});
+  }, 5 * 60 * 1000);
+});
+
+// Ijara kassasi: davr (Bu oy, O'tgan oy, sanalar) va sahifa raqami almashganda butun
+// sahifa qayta yuklanmaydi — faqat data-ij-live bloklar almashadi, joy (scroll) saqlanadi.
+// JavaScript ishlamasa, havolalar oddiy havola bo'lib ishlayveradi.
+document.addEventListener("DOMContentLoaded", function () {
+  if (!document.querySelector("[data-ij-live]") || !window.fetch || !window.DOMParser || !history.pushState) return;
+  var busy = null;
+
+  function load(url, push) {
+    if (busy) busy.abort && busy.abort();
+    var ctl = window.AbortController ? new AbortController() : null;
+    busy = ctl;
+    document.querySelectorAll("[data-ij-live]").forEach(function (b) { b.classList.add("is-loading"); });
+    fetch(url, { credentials: "same-origin", signal: ctl ? ctl.signal : undefined })
+      .then(function (r) {
+        // Sessiya tugagan bo'lsa (kirish sahifasiga yo'naltirilgan) — oddiy o'tish.
+        if (!r.ok || r.redirected) { location.href = url; return null; }
+        return r.text();
+      })
+      .then(function (html) {
+        if (html === null || html === undefined) return;
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        document.querySelectorAll("[data-ij-live]").forEach(function (b) {
+          var fresh = doc.querySelector('[data-ij-live="' + b.getAttribute("data-ij-live") + '"]');
+          if (fresh) b.replaceWith(document.importNode(fresh, true));
+        });
+        if (push) history.pushState({ ijLive: 1 }, "", url);
+      })
+      .catch(function (e) { if (!e || e.name !== "AbortError") location.href = url; })
+      .then(function () {
+        document.querySelectorAll("[data-ij-live].is-loading").forEach(function (b) { b.classList.remove("is-loading"); });
+      });
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("[data-ij-live] a[href]");
+    if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0 || a.target) return;
+    var u = new URL(a.href, location.href);
+    if (u.origin !== location.origin || u.pathname !== location.pathname) return; // ijarachi sahifasi va h.k. — oddiy o'tish
+    e.preventDefault();
+    load(u.pathname + u.search, true);
+  });
+
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f.closest || !f.closest("[data-ij-live]") || (f.method || "get").toLowerCase() !== "get") return;
+    e.preventDefault();
+    var q = new URLSearchParams(new FormData(f)).toString();
+    load(f.getAttribute("action") + (q ? "?" + q : ""), true);
+  });
+
+  window.addEventListener("popstate", function () { load(location.pathname + location.search, false); });
+});
+
+// Eslatmalar qo'ng'irog'i: tashqariga bosilsa yoki Esc — yopiladi.
+document.addEventListener("click", function (e) {
+  document.querySelectorAll("details[data-ij-bell][open]").forEach(function (d) {
+    if (!d.contains(e.target)) d.removeAttribute("open");
+  });
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape") return;
+  document.querySelectorAll("details[data-ij-bell][open]").forEach(function (d) { d.removeAttribute("open"); });
+});
+
+// Eslatmalar har kirishda o'zi ochiladi — hal qilinmaguncha (qarz to'lanmaguncha, shartnoma
+// uzaytirilmaguncha). Bir kirish (brauzer seansi) davomida bir marta; eslatmalar soni oshsa — yana.
+// Kirish sahifasida belgi tozalanadi: keyingi kirishda yana ochiladi.
+document.addEventListener("DOMContentLoaded", function () {
+  var store = null;
+  try { store = window.sessionStorage; } catch (e) { store = null; }
+  if (!store) return;
+  if (/\/ijara\/login\.php$/.test(location.pathname)) { try { store.removeItem("ijBellSeen"); } catch (e) {} return; }
+  var bell = document.querySelector("details[data-ij-bell]");
+  if (!bell) return;
+  var n = parseInt(bell.getAttribute("data-count") || "0", 10);
+  var seen = parseInt(store.getItem("ijBellSeen") || "0", 10);
+  if (n > 0 && n > seen) bell.setAttribute("open", "");
+  try { store.setItem("ijBellSeen", String(n)); } catch (e) {}
+});

@@ -21,6 +21,13 @@ Yangi sessiyada davom etish uchun qisqa, lekin to'liq xulosa. Avval shuni o'qing
   telefon (request_contact, faqat o'z raqami) → oddiy ariza (`source=telegram`, `page=telegram-guruh`).
 - Ochiq savol: kanal/postlarda "24 oygacha", `content.json` da `installmentMonthsMax: 12` — bot faktlarni content.json dan oladi.
 
+- **Ijara paneli** (`/ijara/`, kod: `public/ijara/`, `public/admin/_lib/ijara.php`, `_lib/xlsx.php`, migratsiya 8) —
+  savdodan alohida: o'z kirish sahifasi va sessiyasi. Binolar (surat, qavatlar, Ko'cha/Boshqalar), ijarachilar
+  (oylik + necha oy, shartnoma fayllari), har bir bino kassasi (kirim/chiqim, so'm/dollar, Hamkorbank kursi),
+  eslatmalar (qarz, to'lov kuni, shartnoma muddati), Excel hisobot egasining shabloni bo'yicha.
+  Rollar: `users.kind` = ijara_boshliq / ijara_ishchi (Foydalanuvchilar sahifasida). Qoldiq: minus — qarz, plus — avans.
+  Egasi qiladi: repo'ni private qilish; boshliq va kassir akkauntlarini yaratish (parol ≥ 10 belgi).
+
 ## 1. Loyiha
 
 - Sayt: https://hamkorsavdo.uz — Andijon viloyatidagi savdo tarmog'i (texnika, tilla, mebel, skuter; 12 oygacha muddatli to'lov; 4 filial).

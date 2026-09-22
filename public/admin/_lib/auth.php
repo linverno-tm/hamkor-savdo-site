@@ -30,7 +30,7 @@ function hs_device_id()
         $cur = hs_random_hex(24);
         setcookie('hs_dev', $cur, array(
             'expires' => time() + 10 * 365 * 86400,
-            'path' => '/admin/',
+            'path' => hs_area_root(),
             'secure' => hs_is_https(),
             'httponly' => true,
             'samesite' => 'Strict',
@@ -51,13 +51,14 @@ function hs_session_start()
         @mkdir($dir, 0700, true);
     }
     session_save_path($dir);
-    session_name('hs_admin');
+    // Ijara paneli — boshqa nom va boshqa yo'l: ikki panel sessiyasi bir-birini ko'rmaydi.
+    session_name(hs_area() === 'ijara' ? 'hs_ijara' : 'hs_admin');
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
     ini_set('session.gc_maxlifetime', (string) HS_ABSOLUTE_SECONDS);
     session_set_cookie_params(array(
         'lifetime' => 0,
-        'path' => '/admin/',
+        'path' => hs_area_root(),
         'secure' => hs_is_https(),
         'httponly' => true,
         'samesite' => 'Strict',
@@ -250,12 +251,15 @@ function hs_attempt_login($login, $password)
         $st->execute(array($login));
         $row = $st->fetch();
         if ($row && password_verify($password, $row['password_hash'])) {
-            $user = array('login' => $row['login'], 'name' => $row['name'] ?: $row['login'], 'role' => 'operator', 'branch' => $row['branch'], 'id' => (int) $row['id']);
+            $user = array('login' => $row['login'], 'name' => $row['name'] ?: $row['login'], 'role' => hs_user_kind($row), 'branch' => $row['branch'], 'id' => (int) $row['id']);
         } elseif (!$row) {
             password_verify($password, $dummy);
         }
     }
 
+    if ($user !== null && !hs_role_allowed_here($user['role'])) {
+        $user = null;
+    }
     if ($user === null) {
         hs_record_attempt($login, 'fail');
         // Parolni topish tezligini pasaytiradi.
@@ -280,8 +284,11 @@ function hs_attempt_login($login, $password)
         'csrf' => hs_random_hex(32),
     );
     hs_audit($user['login'], 'kirish', 'IP ' . hs_ip() . ', ' . hs_describe_agent(hs_user_agent()));
-    hs_telegram_send(implode("\n", array(
-        '🔐 Admin panelga kirildi',
+    // Ijara paneliga kirish savdo xodimlari chatiga chiqmasin: faqat egasining shaxsiy
+    // chati (admin_chat_id) sozlangan bo'lsa, o'shanga boradi.
+    $notify = hs_area() !== 'ijara' || (string) hs_config('admin_chat_id', '') !== '';
+    $notify && hs_telegram_send(implode("\n", array(
+        hs_area() === 'ijara' ? '🔐 Ijara paneliga kirildi' : '🔐 Admin panelga kirildi',
         'Login: ' . $user['login'],
         'IP: ' . hs_ip(),
         'Qurilma: ' . hs_describe_agent(hs_user_agent()),
@@ -296,7 +303,7 @@ function hs_logout()
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_destroy();
     }
-    setcookie('hs_admin', '', array('expires' => time() - 3600, 'path' => '/admin/', 'secure' => hs_is_https(), 'httponly' => true, 'samesite' => 'Strict'));
+    setcookie(session_name(), '', array('expires' => time() - 3600, 'path' => hs_area_root(), 'secure' => hs_is_https(), 'httponly' => true, 'samesite' => 'Strict'));
 }
 
 function hs_current_user()
@@ -311,10 +318,11 @@ function hs_current_user()
         hs_logout();
         return null;
     }
-    // Operator o'chirilgan yoki to'xtatilgan bo'lsa — darhol chiqariladi.
+    // Foydalanuvchi o'chirilgan yoki to'xtatilgan bo'lsa — darhol chiqariladi.
+    // Turi (savdo operatori / ijara) o'zgartirilsa ham darhol kuchga kiradi.
     $u = $_SESSION['user'];
-    if ($u['role'] === 'operator') {
-        $st = hs_db()->prepare('SELECT active, branch FROM users WHERE id = ?');
+    if ($u['role'] !== 'owner') {
+        $st = hs_db()->prepare('SELECT * FROM users WHERE id = ?');
         $st->execute(array((int) $u['id']));
         $row = $st->fetch();
         if (!$row || (int) $row['active'] !== 1) {
@@ -322,6 +330,7 @@ function hs_current_user()
             return null;
         }
         $_SESSION['user']['branch'] = $row['branch'];
+        $_SESSION['user']['role'] = hs_user_kind($row);
     }
     $_SESSION['last'] = $now;
     return $_SESSION['user'];
@@ -339,9 +348,14 @@ function hs_require_login($ownerOnly = false)
         hs_render_blocked();
     }
     $user = hs_current_user();
+    // Sessiya boshqa panelniki bo'lib chiqsa (bo'lmasligi kerak — cookie yo'li alohida) — chiqarib yuboriladi.
+    if ($user && !hs_role_allowed_here($user['role'])) {
+        hs_logout();
+        $user = null;
+    }
     if (!$user) {
-        $back = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/admin/';
-        hs_redirect('/admin/login.php?qayt=' . rawurlencode(hs_safe_return($back)));
+        $back = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : hs_area_root();
+        hs_redirect(hs_area_root() . 'login.php?qayt=' . rawurlencode(hs_safe_return($back)));
     }
     if ($ownerOnly && $user['role'] !== 'owner') {
         http_response_code(403);
@@ -353,7 +367,45 @@ function hs_require_login($ownerOnly = false)
     return $user;
 }
 
+/**
+ * Kim qaysi panelga kira oladi: /admin/ — egasi va savdo operatorlari;
+ * /ijara/ — egasi va ijara xodimlari. Boshqa paneldagi login bu yerda
+ * "login yoki parol noto'g'ri" deb qaytariladi — panel borligi ham bilinmaydi.
+ */
+function hs_role_allowed_here($role)
+{
+    if ($role === 'owner') {
+        return true;
+    }
+    return hs_area() === 'ijara' ? strpos((string) $role, 'ijara_') === 0 : $role === 'operator';
+}
+
 function hs_is_owner($user)
 {
     return $user && $user['role'] === 'owner';
+}
+
+/**
+ * users.kind: 'operator' — savdo operatori (arizalar); 'ijara_boshliq' — ijara
+ * bo'limining boshlig'i (joy, ijarachi qo'shadi, hammasini ko'radi); 'ijara_ishchi' —
+ * pul qabul qiladi, shartnoma yuklaydi. Ijara xodimlari savdo bo'limlarini ko'rmaydi.
+ */
+function hs_user_kind($row)
+{
+    $k = isset($row['kind']) ? (string) $row['kind'] : '';
+    return in_array($k, array('ijara_boshliq', 'ijara_ishchi'), true) ? $k : 'operator';
+}
+
+function hs_user_kinds()
+{
+    return array(
+        'operator' => 'Savdo operatori',
+        'ijara_boshliq' => "Ijara boshlig'i",
+        'ijara_ishchi' => 'Ijara ishchisi',
+    );
+}
+
+function hs_is_ijara_user($user)
+{
+    return $user && strpos((string) $user['role'], 'ijara_') === 0;
 }

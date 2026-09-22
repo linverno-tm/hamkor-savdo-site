@@ -803,3 +803,106 @@ details.more[open] > summary::before { content: "− "; }
 .token-list li { display: flex; align-items: baseline; gap: .4rem; }
 .code.token { white-space: nowrap; word-break: normal; flex: none; }
 .token-now { opacity: .75; }
+
+/* ---------- ijara ---------- */
+td.occ { min-width: 150px; }
+td.occ .share-bar { display: block; margin-top: .35rem; }
+.ij-money { display: flex; gap: .4rem; }
+.ij-money input { flex: 1 1 auto; min-width: 0; }
+.ij-money select { flex: 0 0 auto; width: auto; }
+.ij-deal { border: 1px solid var(--purple-100); background: var(--purple-50); border-radius: 14px; padding: .2rem 1rem 1rem; margin-top: 1rem; }
+.ij-deal legend { font-weight: 650; color: var(--purple-ink); padding: 0 .4rem; }
+.ij-spaces { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+label.ij-space { display: flex; flex-direction: column; gap: .35rem; margin: 0; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: 12px; background: var(--ground-2); font-weight: 500; }
+label.ij-space > span { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; }
+label.ij-space small { color: var(--ink-3); font-size: .78rem; }
+input.ij-area { max-width: 140px; min-height: 38px; padding: .4rem .6rem; }
+tr.ij-below td { background: var(--ground-2); }
+.ij-balance .ij-big { font-size: 2.2rem; font-weight: 750; letter-spacing: -.02em; line-height: 1.1; margin: .2rem 0 0; font-variant-numeric: tabular-nums; }
+.ij-balance .hint { margin-bottom: 1rem; }
+.ij-wallets dd b { font-variant-numeric: tabular-nums; }
+.ij-rate .kv dd b { font-size: 1.15rem; }
+.ij-in { color: var(--ok); }
+.ij-out { color: var(--err); }
+table.ij-cash td b { font-variant-numeric: tabular-nums; }
+.ij-period { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .6rem; margin: -.3rem 0 1rem; }
+.ij-period > div { flex: 1 1 150px; max-width: 200px; }
+.ij-period label { margin-top: 0; }
+.ij-kpis { margin-top: .4rem; }
+.ij-sub { margin: 1.2rem 0 .4rem; font-size: 1rem; }
+.ij-files { list-style: none; margin: 0 0 1rem; padding: 0; }
+.ij-files li { display: flex; align-items: center; gap: .8rem; padding: .7rem 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.ij-files li:last-child { border-bottom: 0; }
+.ij-files li > div { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.ij-file-ico { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: var(--purple-50); color: var(--purple-ink); font-size: .72rem; font-weight: 750; }
+.ij-file-act { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.ij-upload { border-top: 1px dashed var(--line); padding-top: .4rem; }
+.ij-kv { margin-top: 1rem; }
+.kpis + .flash { margin-top: 1.1rem; }
+.ij-remind { border-color: var(--warn-line); }
+.ij-remind-list { list-style: none; margin: .6rem 0 0; padding: 0; }
+.ij-remind-list li { display: flex; align-items: center; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid var(--line); }
+.ij-remind-list li:last-child { border-bottom: 0; }
+.ij-remind-list li > div { flex: 1 1 auto; min-width: 0; }
+.ij-remind-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--warn); }
+.ij-remind-list li.is-soon .ij-remind-dot, .ij-remind-list li.is-over .ij-remind-dot { background: var(--err); }
+.ij-remind-list li.is-over b { color: var(--err); }
+
+/* Binolar: surat kartochkalari */
+.ij-objects { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.ij-obj { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--ground); transition: box-shadow .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease); }
+.ij-obj:hover { border-color: var(--purple-100); box-shadow: var(--shadow); transform: translateY(-2px); }
+.ij-obj-photo { position: relative; display: block; aspect-ratio: 16 / 9; background: var(--ground-2); overflow: hidden; }
+.ij-obj-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s var(--ease); }
+.ij-obj:hover .ij-obj-photo img { transform: scale(1.03); }
+.ij-obj-nophoto { position: absolute; inset: 0; display: grid; place-items: center; color: var(--purple-100); }
+.ij-obj-nophoto .ico { width: 48px; height: 48px; }
+.ij-obj-pct { position: absolute; left: .7rem; bottom: .7rem; padding: .2rem .6rem; border-radius: 999px; font-size: .78rem; font-weight: 700; background: rgba(20, 10, 36, .72); color: #fff; backdrop-filter: blur(4px); }
+.ij-obj-body { padding: .9rem 1rem 1rem; display: flex; flex-direction: column; gap: .45rem; flex: 1; }
+.ij-obj-body h3 { margin: 0; font-size: 1.05rem; }
+.ij-obj-body h3 a { text-decoration: none; color: var(--ink); }
+.ij-obj-body > p { margin: 0; font-size: .84rem; }
+.ij-obj-occ { display: flex; justify-content: space-between; gap: .5rem; font-size: .85rem; margin-top: .2rem; }
+.ij-obj-kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .3rem .9rem; margin: .3rem 0 0; font-size: .88rem; }
+.ij-obj-kv dt { color: var(--ink-3); }
+.ij-obj-kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.ij-obj .actions { margin-top: auto; padding-top: .5rem; }
+/* Obyekt sahifasidagi katta surat */
+.ij-hero { padding: 0; overflow: hidden; }
+.ij-hero-img { display: block; width: 100%; max-height: 420px; object-fit: cover; }
+.ij-hero-empty { display: flex; align-items: center; justify-content: center; gap: .6rem; min-height: 160px; color: var(--ink-3); background: var(--ground-2); border-bottom: 1px dashed var(--line); }
+.ij-hero-empty .ico { width: 28px; height: 28px; }
+.ij-hero-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .8rem 1rem; }
+.ij-photo-form { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; flex: 1 1 320px; }
+.ij-photo-form input[type=file] { flex: 1 1 200px; min-height: 38px; }
+[data-ij-live] { transition: opacity .15s var(--ease); }
+[data-ij-live].is-loading { opacity: .55; pointer-events: none; }
+.ij-remind-h { font-size: .9rem; margin: 1rem 0 .1rem; color: var(--ink-2); }
+.ij-remind-h:first-of-type { margin-top: .2rem; }
+/* "Kim qancha to'ladi": raqamlar siqilmasin */
+table.ij-who th { white-space: normal; min-width: 90px; line-height: 1.25; vertical-align: bottom; }
+table.ij-who td { padding-top: .8rem; padding-bottom: .8rem; }
+table.ij-who td:first-child { min-width: 150px; }
+table.ij-who td:last-child { min-width: 150px; }
+table.ij-who td:last-child small, table.ij-who td small { white-space: nowrap; }
+table.ij-who td:nth-child(2) { min-width: 130px; }
+
+/* Eslatmalar qo'ng'irog'i (ijara, yuqori o'ng burchak) */
+.ij-bell { position: relative; }
+.ij-bell > summary { list-style: none; position: relative; cursor: pointer; }
+.ij-bell > summary::-webkit-details-marker { display: none; }
+.ij-bell-count { position: absolute; top: -7px; right: -7px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--err); color: #fff; font-size: .72rem; font-weight: 750; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--ground-2); }
+.ij-bell[open] > summary { background: var(--purple-50); }
+.ij-bell-panel {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: min(420px, calc(100vw - 32px));
+  max-height: min(70vh, 560px); overflow-y: auto; padding: .9rem 1rem; border: 1px solid var(--line); border-radius: 16px;
+  background: var(--ground); box-shadow: var(--shadow-lg); animation: pop-in .18s var(--ease) both;
+}
+.ij-bell-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .2rem; }
+.ij-bell-empty { margin: .4rem 0 0; font-size: .88rem; }
+.ij-bell-panel .ij-remind-h { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); margin: .9rem 0 0; }
+.ij-bell-panel .ij-remind-list li { padding: .55rem 0; gap: .6rem; align-items: flex-start; }
+.ij-bell-panel .ij-remind-dot { margin-top: .4rem; }
+.ij-bell-panel .ij-remind-list .btn { display: none; }
+.ij-bell-panel .ij-remind-list small { font-size: .8rem; }
+.ij-zones { margin-top: .6rem; }

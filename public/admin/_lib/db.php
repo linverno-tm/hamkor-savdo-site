@@ -199,6 +199,95 @@ function hs_db_migrate(PDO $pdo)
                 PRIMARY KEY (q_id, chat_id)
             )",
         ),
+        // Ijara (_lib/ijara.php): obyektlar, qavatlar, ijarachilar, ular egallagan
+        // joylar va kassa. Savdo arizalari bilan hech qanday bog'liqligi yo'q.
+        8 => array(
+            // Foydalanuvchi turi: operator (savdo) / ijara_boshliq / ijara_ishchi — _lib/auth.php.
+            "ALTER TABLE users ADD COLUMN kind TEXT NOT NULL DEFAULT 'operator'",
+            "CREATE TABLE ij_objects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                address TEXT NOT NULL DEFAULT '',
+                land_area REAL NOT NULL DEFAULT 0,
+                floors_below INTEGER NOT NULL DEFAULT 0,
+                floors_above INTEGER NOT NULL DEFAULT 1,
+                note TEXT NOT NULL DEFAULT '',
+                -- Bino surati: fayl nomi data papkasidagi ijara-fayllar/ ichida (bo'sh — surat yo'q).
+                photo TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )",
+            // level: -2, -1 — yerto'la; 1, 2, 3 … — yer usti. 0 bo'lmaydi.
+            "CREATE TABLE ij_floors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                object_id INTEGER NOT NULL REFERENCES ij_objects(id) ON DELETE CASCADE,
+                level INTEGER NOT NULL,
+                area REAL NOT NULL DEFAULT 0,
+                UNIQUE (object_id, level)
+            )",
+            "CREATE TABLE ij_tenants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                object_id INTEGER NOT NULL REFERENCES ij_objects(id),
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL DEFAULT '',
+                activity TEXT NOT NULL DEFAULT '',
+                rent REAL NOT NULL DEFAULT 0,
+                rent_currency TEXT NOT NULL DEFAULT 'UZS',
+                -- Necha oyga kelishilgan; end_date shundan hisoblanadi.
+                months INTEGER NOT NULL DEFAULT 0,
+                start_date TEXT NOT NULL DEFAULT '',
+                end_date TEXT NOT NULL DEFAULT '',
+                active INTEGER NOT NULL DEFAULT 1,
+                note TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )",
+            "CREATE INDEX ij_tenants_object ON ij_tenants(object_id)",
+            // Ijarachi bir nechta qavatda joy olishi mumkin — har biri alohida qator.
+            "CREATE TABLE ij_spaces (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id INTEGER NOT NULL REFERENCES ij_tenants(id) ON DELETE CASCADE,
+                floor_id INTEGER NOT NULL REFERENCES ij_floors(id),
+                area REAL NOT NULL
+            )",
+            "CREATE INDEX ij_spaces_floor ON ij_spaces(floor_id)",
+            // Kassa daftari: kirim (ijarachidan) va chiqim (investorga topshirildi, xarajat).
+            // purpose — nima uchun (ijara, elektr …); method — naqd, click …
+            // rate — o'sha kungi dollar kursi (so'm); amount_uzs — so'mdagi qiymati.
+            "CREATE TABLE ij_cash (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                paid_at TEXT NOT NULL,
+                direction TEXT NOT NULL,
+                tenant_id INTEGER REFERENCES ij_tenants(id),
+                object_id INTEGER REFERENCES ij_objects(id),
+                purpose TEXT NOT NULL,
+                amount REAL NOT NULL,
+                currency TEXT NOT NULL,
+                method TEXT NOT NULL,
+                rate REAL NOT NULL,
+                rate_source TEXT NOT NULL DEFAULT '',
+                amount_uzs REAL NOT NULL,
+                note TEXT NOT NULL DEFAULT '',
+                created_by TEXT NOT NULL DEFAULT ''
+            )",
+            "CREATE INDEX ij_cash_paid ON ij_cash(paid_at)",
+            "CREATE INDEX ij_cash_tenant ON ij_cash(tenant_id)",
+            // Ijarachiga biriktirilgan fayllar (shartnoma skani). Fayl o'zi data papkasida,
+            // veb orqali to'g'ridan-to'g'ri ochilmaydi — faqat panel orqali (ijara-fayl.php).
+            "CREATE TABLE ij_files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id INTEGER NOT NULL REFERENCES ij_tenants(id),
+                title TEXT NOT NULL DEFAULT '',
+                orig_name TEXT NOT NULL,
+                stored TEXT NOT NULL,
+                mime TEXT NOT NULL,
+                size INTEGER NOT NULL,
+                uploaded_at TEXT NOT NULL,
+                uploaded_by TEXT NOT NULL DEFAULT ''
+            )",
+            "CREATE INDEX ij_files_tenant ON ij_files(tenant_id)",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

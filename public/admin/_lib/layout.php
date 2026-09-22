@@ -34,18 +34,34 @@ function hs_icon($name, $class = '')
         'external' => '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v6H4V6h6"/>',
         'sun' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
         'moon' => '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+        'bell' => '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
         'filter' => '<path d="M3 5h18l-7 8.5V20l-4-2v-4.5z"/>',
+        'building' => '<path d="M4 21V5l8-2v18"/><path d="M12 8h8v13"/><path d="M2 21h20"/><path d="M7.5 8h1M7.5 12h1M7.5 16h1M15.5 12h1M15.5 16h1"/>',
+        'wallet' => '<path d="M4 7h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 7V6a2 2 0 0 1 2-2h11v3"/><path d="M16 12.5h4v3h-4a1.5 1.5 0 0 1 0-3z"/>',
     );
     $body = isset($p[$name]) ? $p[$name] : '';
     return '<svg class="ico' . ($class !== '' ? ' ' . $class : '') . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $body . '</svg>';
 }
 
 /**
- * Bo'limlar: [yo'l, nom, belgi, faqat egasi, qisqa izoh].
+ * Bo'limlar: [yo'l, nom, belgi, kim ko'radi, qisqa izoh].
+ * Kim ko'radi: false — egasi va savdo operatorlari; true — faqat egasi;
+ * 'ijara' — egasi va ijara xodimlari (hs_nav_visible).
  * Bosh sahifadagi plitkalar ham shu ro'yxatdan chiziladi.
+ *
+ * Ijara paneli (/ijara/) — alohida manzil va alohida sessiya: u yerda faqat
+ * ijara bo'limlari, bu yerda (/admin/) esa ijaradan hech qanday iz yo'q.
  */
 function hs_nav_groups()
 {
+    if (hs_area() === 'ijara') {
+        return array(
+            'Ijara' => array(
+                array('/ijara/', 'Bosh sahifa', 'home', 'ijara', "Joylar, kassa, kurs"),
+                array('/ijara/kassa.php', 'Kassa', 'wallet', 'ijara', "Har bir bino kassasi, kirim va chiqim"),
+            ),
+        );
+    }
     return array(
         'Asosiy' => array(
             array('/admin/', 'Bosh sahifa', 'home', false, "Bugungi holat bir qarashda"),
@@ -70,6 +86,18 @@ function hs_nav_groups()
     );
 }
 
+/** Menyu bandi shu foydalanuvchiga ko'rinadimi. */
+function hs_nav_visible($user, $who)
+{
+    if (hs_is_owner($user)) {
+        return true;
+    }
+    if ($who === 'ijara') {
+        return hs_is_ijara_user($user);
+    }
+    return $who === false && $user['role'] === 'operator';
+}
+
 function hs_new_leads_badge($user)
 {
     try {
@@ -87,12 +115,20 @@ function hs_new_leads_badge($user)
 
 function hs_render_nav($user, $current)
 {
-    $badge = hs_new_leads_badge($user);
+    // Belgi: savdoda — javob kutayotgan arizalar; ijarada — eslatmalar (qarz, to'lov kuni, shartnoma muddati).
+    $badge = hs_area() === 'ijara' ? (function_exists('hs_ij_reminder_count') ? hs_ij_reminder_count() : 0) : hs_new_leads_badge($user);
+    $badgeOn = hs_area() === 'ijara' ? '/ijara/' : '/admin/arizalar.php';
+    // Ichki sahifalar menyuda o'z bo'limi bilan belgilanadi.
+    $parents = array(
+        '/admin/ariza.php' => '/admin/arizalar.php',
+        '/ijara/obyekt.php' => '/ijara/',
+        '/ijara/ijarachi.php' => '/ijara/',
+    );
     $html = '';
     foreach (hs_nav_groups() as $group => $items) {
         $visible = array();
         foreach ($items as $it) {
-            if (!$it[3] || hs_is_owner($user)) {
+            if (hs_nav_visible($user, $it[3])) {
                 $visible[] = $it;
             }
         }
@@ -101,13 +137,12 @@ function hs_render_nav($user, $current)
         }
         $html .= '<p class="nav-group">' . h($group) . '</p>';
         foreach ($visible as $it) {
-            // Bitta ariza sahifasi ham "Arizalar" bo'limiga tegishli.
-            $active = $current === $it[0] || ($current === '/admin/ariza.php' && $it[0] === '/admin/arizalar.php') ? ' active' : '';
-            $count = ($it[0] === '/admin/arizalar.php' && $badge > 0) ? '<span class="badge">' . $badge . '</span>' : '';
+            $active = $current === $it[0] || (isset($parents[$current]) && $parents[$current] === $it[0]) ? ' active' : '';
+            $count = ($it[0] === $badgeOn && $badge > 0) ? '<span class="badge">' . $badge . '</span>' : '';
             $html .= '<a class="nav-link' . $active . '" href="' . h($it[0]) . '">' . hs_icon($it[2]) . '<span>' . h($it[1]) . '</span>' . $count . '</a>';
         }
     }
-    $html .= '<form class="nav-logout" method="post" action="/admin/logout.php">' . hs_csrf_field()
+    $html .= '<form class="nav-logout" method="post" action="' . (hs_area() === 'ijara' ? '/ijara/logout.php' : '/admin/logout.php') . '">' . hs_csrf_field()
         . '<button type="submit" class="nav-link">' . hs_icon('logout') . '<span>Chiqish</span></button></form>';
     return $html;
 }
@@ -161,7 +196,7 @@ function hs_page_start($title, $user = null, $subtitle = null)
             }
         }
     }
-    hs_head($title . ' — HAMKOR SAVDO admin');
+    hs_head($title . (hs_area() === 'ijara' ? ' — Ijara' : ' — HAMKOR SAVDO admin'));
     echo '<body>';
 
     // Vaqt bo'yicha vazifalar (eslatma, zaxira) — Cron bo'lmasa panel ochilganda ham tekshiriladi.
@@ -175,8 +210,14 @@ function hs_page_start($title, $user = null, $subtitle = null)
         return;
     }
 
-    $brand = '<a class="brand" href="/admin/"><span class="brand-mark">H</span><span class="brand-text">HAMKOR SAVDO<small>boshqaruv paneli</small></span></a>';
-    $who = '<div class="who"><span class="avatar">' . h(mb_strtoupper(mb_substr($user['login'], 0, 1))) . '</span><span><b>' . h($user['name']) . '</b><small>' . ($user['role'] === 'owner' ? 'Egasi' : 'Operator') . '</small></span>' . hs_theme_toggle() . '</div>';
+    // Ijara xodimlari savdo nomini ham ko'rmaydi — ular uchun panel alohida, betaraf ko'rinishda.
+    $ijara = hs_area() === 'ijara';
+    $brand = $ijara
+        ? '<a class="brand" href="/ijara/"><span class="brand-mark">I</span><span class="brand-text">IJARA<small>boshqaruv paneli</small></span></a>'
+        : '<a class="brand" href="/admin/"><span class="brand-mark">H</span><span class="brand-text">HAMKOR SAVDO<small>boshqaruv paneli</small></span></a>';
+    $kinds = hs_user_kinds();
+    $roleName = $user['role'] === 'owner' ? 'Egasi' : (isset($kinds[$user['role']]) ? $kinds[$user['role']] : 'Operator');
+    $who = '<div class="who"><span class="avatar">' . h(mb_strtoupper(mb_substr($user['login'], 0, 1))) . '</span><span><b>' . h($user['name']) . '</b><small>' . h($roleName) . '</small></span>' . hs_theme_toggle() . '</div>';
 
     echo '<div class="shell">';
     echo '<aside class="side">' . $brand . '<nav class="side-nav" aria-label="Bo\'limlar">' . hs_render_nav($user, $current) . '</nav>' . $who . '</aside>';
@@ -184,8 +225,10 @@ function hs_page_start($title, $user = null, $subtitle = null)
     echo '<header class="mobile-top">' . $brand . hs_theme_toggle() . '<details class="mobile-menu"><summary>' . hs_icon('text') . ' Menyu</summary><nav class="mobile-nav" aria-label="Bo\'limlar">' . hs_render_nav($user, $current) . '</nav></details></header>';
     echo '<main class="wrap">';
     echo '<div class="page-head"><div><h1>' . h($title) . '</h1>' . ($subtitle ? '<p class="page-sub">' . h($subtitle) . '</p>' : '') . '</div>';
-    echo '<a class="btn outline small" href="' . h(hs_site_url()) . '/" target="_blank" rel="noopener noreferrer" title="Saytni ochish" aria-label="Saytni ochish">' . hs_icon('external') . '<span class="label-long">Saytni ochish</span></a></div>';
-    if (session_status() === PHP_SESSION_ACTIVE) {
+    // Ijarada o'ng burchakda — eslatmalar qo'ng'iroqchasi; savdoda — "Saytni ochish".
+    echo ($ijara ? (function_exists('hs_ij_bell') ? hs_ij_bell() : '') : '<a class="btn outline small" href="' . h(hs_site_url()) . '/" target="_blank" rel="noopener noreferrer" title="Saytni ochish" aria-label="Saytni ochish">' . hs_icon('external') . '<span class="label-long">Saytni ochish</span></a>') . '</div>';
+    // hs_session_release() sessiyani erta yopgan bo'lsa ham, olib qo'yilgan xabarlar chiqadi.
+    if (session_status() === PHP_SESSION_ACTIVE || isset($GLOBALS['hs_flash_olingan'])) {
         foreach (hs_flash() as $f) {
             echo '<p class="flash flash-' . h($f[0]) . '">' . h($f[1]) . '</p>';
         }

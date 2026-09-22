@@ -19,10 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_flash($pp, 'err');
         } else {
             try {
-                $st = $db->prepare('INSERT INTO users(login, name, password_hash, branch, active, created_at) VALUES(?, ?, ?, ?, 1, ?)');
-                $st->execute(array($login, mb_substr(hs_post('ism'), 0, 80), password_hash($pass, PASSWORD_DEFAULT), preg_replace('/[^a-z0-9-]/', '', hs_post('filial')), hs_now()));
-                hs_audit($user['login'], "operator qo'shildi", $login);
-                hs_flash("Operator qo'shildi: {$login}");
+                $kind = hs_user_kind(array('kind' => hs_post('turi')));
+                $st = $db->prepare('INSERT INTO users(login, name, password_hash, branch, active, created_at, kind) VALUES(?, ?, ?, ?, 1, ?, ?)');
+                $st->execute(array($login, mb_substr(hs_post('ism'), 0, 80), password_hash($pass, PASSWORD_DEFAULT), $kind === 'operator' ? preg_replace('/[^a-z0-9-]/', '', hs_post('filial')) : '', hs_now(), $kind));
+                hs_audit($user['login'], "foydalanuvchi qo'shildi", $login . ' (' . $kind . ')');
+                hs_flash("Qo'shildi: {$login}");
             } catch (PDOException $e) {
                 hs_flash('Bunday login allaqachon bor.', 'err');
             }
@@ -45,8 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'filial') {
         $id = (int) hs_post('id');
-        $db->prepare('UPDATE users SET branch = ? WHERE id = ?')->execute(array(preg_replace('/[^a-z0-9-]/', '', hs_post('filial')), $id));
-        hs_audit($user['login'], 'operator filiali', "#{$id}");
+        $kind = hs_user_kind(array('kind' => hs_post('turi')));
+        $db->prepare('UPDATE users SET branch = ?, kind = ? WHERE id = ?')->execute(array($kind === 'operator' ? preg_replace('/[^a-z0-9-]/', '', hs_post('filial')) : '', $kind, $id));
+        hs_audit($user['login'], 'foydalanuvchi turi/filiali', "#{$id} {$kind}");
         hs_flash('Saqlandi.');
     } elseif ($action === 'ochirish') {
         $id = (int) hs_post('id');
@@ -74,14 +76,28 @@ $branchSelect = function ($current, $id = '') use ($branches) {
     return $html . '</select>';
 };
 
-echo '<section class="card"><h2>Operatorlar</h2><p class="muted">Operator faqat Bosh sahifa va Arizalarni ko\'radi. Filial tanlansa — faqat o\'sha filial arizalarini.</p>';
+$kindSelect = function ($current, $id) {
+    $html = '<select name="turi" id="' . $id . '">';
+    foreach (hs_user_kinds() as $k => $v) {
+        $html .= '<option value="' . h($k) . '"' . ($current === $k ? ' selected' : '') . '>' . h($v) . '</option>';
+    }
+    return $html . '</select>';
+};
+
+echo '<section class="card"><h2>Foydalanuvchilar</h2><ul class="muted">'
+    . '<li><b>Savdo operatori</b> — faqat Bosh sahifa va Arizalar. Filial tanlansa — faqat o\'sha filial arizalari.</li>'
+    . '<li><b>Ijara boshlig\'i</b> — faqat Ijara bo\'limi: joy, qavat, ijarachi qo\'shadi, kassadan chiqim qiladi, hammasini ko\'radi.</li>'
+    . '<li><b>Ijara ishchisi</b> — faqat Ijara bo\'limi: pul qabul qiladi, shartnoma yuklaydi va yuklab oladi.</li></ul>'
+    . '<p class="hint">Savdo operatorlari shu panelga (/admin/) kiradi. Ijara xodimlari alohida manzilga — <b>/ijara/</b> — kiradi va faqat ijarani ko\'radi. Bir paneldagi login ikkinchisida ishlamaydi.</p>';
 if (!$users) {
-    echo '<p class="muted">Hozircha operator yo\'q.</p>';
+    echo '<p class="muted">Hozircha foydalanuvchi yo\'q.</p>';
 }
 foreach ($users as $u) {
-    echo '<div class="repeat-row"><h3>' . h($u['login']) . ($u['name'] ? ' — ' . h($u['name']) : '') . ' ' . ((int) $u['active'] ? '<span class="pill pill-ok">faol</span>' : '<span class="pill st-rad">to\'xtatilgan</span>') . '</h3>';
+    $uk = hs_user_kind($u);
+    $kinds = hs_user_kinds();
+    echo '<div class="repeat-row"><h3>' . h($u['login']) . ($u['name'] ? ' — ' . h($u['name']) : '') . ' <span class="pill st-qongiroq">' . h($kinds[$uk]) . '</span> ' . ((int) $u['active'] ? '<span class="pill pill-ok">faol</span>' : '<span class="pill st-rad">to\'xtatilgan</span>') . '</h3>';
     echo '<div class="grid grid-3">';
-    echo '<form method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="filial"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><label for="u' . (int) $u['id'] . '-f">Filial</label>' . $branchSelect($u['branch'], 'u' . (int) $u['id'] . '-f') . '<div class="actions"><button class="btn outline small" type="submit">Saqlash</button></div></form>';
+    echo '<form method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="filial"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><label for="u' . (int) $u['id'] . '-k">Turi</label>' . $kindSelect($uk, 'u' . (int) $u['id'] . '-k') . '<label for="u' . (int) $u['id'] . '-f">Filial (savdo operatori uchun)</label>' . $branchSelect($u['branch'], 'u' . (int) $u['id'] . '-f') . '<div class="actions"><button class="btn outline small" type="submit">Saqlash</button></div></form>';
     echo '<form method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="parol"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><label for="u' . (int) $u['id'] . '-p">Yangi parol</label><input id="u' . (int) $u['id'] . '-p" type="password" name="parol" autocomplete="new-password" minlength="10" required><div class="actions"><button class="btn outline small" type="submit">Parolni o\'zgartirish</button></div></form>';
     echo '<div><p class="label">Boshqaruv</p><div class="actions">';
     echo '<form class="inline-form" method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="holat"><input type="hidden" name="id" value="' . (int) $u['id'] . '"><input type="hidden" name="faol" value="' . ((int) $u['active'] ? '0' : '1') . '"><button class="btn outline small" type="submit">' . ((int) $u['active'] ? 'To\'xtatish' : 'Yoqish') . '</button></form>';
@@ -91,11 +107,12 @@ foreach ($users as $u) {
 echo '</section>';
 
 echo '<form class="card" method="post" action="/admin/foydalanuvchilar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="qoshish">';
-echo '<h2>Yangi operator</h2><div class="grid grid-2">';
+echo '<h2>Yangi foydalanuvchi</h2><div class="grid grid-2">';
+echo '<div><label for="yangi-turi">Turi</label>' . $kindSelect('operator', 'yangi-turi') . '</div><div></div>';
 echo '<div><label for="login">Login</label><input id="login" type="text" name="login" required pattern="[A-Za-z0-9_.]{3,40}" autocomplete="off"></div>';
 echo '<div><label for="ism">Ismi</label><input id="ism" type="text" name="ism" maxlength="80"></div>';
 echo '<div><label for="parol">Parol</label><input id="parol" type="password" name="parol" required minlength="10" autocomplete="new-password"><p class="hint">Kamida 10 belgi, harf va raqam.</p></div>';
-echo '<div><label for="yangi-filial">Filial</label>' . $branchSelect('', 'yangi-filial') . '</div>';
+echo '<div><label for="yangi-filial">Filial (savdo operatori uchun)</label>' . $branchSelect('', 'yangi-filial') . '</div>';
 echo '</div><div class="actions"><button class="btn" type="submit">Qo\'shish</button></div></form>';
 
 hs_page_end();

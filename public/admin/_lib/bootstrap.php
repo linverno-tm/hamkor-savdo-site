@@ -60,6 +60,22 @@ function hs_data_dir()
     return $dir;
 }
 
+/**
+ * Qaysi panel: 'savdo' (/admin/ — sayt va arizalar) yoki 'ijara' (/ijara/).
+ * Ijara sahifalari bootstrap'dan oldin define('HS_AREA', 'ijara') qiladi.
+ * Ikkalasining sessiyasi, kirish sahifasi va menyusi alohida.
+ */
+function hs_area()
+{
+    return defined('HS_AREA') && HS_AREA === 'ijara' ? 'ijara' : 'savdo';
+}
+
+/** Panel ildizi: /admin/ yoki /ijara/. */
+function hs_area_root()
+{
+    return hs_area() === 'ijara' ? '/ijara/' : '/admin/';
+}
+
 function hs_site_url()
 {
     return rtrim(hs_config('site_url', 'https://hamkorsavdo.uz'), '/');
@@ -146,10 +162,10 @@ function hs_security_headers()
 /** Faqat panel ichidagi yo'l — ochiq redirect (open redirect) bo'lmasin. */
 function hs_safe_return($path, $fallback = '/admin/')
 {
-    if (is_string($path) && preg_match('#^/admin/[a-z0-9_\-./?=&%]*$#i', $path) && strpos($path, '//') === false) {
+    if (is_string($path) && preg_match('#^' . preg_quote(hs_area_root(), '#') . '[a-z0-9_\-./?=&%]*$#i', $path) && strpos($path, '//') === false) {
         return $path;
     }
-    return $fallback;
+    return $fallback === '/admin/' ? hs_area_root() : $fallback;
 }
 
 function hs_flash($message = null, $kind = 'ok')
