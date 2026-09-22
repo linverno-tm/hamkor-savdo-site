@@ -481,6 +481,19 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
   background: var(--yellow);
 }
 
+/* Yakuniy CTA paneli: tekis rang emas — chuqur gradient va yumshoq nur. */
+.cta-panel {
+  background:
+    radial-gradient(38rem 26rem at 88% 8%, rgba(223, 208, 31, 0.14), transparent 60%),
+    radial-gradient(40rem 30rem at 10% 100%, rgba(255, 255, 255, 0.08), transparent 60%),
+    linear-gradient(135deg, #6b3aa3 0%, var(--purple) 45%, var(--purple-dark) 100%);
+  box-shadow: 0 40px 80px -40px rgba(47, 24, 72, 0.7);
+}
+/* Footer: to'q binafsha, pastga qarab yanada to'qlashadi. */
+.site-footer {
+  background: linear-gradient(180deg, #2a1745 0%, #1a0f2c 100%);
+}
+
 /* FAQ akkordeoni silliq ochiladi (qo'llaydigan brauzerlarda; qolganida — darhol). */
 .faq-item::details-content {
   block-size: 0;
@@ -658,6 +671,11 @@ footer a:not(.btn) {
   }
   /* Qator futerning oxirgi qatorlarini yopib qo'ymasin. */
   body {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+  /* To'q footer tagida oq chiziq qolmasin — qator ostigacha cho'ziladi. */
+  .site-footer {
+    margin-bottom: calc(-4.25rem - env(safe-area-inset-bottom));
     padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
   }
 }

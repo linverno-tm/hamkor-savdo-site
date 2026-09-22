@@ -14,6 +14,7 @@ import { HowItWorks } from "@/components/sections/HowItWorks";
 import { SpecialOrder } from "@/components/sections/SpecialOrder";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { About } from "@/components/sections/About";
+import { Store } from "@/components/sections/Store";
 import { Branches } from "@/components/sections/Branches";
 import { Reviews } from "@/components/sections/Reviews";
 import { Faq } from "@/components/sections/Faq";
@@ -115,7 +116,7 @@ export default function Home() {
       <main id="asosiy" tabIndex={-1}>
         {/* Tartib: kim va nima (hero + kategoriyalar) → ishonch → aksiya va
             katalog (bo'sh bo'lsa ko'rinmaydi) → muddatli to'lov → qanday
-            xarid qilinadi → "bizda yo'q" va ariza → biz haqimizda → filiallar
+            xarid qilinadi → "bizda yo'q" va ariza → biz haqimizda → jonli do'kon suratlari → filiallar
             va xarita → sharhlar → savollar → yakuniy chaqiriq. */}
         <Hero />
         <Trust />
@@ -126,6 +127,7 @@ export default function Home() {
         <SpecialOrder />
         <LeadForm />
         <About />
+        <Store />
         <Branches />
         <Reviews />
         <Faq />
