@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { site } from "@/data/site";
 import { content, Rich } from "@/lib/content";
 import { Logo } from "@/components/ui/Logo";
@@ -19,6 +20,20 @@ import { HeroLead } from "@/components/sections/HeroLead";
  * esa qatorlab, `.line-mask` darchasidan ko'tariladi. Hech biri mazmunni
  * to'sib turmaydi: JavaScript bo'lmasa ham hammasi ko'rinadi.
  */
+/**
+ * "Nima sotiladi" — birinchi ekranda ko'z bilan. Matnni o'qimagan odam ham
+ * bir qarashda do'kon nima sotishini ko'radi; har biri o'z sahifasiga olib
+ * boradi. Skuter surati Pexels'dan (bepul litsenziya, muallif ko'rsatilishi
+ * shart emas): https://www.pexels.com/photo/15675779/ — do'konning o'z
+ * skuter surati bo'lsa, public/yonalishlar/skuter-*.webp ni almashtiring.
+ */
+const HERO_TOPICS = [
+  { href: "/texnika", label: "Texnika", photo: "/yonalishlar/texnika-480.webp" },
+  { href: "/tilla", label: "Tilla", photo: "/yonalishlar/tilla-480.webp" },
+  { href: "/mebel", label: "Mebel", photo: "/yonalishlar/mebel-480.webp" },
+  { href: "/skuter", label: "Skuterlar", photo: "/yonalishlar/skuter-480.webp" },
+];
+
 export function Hero() {
   return (
     <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden pt-28 sm:pt-32">
@@ -104,6 +119,31 @@ export function Hero() {
                 </span>
               </a>
             </div>
+
+            <nav aria-label="Nima sotamiz" className="rise mt-8" style={{ ["--i" as string]: 5 }}>
+              <ul className="grid max-w-xl grid-cols-4 gap-2 sm:gap-3">
+                {HERO_TOPICS.map((t) => (
+                  <li key={t.href}>
+                    <Link
+                      href={t.href}
+                      className="group btn-lift relative block aspect-[4/5] overflow-hidden rounded-2xl bg-ground-2"
+                    >
+                      <img
+                        src={t.photo}
+                        alt=""
+                        width={480}
+                        height={360}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        decoding="async"
+                      />
+                      <span className="absolute inset-x-0 bottom-0 px-2 pb-2 pt-8 text-center text-xs font-semibold text-white [background:linear-gradient(to_top,rgba(26,17,48,0.85),transparent)] sm:text-sm">
+                        {t.label}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
 
           {/* O'ng ustun: qisqa ariza formasi.
@@ -113,7 +153,7 @@ export function Hero() {
               sahifalarida qoladi. Muddatli to'lovda mijoz saytdan xarid
               qilmaydi — qo'ng'iroq kutadi, shuning uchun eng ko'rinadigan
               joyni saytning maqsadi egallaydi. */}
-          <div className="rise" style={{ ["--i" as string]: 5 }}>
+          <div className="rise" style={{ ["--i" as string]: 6 }}>
             <HeroLead />
           </div>
         </div>
