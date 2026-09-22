@@ -795,3 +795,10 @@ details.more[open] > summary::before { content: "− "; }
 }
 #stat-body.is-loading .seg span { background: transparent; color: var(--ink-2); box-shadow: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Matnlar sahifasidagi o'rinbosarlar ro'yxati. */
+.token-intro { margin: 0 0 .5rem; }
+.token-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem .9rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.token-list li { display: flex; align-items: baseline; gap: .4rem; }
+.code.token { white-space: nowrap; word-break: normal; flex: none; }
+.token-now { opacity: .75; }

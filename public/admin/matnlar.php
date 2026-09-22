@@ -65,7 +65,21 @@ if (!$c) {
 }
 $t = $c['texts'];
 
-echo '<p class="flash flash-warn">Matn ichida ishlatish mumkin: <span class="code">{oy}</span> — muddatli to\'lov oyi, <span class="code">{filial}</span> — filiallar soni, <span class="code">{mahsulot}</span> — mahsulotlar soni, <span class="code">{bepul_hudud}</span> — bepul yetkazish hududi. <span class="code">**so\'z**</span> — qalin yozuv.</p>';
+/* O'rinbosarlar: matnga raqam qo'lda yozilmaydi — sayt uni sozlamadan o'zi qo'yadi.
+   Hozirgi qiymati yonida ko'rinadi, odam nima chiqishini darrov bilsin. */
+$s0 = isset($c['settings']) ? $c['settings'] : array();
+$tokens = array(
+    array('{oy}', "muddatli to'lov oyi", isset($s0['installmentMonthsMax']) ? (string) $s0['installmentMonthsMax'] : ''),
+    array('{filial}', 'filiallar soni', isset($c['branches']) ? (string) count($c['branches']) : ''),
+    array('{mahsulot}', 'mahsulotlar soni', isset($s0['productCount']) ? (string) $s0['productCount'] : ''),
+    array('{bepul_hudud}', 'bepul yetkazish hududi', isset($s0['freeDeliveryArea']) ? (string) $s0['freeDeliveryArea'] : ''),
+    array("**so'z**", 'qalin yozuv', ''),
+);
+echo '<div class="flash flash-warn"><div><p class="token-intro"><strong>Matn ichida ishlatish mumkin</strong> — sayt ularni o\'zi almashtiradi, raqamni qo\'lda yozish shart emas:</p><ul class="token-list">';
+foreach ($tokens as $tk) {
+    echo '<li><span class="code token">' . h($tk[0]) . '</span> <span>— ' . h($tk[1]) . ($tk[2] !== '' ? ' <span class="token-now">(hozir: ' . h($tk[2]) . ')</span>' : '') . '</span></li>';
+}
+echo '</ul></div></div>';
 
 echo '<form class="card" method="post" action="/admin/matnlar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="matnlar">';
 echo '<h2>Sayt matnlari</h2>';
