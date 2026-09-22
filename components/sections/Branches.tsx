@@ -23,6 +23,8 @@ export function Branches() {
     lat: b.lat,
     lng: b.lng,
     href: `/filiallar/${b.id}/`,
+    phone: b.phone ?? site.phone,
+    phoneDisplay: b.phoneDisplay ?? site.phoneDisplay,
   }));
 
   return (
