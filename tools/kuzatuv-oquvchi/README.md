@@ -87,6 +87,41 @@ so'ralmaydi.
 
 Windows'da qulay bo'lishi uchun `ishga-tushir.bat` faylini ikki marta bosish ham mumkin.
 
+## Doim ishlab turishi uchun: `--bir-marta` rejimi
+
+```
+python oquvchi.py --bir-marta
+```
+
+Bir marta o'qiydi, saytga yuboradi va yopiladi. Hech narsa so'ramaydi — shuning uchun uni
+**cron** yoki Windows avtoyuklashi ishga tushira oladi. Oldingi nusxa hali tugamagan bo'lsa,
+yangisi o'zi o'tkazib yuboriladi (`ishlayapti.lock`).
+
+Seans bo'lmasa, kod so'ramaydi — xato bilan chiqadi. Unda avval kompyuterda
+`python qr-kirish.py` bilan kiring.
+
+### Saytning serverida (cPanel)
+
+Hosting doim ochiq turadigan dasturni odatda o'zi o'chirib qo'yadi, lekin cron'ni ko'taradi —
+sayt barcha ishlarini shunday qiladi. Buning uchun hostingda **Python 3** bo'lishi kerak
+(cPanel'da «Terminal» yoki «Setup Python App» bo'lsa, bor).
+
+1. cPanel → Terminal:
+   ```
+   python3 --version
+   pip3 install --user telethon
+   ```
+2. Papkani **`public_html` DAN TASHQARIGA** yuklang, masalan `~/kuzatuv-oquvchi/`:
+   `oquvchi.py`, `sozlama.ini`, `seans.session`, `holat.json`.
+   **Hech qachon sayt papkasiga emas** — `seans.session` akkauntning kaliti, uni yuklab olgan
+   odam akkauntga kiradi.
+3. cPanel → Cron Jobs → har 5 daqiqada:
+   ```
+   cd $HOME/kuzatuv-oquvchi && python3 oquvchi.py --bir-marta >> jurnal.txt 2>&1
+   ```
+4. **Kompyuterdagi dasturni to'xtating.** Bitta seans ikki joyda (kompyuter va server) bir
+   vaqtda ishlasa, Telegram seansni bekor qiladi va QR bilan qayta kirishga to'g'ri keladi.
+
 ## Kompyuter kechasi o'chsa nima bo'ladi
 
 Hech narsa yo'qolmaydi. Dastur har safar ishga tushganda har bir guruhdan **oxirgi

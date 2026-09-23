@@ -207,14 +207,55 @@ async def bir_aylanish(client, cfg, holat):
     holatni_yoz(holat)
 
 
+QULF = os.path.join(BU_YER, "ishlayapti.lock")
+
+
+def qulf_ol():
+    """Bir vaqtda ikkita nusxa ishlamasin: cron har 5 daqiqada chaqiradi,
+    oldingisi hali tugamagan bo'lishi mumkin. 15 daqiqadan eski qulf —
+    uzilib qolgan jarayonniki, olib tashlanadi."""
+    try:
+        if time.time() - os.path.getmtime(QULF) > 900:
+            os.remove(QULF)
+    except OSError:
+        pass
+    try:
+        fd = os.open(QULF, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.write(fd, str(os.getpid()).encode())
+        os.close(fd)
+        return True
+    except FileExistsError:
+        return False
+
+
 async def asosiy():
     cfg = sozlamani_oqi()
+    bir_marta = "--bir-marta" in sys.argv
     client = TelegramClient(os.path.join(BU_YER, "seans"), cfg["api_id"], cfg["api_hash"])
-    # Birinchi ishga tushirishda Telegram telefon raqami va SMS kodini so'raydi —
-    # ularni KOMPYUTER OLDIDAGI ODAM kiritadi. Keyin seans faylga saqlanadi va
-    # boshqa so'ralmaydi.
-    # Telefon sozlamada bo'lsa, qo'lda yozilmaydi: birinchi urinishda raqam
-    # terminalda xato terilib, kod boshqa raqamga ketgan edi.
+
+    if bir_marta:
+        # Cron yoki Windows avtoyuklashidan: hech narsa so'ramaydi (klaviatura
+        # yo'q), bir marta o'qiydi va yopiladi.
+        if not qulf_ol():
+            print(time.strftime("[%Y-%m-%d %H:%M] ") + "oldingi nusxa hali ishlayapti — o'tkazildi")
+            return
+        try:
+            await client.connect()
+            if not await client.is_user_authorized():
+                print("Seans yo'q yoki bekor qilingan. Avval: python qr-kirish.py")
+                sys.exit(2)
+            print(time.strftime("[%Y-%m-%d %H:%M] ") + "tekshirilyapti...")
+            await bir_aylanish(client, cfg, holatni_oqi())
+        finally:
+            await client.disconnect()
+            try:
+                os.remove(QULF)
+            except OSError:
+                pass
+        return
+
+    # Qo'lda ishga tushirilganda: kirilmagan bo'lsa kod so'raydi (kompyuter
+    # oldidagi odam kiritadi), keyin har N daqiqada tekshirib turadi.
     if cfg["telefon"]:
         print("Kirish: " + cfg["telefon"] + " — kod Telegram ilovasiga keladi.")
         await client.start(phone=cfg["telefon"])
