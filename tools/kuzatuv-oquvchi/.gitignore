@@ -2,3 +2,6 @@
 sozlama.ini
 *.session
 *.session-journal
+holat.json
+holat.json.tmp
+__pycache__/

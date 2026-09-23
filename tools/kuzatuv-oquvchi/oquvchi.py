@@ -11,9 +11,14 @@ Dastur FAQAT O'QIYDI. Hech qayerga xabar yozmaydi, hech kimni qo'shmaydi, hech n
 o'chirmaydi. Yangi xabarlarni saytdagi panelga yuboradi, qolgan ishni (tahlil, xulosa,
 ogohlantirish) panel bajaradi.
 
+Faqat do'konning o'z postlari olinadi (guruh adminlari yoki guruh nomidan yozilgan).
+Guruhdagi mijozlarning savol-javoblari yuborilmaydi: ular tahlilga kerak emas, AI pulini
+bekorga sarflaydi va begona odamlarning yozganini tashqariga chiqaradi.
+
 Ishga tushirish: README.md ga qarang.
 """
 
+import asyncio
 import configparser
 import json
 import os
@@ -25,11 +30,13 @@ import urllib.request
 try:
     from telethon import TelegramClient
     from telethon.errors import FloodWaitError
+    from telethon.tl.types import ChannelParticipantsAdmins, PeerChannel
 except ImportError:
     sys.exit("Telethon o'rnatilmagan. Buyruq: pip install telethon")
 
 BU_YER = os.path.dirname(os.path.abspath(__file__))
 SOZLAMA = os.path.join(BU_YER, "sozlama.ini")
+HOLAT = os.path.join(BU_YER, "holat.json")
 
 
 def sozlamani_oqi():
@@ -50,9 +57,28 @@ def sozlamani_oqi():
         "api_hash": s["api_hash"].strip(),
         "sayt": s["sayt"].strip().rstrip("/"),
         "kalit": s["kalit"].strip(),
-        "oraliq": int(s.get("oraliq_daqiqa", "5")),
+        "oraliq": max(3, int(s.get("oraliq_daqiqa", "5"))),
         "eng_kop": int(s.get("bir_martada", "50")),
     }
+
+
+def holatni_oqi():
+    """Har guruhda qaysi xabargacha ko'rilgani. Panel faqat YUBORILGAN
+    xabarlarni biladi; yozuvsiz rasm yoki mijoz xabari yuborilmaydi, shuning
+    uchun o'qilgan joyni shu yerda ham saqlaymiz — aks holda dastur o'sha
+    xabarlarni har safar qaytadan o'qib, bir joyda aylanib qolardi."""
+    try:
+        with open(HOLAT, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def holatni_yoz(h):
+    tmp = HOLAT + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(h, f)
+    os.replace(tmp, HOLAT)
 
 
 def saytga(cfg, payload):
@@ -71,23 +97,61 @@ def saytga(cfg, payload):
         return json.loads(j.read().decode("utf-8"))
 
 
-async def guruhni_oqi(client, guruh, eng_kop):
+ADMINLAR = {}  # guruh nomi -> admin id lar to'plami (None — ro'yxat olinmadi)
+
+
+async def adminlar(client, nom, manba):
+    if nom in ADMINLAR:
+        return ADMINLAR[nom]
+    try:
+        ids = set()
+        async for u in client.iter_participants(manba, filter=ChannelParticipantsAdmins):
+            ids.add(u.id)
+        ADMINLAR[nom] = ids
+    except Exception as e:
+        # Ba'zi guruhlar a'zolarga adminlar ro'yxatini ko'rsatmaydi.
+        # Unda hamma xabar yuboriladi, AI keraksizini o'zi "boshqa" deb ajratadi.
+        print(f"  @{nom}: adminlar ro'yxati olinmadi ({e.__class__.__name__}) — hamma xabar olinadi")
+        ADMINLAR[nom] = None
+    return ADMINLAR[nom]
+
+
+def dokonnikimi(m, admin_ids):
+    """Xabarni do'kon yozganmi (admin yoki guruh nomidan)."""
+    if admin_ids is None:
+        return True
+    if m.from_id is None or isinstance(m.from_id, PeerChannel):
+        return True  # guruh/kanal nomidan (anonim admin yoki bog'langan kanal)
+    return m.sender_id in admin_ids
+
+
+async def guruhni_oqi(client, guruh, holat, eng_kop):
     """Bitta guruhdan oxirgi ko'rilganidan keyingi xabarlar."""
     nom = guruh["username"]
-    oxirgi = int(guruh.get("last_id") or 0)
+    oxirgi = max(int(guruh.get("last_id") or 0), int(holat.get(nom, 0)))
     try:
         manba = await client.get_entity(nom)
     except Exception as e:
         print(f"  @{nom}: ochilmadi — {e}")
         return []
+    admin_ids = await adminlar(client, nom, manba)
     chiqdi = []
+    eng_katta = oxirgi
     try:
-        # min_id — shu raqamdan KEYINGI xabarlar. Birinchi marta (oxirgi = 0)
-        # oxirgi 50 tasini olamiz, keyin faqat yangilari keladi.
-        async for m in client.iter_messages(manba, limit=eng_kop, min_id=oxirgi):
+        if oxirgi == 0:
+            # Birinchi marta: faqat oxirgi xabarlar. Guruhning butun tarixini
+            # (ba'zan yillar) o'qib o'tirmaymiz.
+            xabarlar = client.iter_messages(manba, limit=eng_kop)
+        else:
+            # Keyingi safar: ESKIDAN YANGIGA, oxirgi ko'rilgandan boshlab.
+            # Teskarisi (yangidan eskiga + limit) bo'lsa, kechasi limitdan ko'p
+            # xabar yozilganda o'rtadagilari sakrab o'tib ketardi.
+            xabarlar = client.iter_messages(manba, limit=eng_kop, min_id=oxirgi, reverse=True)
+        async for m in xabarlar:
+            eng_katta = max(eng_katta, m.id)
             matn = (m.message or "").strip()
-            if not matn:
-                continue  # rasm ostida yozuv bo'lmasa, tahlil qiladigan narsa yo'q
+            if not matn or not dokonnikimi(m, admin_ids):
+                continue
             media = ""
             if getattr(m, "video", None):
                 media = "video"
@@ -102,17 +166,18 @@ async def guruhni_oqi(client, guruh, eng_kop):
             })
     except FloodWaitError as e:
         print(f"  @{nom}: Telegram {e.seconds} soniya kutishni so'radi")
-        time.sleep(min(e.seconds, 300))
+        await asyncio.sleep(min(e.seconds, 300))
     except Exception as e:
         print(f"  @{nom}: o'qilmadi — {e}")
+    holat[nom] = eng_katta
     return chiqdi
 
 
-async def bir_aylanish(client, cfg):
+async def bir_aylanish(client, cfg, holat):
     try:
         javob = saytga(cfg, {"amal": "royxat"})
     except urllib.error.HTTPError as e:
-        print(f"Panel javob bermadi: HTTP {e.code} — kalitni tekshiring")
+        print(f"Panel javob bermadi: HTTP {e.code}" + (" — kalitni tekshiring" if e.code == 403 else ""))
         return
     except Exception as e:
         print(f"Panelga ulanilmadi: {e}")
@@ -123,41 +188,44 @@ async def bir_aylanish(client, cfg):
         return
     hammasi = []
     for g in guruhlar:
-        yangi = await guruhni_oqi(client, g, cfg["eng_kop"])
+        yangi = await guruhni_oqi(client, g, holat, cfg["eng_kop"])
         if yangi:
-            print(f"  @{g['username']}: {len(yangi)} ta yangi xabar")
+            print(f"  @{g['username']}: {len(yangi)} ta do'kon posti")
         hammasi.extend(yangi)
-    if not hammasi:
-        print("Yangi xabar yo'q.")
-        return
-    try:
-        natija = saytga(cfg, {"amal": "yuklash", "postlar": hammasi})
-        print(f"Panelga yuborildi: {natija.get('yozildi', 0)} ta yozildi, "
-              f"{natija.get('otkazildi', 0)} ta o'tkazib yuborildi.")
-    except Exception as e:
-        print(f"Yuborilmadi: {e}")
+    if hammasi:
+        try:
+            natija = saytga(cfg, {"amal": "yuklash", "postlar": hammasi})
+            print(f"Panelga yuborildi: {natija.get('yozildi', 0)} ta yangi, "
+                  f"{natija.get('otkazildi', 0)} ta o'tkazib yuborildi.")
+        except Exception as e:
+            # Holatni saqlamaymiz — keyingi safar shu xabarlar qayta yuboriladi.
+            print(f"Yuborilmadi, keyingi safar qayta urinadi: {e}")
+            return
+    else:
+        print("Yangi do'kon posti yo'q.")
+    holatni_yoz(holat)
 
 
 async def asosiy():
     cfg = sozlamani_oqi()
-    seans = os.path.join(BU_YER, "seans")
-    client = TelegramClient(seans, cfg["api_id"], cfg["api_hash"])
+    client = TelegramClient(os.path.join(BU_YER, "seans"), cfg["api_id"], cfg["api_hash"])
     # Birinchi ishga tushirishda Telegram telefon raqami va SMS kodini so'raydi —
     # ularni KOMPYUTER OLDIDAGI ODAM kiritadi. Keyin seans faylga saqlanadi va
     # boshqa so'ralmaydi.
     await client.start()
     men = await client.get_me()
-    print(f"Telegram akkaunt: {men.first_name} (@{men.username or 'username yo’q'})")
+    nom = "@" + men.username if men.username else "(username yo'q)"
+    print(f"Telegram akkaunt: {men.first_name} {nom}")
     print(f"Har {cfg['oraliq']} daqiqada tekshiradi. To'xtatish: Ctrl+C\n")
+    holat = holatni_oqi()
     while True:
-        print(time.strftime("[%H:%M] ") + "tekshirilyapti…")
-        await bir_aylanish(client, cfg)
-        await client.loop.run_in_executor(None, time.sleep, cfg["oraliq"] * 60)
+        print(time.strftime("[%H:%M] ") + "tekshirilyapti...")
+        await bir_aylanish(client, cfg, holat)
+        await asyncio.sleep(cfg["oraliq"] * 60)
 
 
 if __name__ == "__main__":
     try:
-        import asyncio
         asyncio.run(asosiy())
     except KeyboardInterrupt:
         print("\nTo'xtatildi.")
