@@ -105,7 +105,11 @@ if (!$chats) {
             echo '<form class="inline-form" method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="admin"><input type="hidden" name="id" value="' . $cid . '"><input type="hidden" name="admin" value="' . ($isAdm ? '0' : '1') . '">'
                 . '<button class="btn outline small" type="submit" title="' . ($isAdm ? 'Ruxsat so\'rovlari endi unga kelmaydi' : 'Ruxsat so\'rovlari Telegram\'da shu odamga keladi') . '">' . ($isAdm ? '☆ Boshqaruvchilikdan olish' : '★ Boshqaruvchi') . '</button></form>';
         }
-        echo '<form class="inline-form" method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sinov"><input type="hidden" name="id" value="' . $cid . '"><button class="btn outline small" type="submit"' . ($left ? ' disabled' : '') . '>Sinov xabari</button></form>';
+        // Mijozlar guruhi va mahsulot kanalini yuzlab mijoz o'qiydi — u yerga
+        // "Sinov xabari — admin paneli, arizalar o'chirilgan" chiqmasligi kerak.
+        if ($c['role'] === '') {
+            echo '<form class="inline-form" method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sinov"><input type="hidden" name="id" value="' . $cid . '"><button class="btn outline small" type="submit"' . ($left ? ' disabled' : '') . '>Sinov xabari</button></form>';
+        }
         echo '<form class="inline-form" method="post" action="/admin/telegram.php" data-confirm="«' . h($c['title']) . '» ro\'yxatdan olib tashlansinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . $cid . '"><button class="btn danger small" type="submit">O\'chirish</button></form>';
         echo '</div></div></div>';
     }

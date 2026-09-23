@@ -157,6 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ok = hs_tasks_backup(true);
         hs_audit($user['login'], 'zaxira qo\'lda yuborildi', $ok ? 'ok' : 'xato');
         hs_flash($ok ? "Zaxira fayli boshqaruvchiga Telegram'da yuborildi." : "Yuborilmadi — boshqaruvchi tanlanganini va bot ishlayotganini tekshiring.", $ok ? 'ok' : 'err');
+    } elseif ($action === 'sinov' && $row && $row['role'] !== '') {
+        hs_flash("«{$row['title']}» — " . ($row['role'] === 'mijozlar' ? 'mijozlar guruhi' : 'mahsulot kanali')
+            . ": u yerni mijozlar o'qiydi, sinov xabari yuborilmaydi.", 'err');
     } elseif ($action === 'sinov' && $row) {
         $ok = hs_tg_send_to($id, "🧪 Sinov xabari — HAMKOR SAVDO admin paneli\n\nBu chat ro'yxatda. " . ((int) $row['leads'] ? 'Saytdan kelgan arizalar shu yerga keladi.' : "Arizalar hozircha o'chirilgan — panelda yoqing."));
         hs_flash($ok ? "Sinov xabari «{$row['title']}» ga yuborildi." : "Yuborilmadi. Bot bu chatdan chiqarilgan yoki odam botni to'xtatgan bo'lishi mumkin.", $ok ? 'ok' : 'err');

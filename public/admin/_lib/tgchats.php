@@ -732,7 +732,14 @@ function hs_tg_handle_update($u)
         if ($in && $isNew && $chat['type'] !== 'private') {
             hs_tg_ask_admins($chat, $who);
             // Ochiq guruh yoki kanal (@nomi bor) — ko'pincha mijozlar ko'radigan joy: salom yozmaymiz.
+            // Yopiq bo'lsa ham, katta guruh xodimlar chati emas — ehtimol mijozlar guruhi.
+            // "Arizalar shu yerga yuboriladi" degan salomni yuzlab mijoz o'qib qolmasin.
+            $katta = false;
             if (empty($chat['username'])) {
+                list($okSoni, $soni) = hs_tg_api('getChatMemberCount', array('chat_id' => $chat['id']));
+                $katta = $okSoni && is_numeric($soni) && (int) $soni > 30;
+            }
+            if (empty($chat['username']) && !$katta) {
                 hs_tg_api('sendMessage', array('chat_id' => $chat['id'], 'text' => "Salom! HAMKOR SAVDO boti ulandi.\nBoshqaruvchi ruxsat bergach, saytdan kelgan arizalar shu yerga yuboriladi."));
             }
         }
@@ -773,7 +780,11 @@ function hs_tg_handle_update($u)
     if (!$private) {
         $row = hs_tg_get_chat($chat['id']);
         if (hs_mb_is_customer_chat($chat, $row)) {
-            if (!$row) {
+            /* Nom yoki @manzil Telegram'da o'zgartirilsa (masalan "Hamkor Savdo
+               mijozlari" -> "Hamkor Savdo Andijon"), panel eski nomni ko'rsatib
+               turardi: mijozlar guruhi yozuvi faqat bot qo'shilganda yozilgan. */
+            $username = isset($chat['username']) ? (string) $chat['username'] : '';
+            if (!$row || $row['title'] !== hs_tg_chat_title($chat) || (string) $row['username'] !== $username) {
                 hs_tg_upsert($chat, 'member');
             }
             if (!$row || $row['role'] !== 'mijozlar') {
