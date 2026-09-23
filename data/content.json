@@ -97,6 +97,36 @@
       "alts": {
         "tashqi-1": "Makro supermarketi binosi — HAMKOR SAVDO shu binoning 2-qavatida joylashgan"
       }
+    },
+    "shahrixon-ozodbek": {
+      "order": [
+        "tashqi-1",
+        "zal-7",
+        "zal-9",
+        "zal-8",
+        "zal-10",
+        "zal-11",
+        "zal-12",
+        "zal-13"
+      ],
+      "labels": {
+        "zal-7": "Markaziy yo'lak · 2022",
+        "zal-8": "Savdo zali · 2022",
+        "zal-9": "Hamkor Savdo · 2022",
+        "zal-10": "Kichik maishiy texnika · 2022",
+        "zal-11": "Televizorlar · 2022",
+        "zal-12": "Muzlatgichlar · 2022",
+        "zal-13": "Gaz plitalar · 2022"
+      },
+      "alts": {
+        "zal-7": "HAMKOR SAVDO Shahrixon filiali (Ozodbek savdo markazi): markaziy yo'lak, kir yuvish mashinalari va mikroto'lqinli pechlar. Surat 2022-yil noyabrda, filial ochilgan paytda olingan.",
+        "zal-8": "HAMKOR SAVDO Shahrixon filiali (Ozodbek savdo markazi): keng savdo zali — kir yuvish mashinalari, isitgichlar, bolalar aravachalari. Surat 2022-yil noyabrda, filial ochilgan paytda olingan.",
+        "zal-9": "HAMKOR SAVDO Shahrixon filiali (Ozodbek savdo markazi): yorug'lik bilan yonadigan Hamkor Savdo yozuvi. Surat 2022-yil noyabrda, filial ochilgan paytda olingan.",
+        "zal-10": "HAMKOR SAVDO Shahrixon filiali (Ozodbek savdo markazi): termoslar, choynaklar va oshxona texnikasi javonlari. Surat 2022-yil noyabrda, filial ochilgan paytda olingan.",
+        "zal-11": "HAMKOR SAVDO Shahrixon filiali (Ozodbek savdo markazi): televizorlar devori. Surat 2022-yil noyabrda, filial ochilgan paytda olingan.",
+        "zal-12": "HAMKOR SAVDO Shahrixon filiali (Ozodbek savdo markazi): muzlatgichlar qatori. Surat 2022-yil noyabrda, filial ochilgan paytda olingan.",
+        "zal-13": "HAMKOR SAVDO Shahrixon filiali (Ozodbek savdo markazi): gaz plitalar qatori. Surat 2022-yil noyabrda, filial ochilgan paytda olingan."
+      }
     }
   },
   "faq": [
