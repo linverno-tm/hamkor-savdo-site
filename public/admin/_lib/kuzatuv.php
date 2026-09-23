@@ -284,7 +284,7 @@ function hs_rq_system_prompt()
         . "- discount: eng katta chegirma foizi, raqamda (masalan 60). Yo'q bo'lsa 0.\n"
         . "- instalment: muddatli to'lov sharti matnda qanday yozilgan bo'lsa shundayligicha (masalan \"0-0-6\", \"24 oygacha\"). Yo'q bo'lsa bo'sh.\n"
         . "- ends_at: aksiya tugash sanasi YYYY-MM-DD ko'rinishida. Yo'q bo'lsa bo'sh.\n"
-        . "- summary: bir gap, o'zbekcha, sof fakt. Reklama tili va emoji ishlatma.\n"
+        . "- summary: 3-6 so'z, faqat mavzu (masalan \"maishiy texnika va smartfonlar\"). Gap tuzma, reklama gapini ko'chirma, raqamlarni bu yerga yozma.\n"
         . "- important: true — agar bu bizga darhol ta'sir qiladigan narsa bo'lsa: "
         . "chegirma 30% dan katta, muddatli to'lov bizning {$oy} oyimizdan uzoqroq yoki boshlang'ich to'lovsiz, "
         . "yangi do'kon ochilishi, yoki tarmoq bo'ylab katta aksiya. Oddiy mahsulot e'loni bo'lsa false.";
@@ -424,77 +424,169 @@ function hs_rq_channel_title($username)
     return isset($map[$username]) ? $map[$username] : '@' . $username;
 }
 
-function hs_rq_line($p)
+/** Bizning muddatli to'lovimiz necha oy (saytdagi sozlamadan). */
+function hs_rq_oyimiz()
 {
-    $bosh = $p['model'] !== '' ? $p['model'] : (($p['summary'] !== '' ? $p['summary'] : mb_substr(preg_split('/\R/u', trim($p['text']))[0], 0, 90)));
-    $s = '• ' . hs_rq_channel_title($p['channel']) . ' — ' . $bosh;
-    $qism = array();
-    if ((int) $p['price'] > 0) {
-        $qism[] = 'oyiga ' . number_format((int) $p['price'], 0, '.', ' ') . " so'm"
-            . ((int) $p['months'] > 0 ? ' x ' . (int) $p['months'] . ' oy' : '');
-    }
-    if ((int) $p['discount'] > 0) {
-        $qism[] = $p['discount'] . '% chegirma';
-    }
-    if ($p['instalment'] !== '') {
-        $qism[] = "muddatli to'lov: " . $p['instalment'];
-    }
-    if ($p['ends_at'] !== '') {
-        $qism[] = $p['ends_at'] . ' gacha';
-    }
-    if ($qism) {
-        $s .= "\n  " . implode(' · ', $qism);
-    }
-    return $s . "\n  " . $p['url'];
+    $c = hs_content_published();
+    return is_array($c) && isset($c['settings']['installmentMonthsMax'])
+        ? (int) $c['settings']['installmentMonthsMax'] : 12;
 }
 
-/** Bizning shartimiz bilan taqqoslash — faqat matnda aniq yozilgan bo'lsa. */
-function hs_rq_compare($p)
+/** "2026-09-27" -> "27-sentyabrgacha (4 kun)". Sana bo'lmasa bo'sh. */
+function hs_rq_sana($iso)
 {
-    if ($p['instalment'] === '' || !preg_match('/(\d{1,2})\s*(oy|ой|month)/iu', $p['instalment'], $m)) {
+    $ts = $iso !== '' ? strtotime($iso) : 0;
+    if (!$ts) {
         return '';
     }
-    $oy = 12;
-    $c = hs_content_published();
-    if (is_array($c) && isset($c['settings']['installmentMonthsMax'])) {
-        $oy = (int) $c['settings']['installmentMonthsMax'];
+    $oylar = array('', 'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
+        'iyul', 'avgust', 'sentyabr', 'oktyabr', 'noyabr', 'dekabr');
+    $s = (int) date('j', $ts) . '-' . $oylar[(int) date('n', $ts)] . 'gacha';
+    $qoldi = (int) floor(($ts - strtotime(date('Y-m-d'))) / 86400);
+    if ($qoldi < 0) {
+        return $s . ' (tugagan)';
     }
-    $ular = (int) $m[1];
-    if ($ular > $oy) {
-        return "  ⚠ Ularda {$ular} oy, bizda {$oy} oy.";
+    if ($qoldi === 0) {
+        return $s . ' (bugun oxirgi kun)';
     }
-    if ($ular < $oy) {
-        return "  ✔ Ularda {$ular} oy, bizda {$oy} oy — bizniki uzunroq.";
+    if ($qoldi <= 14) {
+        return $s . ' (' . $qoldi . ' kun qoldi)';
     }
-    return '';
+    return $s;
 }
 
-/** Muhim postlar — darhol. Qaytadi: yuborilgan xabarlar soni. */
+function hs_rq_som($n)
+{
+    return number_format((int) $n, 0, '.', ' ') . " so'm";
+}
+
+/**
+ * Bizning shartimiz bilan taqqoslash — faqat oy soni aniq bo'lsa.
+ * Maqsad: xabarni o'qigan odam "bu bizga yaxshimi yomonmi" deb o'ylab
+ * o'tirmasin, javob bir qatorda tursin.
+ */
+function hs_rq_compare($p)
+{
+    $ular = (int) $p['months'];
+    if ($ular <= 0 && $p['instalment'] !== '' && preg_match('/(\d{1,2})/u', $p['instalment'], $m)) {
+        $ular = (int) $m[1];
+    }
+    if ($ular <= 0) {
+        return '';
+    }
+    $biz = hs_rq_oyimiz();
+    if ($ular > $biz) {
+        return "Bizda {$biz} oy — ular uzunroq to'lov taklif qilyapti.";
+    }
+    if ($ular < $biz) {
+        return "Bizda {$biz} oy — bizniki uzunroq.";
+    }
+    return "Bizda ham {$biz} oy — teng.";
+}
+
+/** Birinchi harfni kattalashtirish (AI xulosani kichik harfda qaytaradi). */
+function hs_rq_bosh_harf($s)
+{
+    return $s === '' ? '' : mb_strtoupper(mb_substr($s, 0, 1)) . mb_substr($s, 1);
+}
+
+/** Mahsulot nomi yoki mavzusi: eng qisqa aniq sarlavha. */
+function hs_rq_sarlavha($p)
+{
+    if ($p['model'] !== '') {
+        return $p['model'];
+    }
+    if ($p['summary'] !== '') {
+        return hs_rq_bosh_harf($p['summary']);
+    }
+    $q = preg_split('/\R/u', trim($p['text']));
+    return hs_rq_bosh_harf(mb_substr(trim($q[0]), 0, 70));
+}
+
+/**
+ * Darhol ogohlantirish matni.
+ *
+ * Qoida: har bir fakt BIR marta va o'z nomi bilan tursin. Ilgari xulosa gapi
+ * ham, pastdagi qator ham bir xil raqamni takrorlar edi va reklama tilida
+ * yozilgan bo'lardi — o'qish qiyin edi.
+ */
+function hs_rq_alert_text($p)
+{
+    $s = '⚡ ' . hs_rq_channel_title($p['channel']) . "\n\n" . hs_rq_sarlavha($p) . "\n";
+    if ((int) $p['price'] > 0) {
+        $s .= "\nOyiga: " . hs_rq_som($p['price'])
+            . ((int) $p['months'] > 0 ? ' × ' . (int) $p['months'] . ' oy' : '');
+    }
+    if ((int) $p['discount'] > 0) {
+        $s .= "\nChegirma: " . (int) $p['discount'] . '% gacha';
+    }
+    if ($p['instalment'] !== '') {
+        $s .= "\nMuddatli to'lov: " . $p['instalment'];
+    }
+    $sana = hs_rq_sana($p['ends_at']);
+    if ($sana !== '') {
+        $s .= "\nMuddat: " . $sana;
+    }
+    $taq = hs_rq_compare($p);
+    if ($taq !== '') {
+        $s .= "\n\n" . $taq;
+    }
+    return $s . "\n\n" . $p['url'];
+}
+
+/** Kunlik xulosadagi bitta qator — ixcham, bitta e'lon bitta satr. */
+function hs_rq_line($p)
+{
+    $q = array();
+    if ((int) $p['price'] > 0) {
+        $q[] = 'oyiga ' . hs_rq_som($p['price']) . ((int) $p['months'] > 0 ? ' × ' . (int) $p['months'] . ' oy' : '');
+    }
+    if ((int) $p['discount'] > 0) {
+        $q[] = (int) $p['discount'] . '% chegirma';
+    }
+    if ($p['instalment'] !== '' && (int) $p['price'] === 0) {
+        $q[] = $p['instalment'];
+    }
+    $sana = hs_rq_sana($p['ends_at']);
+    if ($sana !== '') {
+        $q[] = $sana;
+    }
+    return '• ' . hs_rq_sarlavha($p) . ($q ? "\n  " . implode(' · ', $q) : '') . "\n  " . $p['url'];
+}
+
+/** Muhim e'lonlar — darhol. Qaytadi: yuborilgan xabarlar soni. */
 function hs_rq_alerts()
 {
     if (!hs_rq_on() || hs_rq_setting('alerts') !== '1') {
         return 0;
     }
     $rows = hs_db()->query('SELECT * FROM rq_posts WHERE analyzed = 1 AND important = 1 AND alerted = 0 ORDER BY posted_at LIMIT 5')->fetchAll();
+    $belgila = hs_db()->prepare('UPDATE rq_posts SET alerted = 1, digested = 1 WHERE channel = ? AND post_id = ?');
+    /* Bitta aksiyani do'kon bir necha post qilib chiqaradi: matni har xil,
+       sharti bir xil. Har biriga alohida ogohlantirish yuborilsa, guruhni
+       bir haftada hech kim o'qimay qo'yadi. Sharti bir xil e'lon ikkinchi
+       marta yuborilmaydi — u jimgina kunlik xulosaga tushadi. */
+    $xuddishu = hs_db()->prepare('SELECT COUNT(*) FROM rq_posts WHERE channel = ? AND alerted = 1
+        AND discount = ? AND instalment = ? AND ends_at = ? AND posted_at > ?');
     $n = 0;
     foreach ($rows as $p) {
-        $text = "⚡ Diqqat — raqobatchi e'loni\n\n" . hs_rq_line($p);
-        $taq = hs_rq_compare($p);
-        if ($taq !== '') {
-            $text .= "\n" . $taq;
+        $xuddishu->execute(array($p['channel'], (int) $p['discount'], $p['instalment'], $p['ends_at'],
+            date('Y-m-d H:i:s', time() - 14 * 86400)));
+        if ((int) $xuddishu->fetchColumn() > 0) {
+            $belgila->execute(array($p['channel'], $p['post_id']));
+            continue;
         }
-        list($ok) = hs_rq_send($text);
+        list($ok) = hs_rq_send(hs_rq_alert_text($p));
         if (!$ok) {
             break;
         }
-        $u = hs_db()->prepare('UPDATE rq_posts SET alerted = 1, digested = 1 WHERE channel = ? AND post_id = ?');
-        $u->execute(array($p['channel'], $p['post_id']));
+        $belgila->execute(array($p['channel'], $p['post_id']));
         $n++;
     }
     return $n;
 }
 
-/** Kunlik xulosa — belgilangan soatda, kuniga bir marta. */
+/** Kunlik xulosa — belgilangan soatda, kuniga bir marta, do'konlar bo'yicha. */
 function hs_rq_digest($force = false)
 {
     if (!hs_rq_on()) {
@@ -513,16 +605,22 @@ function hs_rq_digest($force = false)
     if (!$rows) {
         return false;
     }
-    $lines = array();
+    $guruhlangan = array();
     foreach ($rows as $p) {
         if ($p['kind'] === 'boshqa') {
             continue;
         }
-        $lines[] = hs_rq_line($p);
+        $guruhlangan[$p['channel']][] = hs_rq_line($p);
     }
-    if ($lines) {
-        $text = 'Raqobatchilar — ' . date('d.m.Y') . "\n\n" . implode("\n\n", $lines)
-            . "\n\nJami " . count($lines) . " ta e'lon. Batafsil: " . hs_site_url() . '/admin/kuzatuv.php';
+    if ($guruhlangan) {
+        $qismlar = array();
+        $jami = 0;
+        foreach ($guruhlangan as $kanal => $qatorlar) {
+            $jami += count($qatorlar);
+            $qismlar[] = hs_rq_channel_title($kanal) . "\n" . implode("\n", $qatorlar);
+        }
+        $text = "Raqobatchilar — " . date('d.m.Y') . "\n\n" . implode("\n\n", $qismlar)
+            . "\n\nJami {$jami} ta e'lon.";
         list($ok) = hs_rq_send($text);
         if (!$ok) {
             return false;
@@ -530,7 +628,7 @@ function hs_rq_digest($force = false)
     }
     $u = hs_db()->prepare('UPDATE rq_posts SET digested = 1 WHERE digested = 0 AND analyzed = 1');
     $u->execute();
-    return (bool) $lines;
+    return (bool) $guruhlangan;
 }
 
 /* ====================== kompyuterdagi o'quvchi dastur ====================== */
