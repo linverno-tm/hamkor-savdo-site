@@ -291,11 +291,19 @@ function hs_rq_system_prompt()
 }
 
 /** Bitta postni tahlil qilish. Qaytadi: [massiv yoki null, xato]. */
+/*
+ * Bitta e'lonni AI ga yuborish.
+ *
+ * Matn yuborishdan oldin telefon raqamlari o'chiriladi (hs_mb_scrub). Kanal
+ * e'lonlarida bu do'konning o'z raqami bo'ladi, lekin GURUHlarda oddiy
+ * mijozlar ham yozadi va raqamini qoldiradi — ularning raqami tahlil uchun
+ * kerak emas, demak umuman yuborilmasligi kerak.
+ */
 function hs_rq_ai($post)
 {
     $text = "Kanal: @" . $post['channel'] . "\nSana: " . $post['posted_at']
         . "\nMedia: " . ($post['media'] !== '' ? $post['media'] : 'yo\'q')
-        . "\n\nE'lon matni:\n\"\"\"" . mb_substr($post['text'], 0, 2000) . "\"\"\"";
+        . "\n\nE'lon matni:\n\"\"\"" . mb_substr(hs_mb_scrub($post['text']), 0, 2000) . "\"\"\"";
     if (getenv('HS_MB_FAKE_AI')) {
         $fake = json_decode((string) @file_get_contents(getenv('HS_MB_FAKE_AI')), true);
         @file_put_contents(hs_data_dir() . '/kuzatuv-ai.log', $text . "\n\n", FILE_APPEND);
