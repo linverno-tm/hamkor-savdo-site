@@ -293,8 +293,14 @@ function hs_mb_parse_channel_page($html, $channel)
         $video = strpos($part, 'tgme_widget_message_video') !== false;
         // 'media' — kuzatuv bo'limi uchun: postda video bo'lsa, narx ko'pincha
         // faqat videoda bo'ladi va matndan chiqmaydi.
+        // Rasm (yoki videoning birinchi kadri) manzili — kuzatuv bo'limi narxni
+        // ko'pincha shu yerdan o'qiydi: post matnida narx bo'lmaydi.
+        $rasm = '';
+        if (preg_match("#tgme_widget_message_(?:photo_wrap|video_thumb)[^>]*background-image:url\('([^']+)'\)#", $part, $r)) {
+            $rasm = html_entity_decode($r[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
         $out[] = array('id' => (int) $m[1], 'text' => $text, 'photo' => $photo,
-            'media' => $video ? 'video' : ($photo ? 'foto' : ''), 'at' => $at);
+            'media' => $video ? 'video' : ($photo ? 'foto' : ''), 'rasm' => $rasm, 'at' => $at);
     }
     return $out;
 }

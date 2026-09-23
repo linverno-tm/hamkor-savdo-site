@@ -40,7 +40,7 @@ if ($kalit === '' || strlen($berilgan) !== strlen($kalit) || !hash_equals($kalit
 }
 
 $xom = (string) file_get_contents('php://input');
-if (strlen($xom) > 2000000) {
+if (strlen($xom) > 4000000) {
     hs_rq_javob(array('ok' => false, 'xato' => 'juda katta'), 413);
 }
 $in = json_decode($xom, true);

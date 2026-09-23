@@ -331,6 +331,13 @@ function hs_db_migrate(PDO $pdo)
             "CREATE INDEX rq_posts_posted ON rq_posts(posted_at)",
             "CREATE INDEX rq_posts_todo ON rq_posts(analyzed, posted_at)",
         ),
+        // Raqobatchilar narxi ko'pincha RASMDA bo'ladi ("12 OYGA 209 000 so'mdan"),
+        // post matnida esa faqat "changyutkich". rasm — kanal postida rasm manzili,
+        // guruh postida esa serverdagi vaqtinchalik fayl (tahlildan keyin o'chiriladi).
+        10 => array(
+            "ALTER TABLE rq_posts ADD COLUMN price_total INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE rq_posts ADD COLUMN rasm TEXT NOT NULL DEFAULT ''",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

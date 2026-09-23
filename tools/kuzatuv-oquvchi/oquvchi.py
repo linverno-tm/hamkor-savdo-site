@@ -19,6 +19,7 @@ Ishga tushirish: README.md ga qarang.
 """
 
 import asyncio
+import base64
 import configparser
 import json
 import os
@@ -126,7 +127,38 @@ def dokonnikimi(m, admin_ids):
     return m.sender_id in admin_ids
 
 
-async def guruhni_oqi(client, guruh, holat, eng_kop):
+RASM_CHEGARA = 1_200_000  # bayt; undan kattasi yuborilmaydi
+
+
+async def rasm_ol(client, m):
+    """Post rasmi (yoki videoning muqovasi) — base64, 1000 px gacha.
+
+    Raqobatchilar narxni ko'pincha faqat rasmga yozadi ("12 OYGA 209 000
+    so'mdan"), post matnida esa "changyutkich" xolos. Shuning uchun rasm ham
+    saytga boradi, u yerda AI narxni o'qiydi va rasm darhol o'chiriladi.
+    1000 px katta yozuvni o'qishga yetadi, to'liq o'lcham esa ortiqcha og'ir.
+    """
+    try:
+        if getattr(m, "photo", None):
+            olcham = None
+            for s in getattr(m.photo, "sizes", []) or []:
+                w = getattr(s, "w", 0) or 0
+                if 0 < w <= 1000 and "Stripped" not in type(s).__name__:
+                    olcham = s  # o'lchamlar kichikdan kattaga tartiblangan
+            b = await client.download_media(m, file=bytes, thumb=olcham if olcham is not None else -1)
+        elif getattr(m, "video", None):
+            b = await client.download_media(m, file=bytes, thumb=-1)  # videoning muqovasi
+        else:
+            return ""
+    except Exception as e:
+        print(f"    rasm olinmadi ({e.__class__.__name__}) — matni bilan yuboriladi")
+        return ""
+    if not b or len(b) > RASM_CHEGARA:
+        return ""
+    return base64.b64encode(b).decode("ascii")
+
+
+async def guruhni_oqi(client, guruh, holat, eng_kop, qayta=0):
     """Bitta guruhdan oxirgi ko'rilganidan keyingi xabarlar."""
     nom = guruh["username"]
     oxirgi = max(int(guruh.get("last_id") or 0), int(holat.get(nom, 0)))
@@ -139,7 +171,10 @@ async def guruhni_oqi(client, guruh, holat, eng_kop):
     chiqdi = []
     eng_katta = oxirgi
     try:
-        if oxirgi == 0:
+        if qayta:
+            # --qayta: oxirgi N ta xabar qaytadan, rasmi bilan (o'qilgan joy o'zgarmaydi).
+            xabarlar = client.iter_messages(manba, limit=qayta)
+        elif oxirgi == 0:
             # Birinchi marta: faqat oxirgi xabarlar. Guruhning butun tarixini
             # (ba'zan yillar) o'qib o'tirmaymiz.
             xabarlar = client.iter_messages(manba, limit=eng_kop)
@@ -158,23 +193,43 @@ async def guruhni_oqi(client, guruh, holat, eng_kop):
                 media = "video"
             elif getattr(m, "photo", None):
                 media = "foto"
-            chiqdi.append({
+            post = {
                 "source": nom,
                 "post_id": m.id,
                 "text": matn,
                 "media": media,
                 "posted_at": m.date.strftime("%Y-%m-%d %H:%M:%S"),
-            })
+            }
+            if media:
+                rasm = await rasm_ol(client, m)
+                if rasm:
+                    post["rasm"] = rasm
+            chiqdi.append(post)
     except FloodWaitError as e:
         print(f"  @{nom}: Telegram {e.seconds} soniya kutishni so'radi")
         await asyncio.sleep(min(e.seconds, 300))
     except Exception as e:
         print(f"  @{nom}: o'qilmadi — {e}")
-    holat[nom] = eng_katta
+    if not qayta:
+        holat[nom] = eng_katta
     return chiqdi
 
 
-async def bir_aylanish(client, cfg, holat):
+def bolaklar(postlar, chegara=1_500_000, eng_kop=20):
+    """Saytga bo'lib yuborish: bitta so'rov ~1.5 MB dan oshmasin (rasmlar bilan)."""
+    bolak, hajm = [], 0
+    for p in postlar:
+        o = len(p.get("rasm", "")) + len(p["text"]) + 300
+        if bolak and (hajm + o > chegara or len(bolak) >= eng_kop):
+            yield bolak
+            bolak, hajm = [], 0
+        bolak.append(p)
+        hajm += o
+    if bolak:
+        yield bolak
+
+
+async def bir_aylanish(client, cfg, holat, qayta=0):
     try:
         javob = saytga(cfg, {"amal": "royxat"})
     except urllib.error.HTTPError as e:
@@ -189,22 +244,27 @@ async def bir_aylanish(client, cfg, holat):
         return
     hammasi = []
     for g in guruhlar:
-        yangi = await guruhni_oqi(client, g, holat, cfg["eng_kop"])
+        yangi = await guruhni_oqi(client, g, holat, cfg["eng_kop"], qayta)
         if yangi:
-            print(f"  @{g['username']}: {len(yangi)} ta do'kon posti")
+            rasmli = sum(1 for p in yangi if p.get("rasm"))
+            print(f"  @{g['username']}: {len(yangi)} ta do'kon posti, {rasmli} tasi rasmi bilan")
         hammasi.extend(yangi)
     if hammasi:
-        try:
-            natija = saytga(cfg, {"amal": "yuklash", "postlar": hammasi})
-            print(f"Panelga yuborildi: {natija.get('yozildi', 0)} ta yangi, "
-                  f"{natija.get('otkazildi', 0)} ta o'tkazib yuborildi.")
-        except Exception as e:
-            # Holatni saqlamaymiz — keyingi safar shu xabarlar qayta yuboriladi.
-            print(f"Yuborilmadi, keyingi safar qayta urinadi: {e}")
-            return
+        yozildi = otkazildi = 0
+        for bolak in bolaklar(hammasi):
+            try:
+                natija = saytga(cfg, {"amal": "yuklash", "postlar": bolak})
+            except Exception as e:
+                # Holatni saqlamaymiz — keyingi safar shu xabarlar qayta yuboriladi.
+                print(f"Yuborilmadi, keyingi safar qayta urinadi: {e}")
+                return
+            yozildi += natija.get("yozildi", 0)
+            otkazildi += natija.get("otkazildi", 0)
+        print(f"Panelga yuborildi: {yozildi} ta yangi, {otkazildi} ta o'tkazib yuborildi.")
     else:
         print("Yangi do'kon posti yo'q.")
-    holatni_yoz(holat)
+    if not qayta:
+        holatni_yoz(holat)
 
 
 QULF = os.path.join(BU_YER, "ishlayapti.lock")
@@ -231,6 +291,15 @@ def qulf_ol():
 async def asosiy():
     cfg = sozlamani_oqi()
     bir_marta = "--bir-marta" in sys.argv
+    qayta = 0
+    if "--qayta" in sys.argv:
+        # Oxirgi N ta xabarni rasmi bilan qayta yuborish (bir martalik). Masalan,
+        # narxni rasmdan o'qish qo'shilganda oldin rasmsiz kelganlarini to'ldirish uchun.
+        try:
+            qayta = max(1, min(200, int(sys.argv[sys.argv.index("--qayta") + 1])))
+        except (IndexError, ValueError):
+            qayta = 50
+        bir_marta = True
     client = TelegramClient(os.path.join(BU_YER, "seans"), cfg["api_id"], cfg["api_hash"])
 
     if bir_marta:
@@ -245,7 +314,7 @@ async def asosiy():
                 print("Seans yo'q yoki bekor qilingan. Avval: python qr-kirish.py")
                 sys.exit(2)
             print(time.strftime("[%Y-%m-%d %H:%M] ") + "tekshirilyapti...")
-            await bir_aylanish(client, cfg, holatni_oqi())
+            await bir_aylanish(client, cfg, holatni_oqi(), qayta)
         finally:
             await client.disconnect()
             try:

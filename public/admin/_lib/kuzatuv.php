@@ -7,10 +7,13 @@
  *      Buning uchun bot ham, akkaunt ham, ruxsat ham kerak emas — bu sahifani
  *      istalgan odam brauzerda ocha oladi. Yopiq guruhga kirish yo'li bu yerda
  *      YO'Q va ataylab qo'shilmagan.
- *   2. Har postni AI tahlil qiladi: aksiya turi, chegirma foizi, muddatli to'lov
- *      sharti, tugash sanasi. Narx faqat rasm yoki videoda bo'lsa — bo'sh qoladi,
- *      o'ylab topilmaydi.
- *   3. Xulosani ALOHIDA botning ALOHIDA guruhiga yuboradi.
+ *   2. Har postni AI tahlil qiladi — MATNI VA RASMI bilan. Raqobatchilar narxni
+ *      ko'pincha faqat rasmga yozadi ("12 OYGA 209 000 so'mdan"), matnda esa
+ *      "changyutkich" degan so'z xolos. Ko'rinmagan narx o'ylab topilmaydi.
+ *   3. ALOHIDA botning ALOHIDA guruhiga yuboradi: narxlarni to'plab (yarim soatda
+ *      bir marta yoki kuniga bir marta) va jiddiy o'zgarishni darhol. Narxsiz
+ *      e'lon (hazil rolik, "12 oy muddatga" degan umumiy gap) Telegram'ga
+ *      yuborilmaydi — egasi so'radi: "menga qiziqmas unaqa e'lonlari".
  *
  * Nega alohida bot: mijozlar boti mijozlar guruhlarida o'tiradi. Bitta sozlama
  * xatosi bilan raqobatchi tahlili o'sha yerga tushib ketmasligi uchun bu bo'lim
@@ -33,6 +36,8 @@ function hs_rq_setting($key)
         'chat_id' => '',
         'chat_title' => '',
         'digest_hour' => '9',
+        // darhol — yangi narxlar yarim soatda bir marta bitta xabarda; kunlik — digest_hour da.
+        'narx_rejim' => 'darhol',
         'alerts' => '1',
         'alert_discount' => '30',
     );
@@ -190,11 +195,96 @@ function hs_rq_channel_add($username)
         . ($kind === "guruh" ? " — bu GURUH, uni kompyuterdagi o'quvchi dastur o'qiydi." : "."));
 }
 
+/* ================================= rasmlar ================================= */
+
+/** Guruh postlari rasmlarining vaqtinchalik papkasi (veb orqali yopiq: _data). */
+function hs_rq_rasm_dir()
+{
+    $dir = hs_data_dir() . '/rq-rasm';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+    }
+    return $dir;
+}
+
+/** Fayl boshidan turini aniqlash. Rasm bo'lmasa — ''. */
+function hs_rq_mime($b)
+{
+    if (strncmp($b, "\xFF\xD8\xFF", 3) === 0) {
+        return 'image/jpeg';
+    }
+    if (strncmp($b, "\x89PNG", 4) === 0) {
+        return 'image/png';
+    }
+    if (strncmp($b, 'RIFF', 4) === 0 && substr($b, 8, 4) === 'WEBP') {
+        return 'image/webp';
+    }
+    return '';
+}
+
+/** O'quvchi dastur yuborgan rasmni saqlash. Qaytadi: fayl nomi yoki ''. */
+function hs_rq_rasm_saqla($channel, $postId, $b64)
+{
+    $b = base64_decode((string) $b64, true);
+    if ($b === false || strlen($b) > 1500000 || hs_rq_mime($b) === '') {
+        return '';
+    }
+    $nom = preg_replace('/[^A-Za-z0-9_]/', '', $channel) . '-' . (int) $postId . '.img';
+    return @file_put_contents(hs_rq_rasm_dir() . '/' . $nom, $b) ? $nom : '';
+}
+
+/**
+ * Tahlil uchun rasm: [mime, base64] yoki null.
+ * Kanal postida `rasm` — Telegram CDN manzili, guruh postida — saqlangan fayl nomi.
+ */
+function hs_rq_rasm_olish($post)
+{
+    $r = (string) $post['rasm'];
+    if ($r === '') {
+        return null;
+    }
+    if (strncmp($r, 'https://', 8) === 0) {
+        list($code, $b) = hs_http('GET', $r, array('User-Agent: Mozilla/5.0 (HamkorSavdo kuzatuv)'), null, 20);
+        if ($code !== 200 || strlen((string) $b) > 3000000) {
+            return null;
+        }
+    } else {
+        $f = hs_rq_rasm_dir() . '/' . basename($r);
+        $b = is_file($f) ? (string) file_get_contents($f) : '';
+    }
+    $mime = hs_rq_mime((string) $b);
+    return $mime !== '' ? array($mime, base64_encode($b)) : null;
+}
+
+/** Tahlildan keyin guruh rasmi o'chiriladi — raqobatchining rasmini saqlab yurmaymiz. */
+function hs_rq_rasm_ochir($post)
+{
+    $r = (string) $post['rasm'];
+    if ($r !== '' && strncmp($r, 'https://', 8) !== 0) {
+        @unlink(hs_rq_rasm_dir() . '/' . basename($r));
+    }
+}
+
+/**
+ * Oldin RASMSIZ kelgan post endi rasm bilan kelsa — qayta tahlilga qo'yiladi.
+ * Faqat yangi postlar (7 kun): eski narx endi kerak emas.
+ * Oldin narx topilmagan bo'lsa, narx xabariga qaytadan kirishi uchun digested = 0.
+ */
+function hs_rq_rasm_qoshimcha($channel, $postId, $rasm)
+{
+    $st = hs_db()->prepare("UPDATE rq_posts SET rasm = ?, analyzed = 0, ai_error = '',
+        digested = CASE WHEN price = 0 AND price_total = 0 THEN 0 ELSE digested END
+        WHERE channel = ? AND post_id = ? AND rasm = '' AND posted_at > ?");
+    $st->execute(array($rasm, $channel, (int) $postId, date('Y-m-d H:i:s', time() - 7 * 86400)));
+    return $st->rowCount() > 0;
+}
+
 /* ============================= postlarni olish ============================= */
 
 /**
  * Bitta kanaldan yangi postlar. Birinchi marta — oxirgi bir sahifa (~20 post),
- * keyin faqat oxirgi ko'rilganidan yangilari.
+ * keyin faqat oxirgi ko'rilganidan yangilari. Sahifadagi eski postlardan rasmi
+ * yo'q holda saqlanganlariga rasm qo'shiladi (narxni rasmdan o'qish kiritilgan).
  */
 function hs_rq_fetch($ch)
 {
@@ -209,14 +299,18 @@ function hs_rq_fetch($ch)
     $posts = hs_mb_parse_channel_page($html, $username);
     $saved = 0;
     $max = $last;
-    $ins = hs_db()->prepare('INSERT OR IGNORE INTO rq_posts (channel, post_id, url, text, media, posted_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    $ins = hs_db()->prepare('INSERT OR IGNORE INTO rq_posts (channel, post_id, url, text, media, rasm, posted_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     foreach ($posts as $p) {
         $max = max($max, (int) $p['id']);
+        $rasm = isset($p['rasm']) ? (string) $p['rasm'] : '';
         if ((int) $p['id'] <= $last) {
+            if ($rasm !== '') {
+                hs_rq_rasm_qoshimcha($username, (int) $p['id'], $rasm);
+            }
             continue;
         }
         $ins->execute(array($username, (int) $p['id'], hs_mb_post_url($username, (int) $p['id']),
-            $p['text'], isset($p['media']) ? $p['media'] : '', $p['at'], hs_now()));
+            $p['text'], isset($p['media']) ? $p['media'] : '', $rasm, $p['at'], hs_now()));
         $saved += $ins->rowCount() > 0 ? 1 : 0;
     }
     $st = hs_db()->prepare('UPDATE rq_channels SET last_post_id = ?, last_fetch = ?, last_error = ? WHERE id = ?');
@@ -255,64 +349,60 @@ function hs_rq_schema()
             'summary' => array('type' => 'string'),
             'price' => array('type' => 'integer'),
             'months' => array('type' => 'integer'),
+            'price_total' => array('type' => 'integer'),
             'discount' => array('type' => 'integer'),
             'instalment' => array('type' => 'string'),
             'ends_at' => array('type' => 'string'),
-            'important' => array('type' => 'boolean'),
         ),
-        'required' => array('kind', 'brand', 'model', 'summary', 'price', 'months', 'discount', 'instalment', 'ends_at', 'important'),
+        'required' => array('kind', 'brand', 'model', 'summary', 'price', 'months', 'price_total', 'discount', 'instalment', 'ends_at'),
         'additionalProperties' => false,
     );
 }
 
 function hs_rq_system_prompt()
 {
-    $oy = 12;
-    $c = hs_content_published();
-    if (is_array($c) && isset($c['settings']['installmentMonthsMax'])) {
-        $oy = (int) $c['settings']['installmentMonthsMax'];
-    }
     return "Sen HAMKOR SAVDO (Andijon: texnika, tilla, mebel, skuterlar) uchun raqobat tahlilchisisan. "
-        . "Senga boshqa do'konning Telegram e'loni beriladi. Vazifang — undagi FAKTLARNI ajratib olish.\n\n"
+        . "Senga boshqa do'konning Telegram e'loni beriladi: matni va, bo'lsa, RASMI. Vazifang — undagi FAKTLARNI ajratib olish.\n\n"
+        . "Narx ko'pincha RASMDA bo'ladi, matnda emas. Rasmdagi yozuvlarni diqqat bilan o'qi.\n\n"
         . "Qoidalar:\n"
-        . "- Faqat matnda YOZILGANINI yoz. Narx, foiz yoki sana matnda bo'lmasa — bo'sh qoldir, taxmin qilma.\n"
-        . "- Ko'p e'lonlarda narx faqat rasm yoki videoda bo'ladi; bu normal, bo'sh qoldir.\n"
-        . "- model: mahsulot nomi va modeli matnda qanday yozilgan bo'lsa shundayligicha. Yo'q bo'lsa bo'sh.\n"
-        . "- price: OYIGA to'lanadigan summa, so'mda, faqat raqam (\"262.000 SOMDAN\" -> 262000). Yo'q bo'lsa 0.\n"
-        . "- months: necha oyga (\"12 OYGA\" -> 12). Yo'q bo'lsa 0.\n"
-        . "- kind: bitta mahsulotning narxi e'lon qilingan bo'lsa 'mahsulot'.\n"
+        . "- Faqat matnda yoki rasmda aniq YOZILGANINI yoz. Ko'rinmasa yoki o'qib bo'lmasa — 0 yoki bo'sh qoldir, taxmin qilma.\n"
+        . "- price: OYIGA to'lanadigan summa, so'mda, faqat raqam. Rasmda \"12 OYGA 209 000 so'mdan\" -> price 209000, months 12. Matnda \"262.000 SOMDAN\" -> 262000.\n"
+        . "- price_total: mahsulotning to'liq narxi — odatda oylik to'lov yonida alohida turgan kattaroq summa (masalan \"1 793 000\"). Yo'q bo'lsa 0.\n"
+        . "- months: necha oyga. Yo'q bo'lsa 0.\n"
+        . "- model: mahsulot brendi va nomi, rasmda yoki matnda qanday yozilgan bo'lsa (masalan \"AVALON changyutkich\"). Yo'q bo'lsa bo'sh.\n"
+        . "- Bir e'londa bir nechta mahsulot bo'lsa — eng ko'zga tashlanadiganini yoz.\n"
+        . "- kind: bitta mahsulot narxi — 'mahsulot'; chegirma yoki aksiya — 'aksiya'; yangi do'kon yoki filial — 'do'kon yangiligi'; "
+        . "hazil rolik, tabrik, umumiy reklama — 'boshqa'.\n"
         . "- discount: eng katta chegirma foizi, raqamda (masalan 60). Yo'q bo'lsa 0.\n"
-        . "- instalment: muddatli to'lov sharti matnda qanday yozilgan bo'lsa shundayligicha (masalan \"0-0-6\", \"24 oygacha\"). Yo'q bo'lsa bo'sh.\n"
+        . "- instalment: muddatli to'lov sharti qanday yozilgan bo'lsa shundayligicha (masalan \"0-0-6\", \"24 oygacha\"). Yo'q bo'lsa bo'sh.\n"
         . "- ends_at: aksiya tugash sanasi YYYY-MM-DD ko'rinishida. Yo'q bo'lsa bo'sh.\n"
-        . "- summary: 3-6 so'z, faqat mavzu (masalan \"maishiy texnika va smartfonlar\"). Gap tuzma, reklama gapini ko'chirma, raqamlarni bu yerga yozma.\n"
-        . "- important: true — agar bu bizga darhol ta'sir qiladigan narsa bo'lsa: "
-        . "chegirma 30% dan katta, muddatli to'lov bizning {$oy} oyimizdan uzoqroq yoki boshlang'ich to'lovsiz, "
-        . "yangi do'kon ochilishi, yoki tarmoq bo'ylab katta aksiya. Oddiy mahsulot e'loni bo'lsa false.";
+        . "- summary: 3-6 so'z, faqat mavzu (masalan \"maishiy texnika va smartfonlar\"). Gap tuzma, reklama gapini ko'chirma, raqam yozma.";
 }
 
-/** Bitta postni tahlil qilish. Qaytadi: [massiv yoki null, xato]. */
 /*
- * Bitta e'lonni AI ga yuborish.
+ * Bitta e'lonni AI ga yuborish — matni va rasmi bilan.
  *
- * Matn yuborishdan oldin telefon raqamlari o'chiriladi (hs_mb_scrub). Kanal
- * e'lonlarida bu do'konning o'z raqami bo'ladi, lekin GURUHlarda oddiy
- * mijozlar ham yozadi va raqamini qoldiradi — ularning raqami tahlil uchun
- * kerak emas, demak umuman yuborilmasligi kerak.
+ * Matn yuborishdan oldin telefon raqamlari o'chiriladi (hs_mb_scrub): guruhlarda
+ * oddiy mijozlar ham raqamini qoldiradi, u tahlilga kerak emas.
  */
 function hs_rq_ai($post)
 {
     $text = "Kanal: @" . $post['channel'] . "\nSana: " . $post['posted_at']
-        . "\nMedia: " . ($post['media'] !== '' ? $post['media'] : 'yo\'q')
+        . "\nMedia: " . ($post['media'] !== '' ? $post['media'] : "yo'q")
         . "\n\nE'lon matni:\n\"\"\"" . mb_substr(hs_mb_scrub($post['text']), 0, 2000) . "\"\"\"";
+    $img = hs_rq_rasm_olish($post);
+    if ($img) {
+        $text .= "\n\nRasm ilova qilingan — narxni undan o'qi.";
+    }
     if (getenv('HS_MB_FAKE_AI')) {
         $fake = json_decode((string) @file_get_contents(getenv('HS_MB_FAKE_AI')), true);
-        @file_put_contents(hs_data_dir() . '/kuzatuv-ai.log', $text . "\n\n", FILE_APPEND);
+        @file_put_contents(hs_data_dir() . '/kuzatuv-ai.log', $text . ($img ? "\n[rasm: " . $img[0] . ', ' . strlen($img[1]) . " belgi]" : '') . "\n\n", FILE_APPEND);
         return array(is_array($fake) ? $fake : null, is_array($fake) ? '' : "fake yo'q");
     }
-    return hs_mb_provider() === 'gemini' ? hs_rq_ai_gemini($text) : hs_rq_ai_claude($text);
+    return hs_mb_provider() === 'gemini' ? hs_rq_ai_gemini($text, $img) : hs_rq_ai_claude($text, $img);
 }
 
-function hs_rq_ai_gemini($text)
+function hs_rq_ai_gemini($text, $img = null)
 {
     $key = hs_mb_gemini_key();
     if ($key === '') {
@@ -327,7 +417,9 @@ function hs_rq_ai_gemini($text)
     }
     $body = array(
         'system_instruction' => array('parts' => array(array('text' => hs_rq_system_prompt()))),
-        'contents' => array(array('role' => 'user', 'parts' => array(array('text' => $text)))),
+        'contents' => array(array('role' => 'user', 'parts' => $img
+            ? array(array('inline_data' => array('mime_type' => $img[0], 'data' => $img[1])), array('text' => $text))
+            : array(array('text' => $text)))),
         'generationConfig' => array(
             'responseMimeType' => 'application/json',
             'responseSchema' => $schema,
@@ -352,7 +444,7 @@ function hs_rq_ai_gemini($text)
     return is_array($d) && isset($d['kind']) ? array($d, '') : array(null, 'Gemini javobi tushunarsiz.');
 }
 
-function hs_rq_ai_claude($text)
+function hs_rq_ai_claude($text, $img = null)
 {
     $key = hs_mb_key();
     if ($key === '') {
@@ -363,7 +455,9 @@ function hs_rq_ai_claude($text)
         'model' => $model,
         'max_tokens' => 1200,
         'system' => array(array('type' => 'text', 'text' => hs_rq_system_prompt())),
-        'messages' => array(array('role' => 'user', 'content' => $text)),
+        'messages' => array(array('role' => 'user', 'content' => $img
+            ? array(array('type' => 'image', 'source' => array('type' => 'base64', 'media_type' => $img[0], 'data' => $img[1])), array('type' => 'text', 'text' => $text))
+            : $text)),
         'output_config' => array('effort' => 'low', 'format' => array('type' => 'json_schema', 'schema' => hs_rq_schema())),
     );
     $headers = array('Content-Type: application/json', 'x-api-key: ' . $key, 'anthropic-version: 2023-06-01');
@@ -387,6 +481,24 @@ function hs_rq_ai_claude($text)
     return is_array($d) && isset($d['kind']) ? array($d, '') : array(null, 'Claude javobi tushunarsiz.');
 }
 
+/**
+ * Muddatli to'lov necha oy: months, bo'lmasa sharti matnidagi eng katta son
+ * ("0-0-12" -> 12, "12 oyga 0 so'm" -> 12, "24 oygacha" -> 24).
+ */
+function hs_rq_oy_soni($p)
+{
+    if ((int) $p['months'] > 0) {
+        return (int) $p['months'];
+    }
+    $eng = 0;
+    if (preg_match_all('/\d{1,2}/u', (string) $p['instalment'], $m)) {
+        foreach ($m[0] as $n) {
+            $eng = (int) $n <= 60 ? max($eng, (int) $n) : $eng;
+        }
+    }
+    return $eng;
+}
+
 /** Tahlil qilinmagan postlar. Qaytadi: nechtasi tahlil qilindi. */
 function hs_rq_analyze($limit = 10)
 {
@@ -394,25 +506,37 @@ function hs_rq_analyze($limit = 10)
     $st->execute(array((int) $limit));
     $rows = $st->fetchAll();
     $n = 0;
+    $u = hs_db()->prepare("UPDATE rq_posts SET analyzed = 1, ai_error = '', kind = ?, brand = ?, model = ?, summary = ?, price = ?, months = ?,
+        price_total = ?, discount = ?, instalment = ?, ends_at = ?, important = ? WHERE channel = ? AND post_id = ?");
     foreach ($rows as $p) {
         list($d, $err) = hs_rq_ai($p);
         if ($d === null) {
-            $u = hs_db()->prepare('UPDATE rq_posts SET ai_error = ? WHERE channel = ? AND post_id = ?');
-            $u->execute(array(mb_substr($err, 0, 200), $p['channel'], $p['post_id']));
+            $e = hs_db()->prepare('UPDATE rq_posts SET ai_error = ? WHERE channel = ? AND post_id = ?');
+            $e->execute(array(mb_substr($err, 0, 200), $p['channel'], $p['post_id']));
             // Kalit yo'q yoki limit tugagan bo'lsa qolganini ham urinib o'tirmaymiz.
             break;
         }
-        $chegara = (int) hs_rq_setting('alert_discount');
-        $important = !empty($d['important']) || (int) $d['discount'] >= $chegara ? 1 : 0;
-        $u = hs_db()->prepare('UPDATE rq_posts SET analyzed = 1, ai_error = \'\', kind = ?, brand = ?, model = ?, summary = ?, price = ?, months = ?, discount = ?, instalment = ?, ends_at = ?, important = ? WHERE channel = ? AND post_id = ?');
+        $natija = array(
+            'months' => isset($d['months']) ? (int) $d['months'] : 0,
+            'instalment' => mb_substr((string) $d['instalment'], 0, 60),
+        );
+        /* "Jiddiy" — AI ning fikri emas, qat'iy qoida. Ilgari AI bergan belgi
+           ishlatilardi va "changyutkich, 12 oy muddatga" ham "⚡ Diqqat" bo'lib
+           kelardi. Endi faqat: chegirma chegaradan katta, muddat bizdan uzun
+           yoki yangi do'kon. */
+        $important = (int) $d['discount'] >= (int) hs_rq_setting('alert_discount')
+            || hs_rq_oy_soni($natija) > hs_rq_oyimiz()
+            || (string) $d['kind'] === "do'kon yangiligi" ? 1 : 0;
         $u->execute(array(
             (string) $d['kind'], mb_substr((string) $d['brand'], 0, 80),
             mb_substr(isset($d['model']) ? (string) $d['model'] : '', 0, 160),
             mb_substr((string) $d['summary'], 0, 400),
-            isset($d['price']) ? (int) $d['price'] : 0, isset($d['months']) ? (int) $d['months'] : 0,
-            (int) $d['discount'], mb_substr((string) $d['instalment'], 0, 60), mb_substr((string) $d['ends_at'], 0, 10),
+            isset($d['price']) ? (int) $d['price'] : 0, $natija['months'],
+            isset($d['price_total']) ? (int) $d['price_total'] : 0,
+            (int) $d['discount'], $natija['instalment'], mb_substr((string) $d['ends_at'], 0, 10),
             $important, $p['channel'], $p['post_id'],
         ));
+        hs_rq_rasm_ochir($p);
         $n++;
     }
     return $n;
@@ -469,16 +593,12 @@ function hs_rq_som($n)
 }
 
 /**
- * Bizning shartimiz bilan taqqoslash — faqat oy soni aniq bo'lsa.
- * Maqsad: xabarni o'qigan odam "bu bizga yaxshimi yomonmi" deb o'ylab
- * o'tirmasin, javob bir qatorda tursin.
+ * Bizning shartimiz bilan taqqoslash — faqat farq bo'lsa. "Teng" degan qator
+ * hech narsa aytmaydi, shuning uchun yozilmaydi.
  */
 function hs_rq_compare($p)
 {
-    $ular = (int) $p['months'];
-    if ($ular <= 0 && $p['instalment'] !== '' && preg_match('/(\d{1,2})/u', $p['instalment'], $m)) {
-        $ular = (int) $m[1];
-    }
+    $ular = hs_rq_oy_soni($p);
     if ($ular <= 0) {
         return '';
     }
@@ -489,7 +609,7 @@ function hs_rq_compare($p)
     if ($ular < $biz) {
         return "Bizda {$biz} oy — bizniki uzunroq.";
     }
-    return "Bizda ham {$biz} oy — teng.";
+    return '';
 }
 
 /** Birinchi harfni kattalashtirish (AI xulosani kichik harfda qaytaradi). */
@@ -525,6 +645,9 @@ function hs_rq_alert_text($p)
         $s .= "\nOyiga: " . hs_rq_som($p['price'])
             . ((int) $p['months'] > 0 ? ' × ' . (int) $p['months'] . ' oy' : '');
     }
+    if ((int) $p['price_total'] > 0) {
+        $s .= "\nNarxi: " . hs_rq_som($p['price_total']);
+    }
     if ((int) $p['discount'] > 0) {
         $s .= "\nChegirma: " . (int) $p['discount'] . '% gacha';
     }
@@ -542,18 +665,18 @@ function hs_rq_alert_text($p)
     return $s . "\n\n" . $p['url'];
 }
 
-/** Kunlik xulosadagi bitta qator — ixcham, bitta e'lon bitta satr. */
+/** Narxlar xabaridagi bitta qator — ixcham: nomi, oylik to'lov, to'liq narx, havola. */
 function hs_rq_line($p)
 {
     $q = array();
     if ((int) $p['price'] > 0) {
         $q[] = 'oyiga ' . hs_rq_som($p['price']) . ((int) $p['months'] > 0 ? ' × ' . (int) $p['months'] . ' oy' : '');
     }
+    if ((int) $p['price_total'] > 0) {
+        $q[] = 'narxi ' . hs_rq_som($p['price_total']);
+    }
     if ((int) $p['discount'] > 0) {
         $q[] = (int) $p['discount'] . '% chegirma';
-    }
-    if ($p['instalment'] !== '' && (int) $p['price'] === 0) {
-        $q[] = $p['instalment'];
     }
     $sana = hs_rq_sana($p['ends_at']);
     if ($sana !== '') {
@@ -639,50 +762,62 @@ function hs_rq_bolakla($bolimlar, $sarlavha, $chegara = 3800)
     return $xabarlar;
 }
 
-/** Kunlik xulosa — belgilangan soatda, kuniga bir marta, do'konlar bo'yicha. */
-function hs_rq_digest($force = false)
+/**
+ * Narxlar xabari. Egasiga raqobatchining NARXI kerak — shuning uchun:
+ *  - narxsiz e'lonlar (hazil rolik, "12 oy muddatga" degan umumiy gap)
+ *    Telegram'ga umuman yuborilmaydi, faqat panelda turadi;
+ *  - narxlilari to'planib keladi: "darhol" rejimida yarim soatda bir marta
+ *    (yangilari bo'lsa), "kunlik" rejimida belgilangan soatda;
+ *  - faqat so'nggi 3 kundagilari — yangi manba qo'shilganda uning bir
+ *    haftalik tarixi birdaniga guruhni to'ldirmasin.
+ * Qaytadi: yuborilgan e'lonlar soni.
+ */
+function hs_rq_narxlar($force = false)
 {
     if (!hs_rq_on()) {
-        return false;
+        return 0;
     }
+    hs_db()->exec('UPDATE rq_posts SET digested = 1 WHERE digested = 0 AND analyzed = 1 AND price = 0 AND price_total = 0');
+    $st = hs_db()->prepare('UPDATE rq_posts SET digested = 1 WHERE digested = 0 AND analyzed = 1 AND posted_at <= ?');
+    $st->execute(array(date('Y-m-d H:i:s', time() - 3 * 86400)));
+    $kunlik = hs_rq_setting('narx_rejim') === 'kunlik';
     if (!$force) {
-        if ((int) date('G') < (int) hs_rq_setting('digest_hour')) {
-            return false;
+        if ($kunlik && ((int) date('G') < (int) hs_rq_setting('digest_hour') || hs_setting('rq_digest_last', '') === date('Y-m-d'))) {
+            return 0;
         }
-        if (hs_setting('rq_digest_last', '') === date('Y-m-d')) {
-            return false;
+        if (!$kunlik && time() - (int) hs_setting('rq_narx_last', '0') < 1800) {
+            return 0;
         }
     }
-    $rows = hs_db()->query('SELECT * FROM rq_posts WHERE digested = 0 AND analyzed = 1 ORDER BY channel, posted_at')->fetchAll();
-    hs_set_setting('rq_digest_last', date('Y-m-d'));
+    $rows = hs_db()->query('SELECT * FROM rq_posts WHERE digested = 0 AND analyzed = 1 ORDER BY channel, posted_at LIMIT 200')->fetchAll();
+    if ($kunlik) {
+        hs_set_setting('rq_digest_last', date('Y-m-d'));
+    }
     if (!$rows) {
-        return false;
+        return 0;
     }
     $guruhlangan = array();
     foreach ($rows as $p) {
-        if ($p['kind'] === 'boshqa') {
-            continue;
-        }
         $guruhlangan[$p['channel']][] = hs_rq_line($p);
     }
-    if ($guruhlangan) {
-        $bolimlar = array();
-        $jami = 0;
-        foreach ($guruhlangan as $kanal => $qatorlar) {
-            $jami += count($qatorlar);
-            $bolimlar[] = hs_rq_channel_title($kanal) . ' — ' . count($qatorlar) . " ta\n" . implode("\n", $qatorlar);
-        }
-        $xabarlar = hs_rq_bolakla($bolimlar, 'Raqobatchilar — ' . date('d.m.Y') . " · jami {$jami} ta e'lon");
-        foreach ($xabarlar as $i => $matn) {
-            list($ok) = hs_rq_send($matn . (count($xabarlar) > 1 ? "\n\n[" . ($i + 1) . '/' . count($xabarlar) . ']' : ''));
-            if (!$ok) {
-                return false;
-            }
+    $bolimlar = array();
+    foreach ($guruhlangan as $kanal => $qatorlar) {
+        $bolimlar[] = hs_rq_channel_title($kanal) . "\n" . implode("\n", $qatorlar);
+    }
+    $sarlavha = '💰 ' . ($kunlik ? 'Raqobatchilar narxlari — ' . date('d.m.Y') : 'Yangi narxlar') . ' · ' . count($rows) . ' ta';
+    $xabarlar = hs_rq_bolakla($bolimlar, $sarlavha);
+    foreach ($xabarlar as $i => $matn) {
+        list($ok) = hs_rq_send($matn . (count($xabarlar) > 1 ? "\n\n[" . ($i + 1) . '/' . count($xabarlar) . ']' : ''));
+        if (!$ok) {
+            return 0;
         }
     }
-    $u = hs_db()->prepare('UPDATE rq_posts SET digested = 1 WHERE digested = 0 AND analyzed = 1');
-    $u->execute();
-    return (bool) $guruhlangan;
+    $b = hs_db()->prepare('UPDATE rq_posts SET digested = 1 WHERE channel = ? AND post_id = ?');
+    foreach ($rows as $p) {
+        $b->execute(array($p['channel'], $p['post_id']));
+    }
+    hs_set_setting('rq_narx_last', (string) time());
+    return count($rows);
 }
 
 /* ====================== kompyuterdagi o'quvchi dastur ====================== */
@@ -708,10 +843,13 @@ function hs_rq_ingest_key_new()
     return $k;
 }
 
-/** Dastur yuborgan xabarlarni yozish. Qaytadi: [yozilgan, o'tkazilgan]. */
+/**
+ * Dastur yuborgan xabarlarni yozish. Qaytadi: [yozilgan, o'tkazilgan].
+ * `rasm` — base64 (dastur 1000px gacha kichraytirib yuboradi); tahlildan keyin o'chiriladi.
+ */
 function hs_rq_ingest($posts)
 {
-    $ins = hs_db()->prepare("INSERT OR IGNORE INTO rq_posts (channel, post_id, via, url, text, media, posted_at, fetched_at) VALUES (?, ?, 'guruh', ?, ?, ?, ?, ?)");
+    $ins = hs_db()->prepare("INSERT OR IGNORE INTO rq_posts (channel, post_id, via, url, text, media, rasm, posted_at, fetched_at) VALUES (?, ?, 'guruh', ?, ?, ?, ?, ?, ?)");
     $n = 0;
     $skip = 0;
     foreach ((array) $posts as $p) {
@@ -722,11 +860,18 @@ function hs_rq_ingest($posts)
             $skip++;
             continue;
         }
+        $rasm = !empty($p['rasm']) ? hs_rq_rasm_saqla($src, $id, $p['rasm']) : '';
         $ts = isset($p['posted_at']) ? strtotime((string) $p['posted_at']) : 0;
         $media = isset($p['media']) && in_array($p['media'], array('foto', 'video'), true) ? $p['media'] : '';
         $ins->execute(array($src, $id, 'https://t.me/' . $src . '/' . $id,
-            mb_substr($text, 0, 4000), $media, $ts ? date('Y-m-d H:i:s', $ts) : hs_now(), hs_now()));
-        $n += $ins->rowCount() > 0 ? 1 : 0;
+            mb_substr($text, 0, 4000), $media, $rasm, $ts ? date('Y-m-d H:i:s', $ts) : hs_now(), hs_now()));
+        if ($ins->rowCount() > 0) {
+            $n++;
+        } elseif ($rasm !== '' && hs_rq_rasm_qoshimcha($src, $id, $rasm)) {
+            $n++; // oldin rasmsiz kelgan — endi rasmi bilan qayta tahlil qilinadi
+        } elseif ($rasm !== '') {
+            @unlink(hs_rq_rasm_dir() . '/' . $rasm);
+        }
     }
     if ($n) {
         hs_set_setting('rq_ingest_at', hs_now());
@@ -749,7 +894,7 @@ function hs_rq_group_list()
     return $out;
 }
 
-/** Cron: yig'ish → tahlil → ogohlantirish → kunlik xulosa. */
+/** Cron: yig'ish → tahlil → jiddiylarini darhol → narxlar. */
 function hs_rq_tasks()
 {
     if (!hs_rq_on() || !hs_rq_channels(true)) {
@@ -763,6 +908,12 @@ function hs_rq_tasks()
     }
     hs_rq_analyze(10);
     hs_rq_alerts();
-    hs_rq_digest();
+    hs_rq_narxlar();
+    // Tahlil qilinmay qolgan guruh rasmlari (xato bo'lsa) 2 kundan ortiq yotmasin.
+    foreach (glob(hs_rq_rasm_dir() . '/*.img') ?: array() as $f) {
+        if (filemtime($f) < time() - 2 * 86400) {
+            @unlink($f);
+        }
+    }
     return $done;
 }

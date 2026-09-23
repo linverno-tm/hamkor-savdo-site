@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'sozlama') {
         hs_set_setting('rq_on', hs_post('on') === '1' ? '1' : '0');
         hs_set_setting('rq_alerts', hs_post('alerts') === '1' ? '1' : '0');
+        hs_set_setting('rq_narx_rejim', hs_post('narx_rejim') === 'kunlik' ? 'kunlik' : 'darhol');
         $h = (int) hs_post('digest_hour');
         hs_set_setting('rq_digest_hour', (string) ($h >= 0 && $h <= 23 ? $h : 9));
         $d = (int) hs_post('alert_discount');
@@ -100,8 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         list($ok, $err) = hs_rq_send("Sinov xabari — HAMKOR SAVDO kuzatuv boti ishlayapti.");
         hs_flash($ok ? 'Xabar yuborildi — guruhni tekshiring.' : 'Yuborilmadi: ' . $err, $ok ? 'ok' : 'err');
     } elseif ($action === 'xulosa') {
-        $ok = hs_rq_digest(true);
-        hs_flash($ok ? 'Xulosa yuborildi.' : "Yuborishga yangi e'lon yo'q (yoki bot sozlanmagan).", $ok ? 'ok' : 'err');
+        $n = hs_rq_narxlar(true);
+        hs_flash($n ? "{$n} ta narx yuborildi." : "Yuborishga yangi narx yo'q (yoki bot sozlanmagan).", $n ? 'ok' : 'err');
     }
     hs_redirect('/admin/kuzatuv.php');
 }
@@ -130,10 +131,10 @@ echo '<ul class="checklist">';
 echo '<li>' . $okIco($token !== '') . '<div><b>' . ($token !== ''
         ? 'Kuzatuv boti ulangan' . ($botName !== '' ? ' — @' . h($botName) : '')
         : 'Kuzatuv boti ulanmagan') . '</b><small>'
-    . ($token !== '' ? 'Bu bot faqat xulosa yozadi. Mijozlar botidan butunlay alohida — mijozlar guruhlariga kira olmaydi.'
+    . ($token !== '' ? 'Bu bot faqat yozadi. Mijozlar botidan butunlay alohida — mijozlar guruhlariga kira olmaydi.'
         : '@BotFather da yangi bot yarating (/newbot) va tokenini pastga qo\'ying. Mijozlar botining tokeni bu yerga yaramaydi.') . '</small></div></li>';
 echo '<li>' . $okIco($chatId !== '') . '<div><b>' . ($chatId !== '' ? 'Guruh: ' . h($chatTitle !== '' ? $chatTitle : $chatId) : 'Guruh tanlanmagan') . '</b><small>'
-    . ($chatId !== '' ? 'Kunlik xulosa va ogohlantirishlar shu yerga boradi.'
+    . ($chatId !== '' ? 'Narxlar va jiddiy ogohlantirishlar shu yerga boradi.'
         : 'Yopiq guruh oching, botni a\'zo qilib qo\'shing, guruhda bitta xabar yozing — keyin "Guruhni aniqlash".') . '</small></div></li>';
 echo '<li>' . $okIco(count($faol) > 0) . '<div><b>' . count($faol) . ' ta kanal kuzatuvda</b><small>'
     . ($lastFetch ? 'Oxirgi yig\'ish: ' . h(date('d.m H:i', $lastFetch)) . '. ' : '')
@@ -147,7 +148,7 @@ echo '</ul>';
 if (hs_rq_on()) {
     echo '<div class="actions">';
     echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="yigish"><button class="btn outline small" type="submit">Hozir yig\'ish</button></form>';
-    echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="xulosa"><button class="btn outline small" type="submit">Xulosani hozir yuborish</button></form>';
+    echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="xulosa"><button class="btn outline small" type="submit">Narxlarni hozir yuborish</button></form>';
     echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sinov"><button class="btn outline small" type="submit">Sinov xabari</button></form>';
     if ($xato) {
         echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="qayta"><button class="btn outline small" type="submit">Tahlilni qayta urinish</button></form>';
@@ -229,14 +230,18 @@ echo '<div><label for="on">Kuzatuv</label><select id="on" name="on">'
     . '<option value="0"' . (hs_rq_setting('on') !== '1' ? ' selected' : '') . ">O'chirilgan</option>"
     . '<option value="1"' . (hs_rq_setting('on') === '1' ? ' selected' : '') . '>Yoqilgan</option>'
     . '</select><p class="hint">Yoqilganda har yarim soatda yangi e\'lonlar yig\'iladi.</p></div>';
-echo '<div><label for="digest_hour">Kunlik xulosa soati</label><input id="digest_hour" type="number" name="digest_hour" min="0" max="23" value="' . h(hs_rq_setting('digest_hour')) . '">'
-    . '<p class="hint">Shu soatdan keyin kuniga bir marta bitta umumiy xabar keladi.</p></div>';
+echo '<div><label for="narx_rejim">Narxlar qachon kelsin</label><select id="narx_rejim" name="narx_rejim">'
+    . '<option value="darhol"' . (hs_rq_setting('narx_rejim') !== 'kunlik' ? ' selected' : '') . ">Darhol — yangilari yarim soatda bir marta, bitta xabarda</option>"
+    . '<option value="kunlik"' . (hs_rq_setting('narx_rejim') === 'kunlik' ? ' selected' : '') . '>Kuniga bir marta — pastdagi soatda</option>'
+    . "</select><p class=\"hint\">Faqat narxi bor e'lonlar keladi. Narxsiz e'lonlar (rolik, umumiy reklama) faqat shu sahifada turadi.</p></div>";
+echo '<div><label for="digest_hour">Kuniga bir marta bo&#39;lsa — soat</label><input id="digest_hour" type="number" name="digest_hour" min="0" max="23" value="' . h(hs_rq_setting('digest_hour')) . '">'
+    . '<p class="hint">«Kuniga bir marta» tanlanganda shu soatdan keyin keladi.</p></div>';
 echo '<div><label for="alerts">Darhol ogohlantirish</label><select id="alerts" name="alerts">'
     . '<option value="1"' . (hs_rq_setting('alerts') === '1' ? ' selected' : '') . '>Yoqilgan</option>'
     . '<option value="0"' . (hs_rq_setting('alerts') !== '1' ? ' selected' : '') . ">O'chirilgan</option>"
     . '</select><p class="hint">Faqat jiddiy e\'lonlar: katta chegirma, muddatli to\'lov sharti, yangi do\'kon.</p></div>';
 echo '<div><label for="alert_discount">Qaysi chegirmadan boshlab jiddiy</label><input id="alert_discount" type="number" name="alert_discount" min="5" max="90" value="' . h(hs_rq_setting('alert_discount')) . '">'
-    . '<p class="hint">Foizda. Bundan pastlari faqat kunlik xulosaga tushadi.</p></div>';
+    . '<p class="hint">Foizda. Darhol «⚡» faqat shundan katta chegirma, bizdan uzun muddat yoki yangi do&#39;konga keladi.</p></div>';
 echo '</div><div class="actions"><button class="btn" type="submit">Saqlash</button></div></form>';
 echo '</section>';
 
@@ -277,15 +282,17 @@ echo '<section class="card"><div class="card-head"><h2>Oxirgi e\'lonlar</h2></di
 if (!$rows) {
     echo '<p class="muted">Hali e\'lon yig\'ilmagan. Kanal qo\'shib, "Hozir yig\'ish" ni bosing.</p>';
 } else {
-    echo '<div class="table-wrap"><table><thead><tr><th>Sana</th><th>Kanal</th><th>Xulosa</th><th>Chegirma</th><th>Muddatli to\'lov</th><th></th></tr></thead><tbody>';
+    echo '<div class="table-wrap"><table><thead><tr><th>Sana</th><th>Kanal</th><th>Mahsulot</th><th>Oyiga, so&#39;m</th><th>Chegirma</th><th>Muddatli to\'lov</th><th></th></tr></thead><tbody>';
     foreach ($rows as $p) {
-        $sarlavha = $p['summary'] !== '' ? $p['summary'] : mb_substr(preg_split('/\R/u', trim($p['text']))[0], 0, 90);
+        $sarlavha = hs_rq_sarlavha($p); // model bo'lsa model, bo'lmasa mavzu — Telegram xabaridagidek
         echo '<tr><td>' . h(date('d.m H:i', strtotime($p['posted_at']))) . '</td>'
             . '<td>' . h(hs_rq_channel_title($p['channel'])) . '</td>'
             . '<td>' . ((int) $p['important'] ? '⚡ ' : '') . h($sarlavha)
             . ($p['ai_error'] !== '' ? '<br><small class="muted">tahlil qilinmadi: ' . h($p['ai_error']) . '</small>'
                 : (!(int) $p['analyzed'] ? '<br><small class="muted">tahlil navbatda</small>' : ''))
-            . ($p['media'] !== '' ? '<br><small class="muted">' . h($p['media']) . ' — narx faqat shu yerda bo\'lishi mumkin</small>' : '') . '</td>'
+            . '</td>'
+            . '<td>' . ((int) $p['price'] > 0 ? h(number_format((int) $p['price'], 0, '.', ' ')) . ((int) $p['months'] > 0 ? ' × ' . (int) $p['months'] : '') : '—')
+                . ((int) $p['price_total'] > 0 ? '<br><small class="muted">narxi ' . h(number_format((int) $p['price_total'], 0, '.', ' ')) . '</small>' : '') . '</td>'
             . '<td>' . ((int) $p['discount'] > 0 ? (int) $p['discount'] . '%' : '—') . '</td>'
             . '<td>' . h($p['instalment'] !== '' ? $p['instalment'] : '—') . '</td>'
             . '<td><a class="btn outline small" href="' . h($p['url']) . '" target="_blank" rel="noopener noreferrer">Ochish</a></td></tr>';
