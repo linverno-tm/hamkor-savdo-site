@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_set_setting('mb_mode', hs_post('mb_mode') === 'faol' ? 'faol' : 'kuzatish');
         hs_set_setting('mb_notify', hs_post('mb_notify') === 'hammasi' ? 'hammasi' : 'kerak');
         hs_set_setting('mb_remind_m', (string) max(5, min(240, (int) hs_post('mb_remind_m'))));
+        hs_set_setting('mb_provider', hs_post('mb_provider') === 'gemini' ? 'gemini' : 'claude');
+        $gm = hs_post('mb_gemini_model');
+        hs_set_setting('mb_gemini_model', in_array($gm, array('gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'), true) ? $gm : HS_MB_GEMINI_DEFAULT_MODEL);
         $model = hs_post('mb_model');
         hs_set_setting('mb_model', in_array($model, array('claude-opus-5', 'claude-sonnet-5', 'claude-haiku-4-5'), true) ? $model : HS_MB_DEFAULT_MODEL);
         foreach (array('mb_group', 'mb_channel') as $k) {
@@ -51,16 +54,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_flash('Saqlandi.');
     } elseif ($action === 'mb_kalit') {
         $key = trim(hs_post('mb_key'));
-        if (!preg_match('/^sk-ant-[A-Za-z0-9_\-]{20,200}$/', $key)) {
-            hs_flash("Kalit formati noto'g'ri (sk-ant-... bilan boshlanadi).", 'err');
-        } else {
+        // Qaysi xizmatniki ekani kalitning o'zidan ko'rinadi: Anthropic "sk-ant-",
+        // Google AI Studio "AIza" bilan boshlanadi. Shu sababli bitta maydon yetadi.
+        if (preg_match('/^sk-ant-[A-Za-z0-9_\-]{20,200}$/', $key)) {
             hs_set_setting('mb_claude_key', $key);
             hs_audit($user['login'], 'mijozlar guruhi: Claude kaliti saqlandi', '…' . substr($key, -4));
             hs_flash('Claude kaliti saqlandi. "Sinab ko\'rish" bilan tekshiring.');
+        } elseif (preg_match('/^AIza[A-Za-z0-9_\-]{20,100}$/', $key)) {
+            hs_set_setting('mb_gemini_key', $key);
+            hs_audit($user['login'], 'mijozlar guruhi: Gemini kaliti saqlandi', '…' . substr($key, -4));
+            hs_flash('Gemini kaliti saqlandi. Provayderni "Gemini" ga o\'tkazing va "Sinab ko\'rish" bilan tekshiring.');
+        } else {
+            hs_flash("Kalit formati noto'g'ri. Claude kaliti sk-ant-… , Google AI Studio kaliti AIza… bilan boshlanadi.", 'err');
         }
     } elseif ($action === 'mb_kalit_ochir') {
-        hs_db()->prepare('DELETE FROM settings WHERE key = ?')->execute(array('mb_claude_key'));
-        hs_audit($user['login'], "mijozlar guruhi: Claude kaliti o'chirildi");
+        $qaysi = hs_mb_provider() === 'gemini' ? 'mb_gemini_key' : 'mb_claude_key';
+        hs_db()->prepare('DELETE FROM settings WHERE key = ?')->execute(array($qaysi));
+        hs_audit($user['login'], "mijozlar guruhi: " . (hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') . " kaliti o'chirildi");
         hs_flash("Kalit o'chirildi. Bot endi oddiy so'z qidiruvi bilan ishlaydi va savollarni operatorga yuboradi.");
     } elseif ($action === 'mb_katalog') {
         list($n, $err) = hs_mb_backfill(hs_mb_setting('channel'), 15);
@@ -72,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_flash('Savol yozing.', 'err');
         } else {
             $rows = hs_mb_catalog_rows();
-            list($d, $err) = hs_mb_ask_claude($savol, '', $rows);
+            list($d, $err) = hs_mb_ask_ai($savol, '', $rows);
             if ($d === null) {
                 hs_flash('Claude ishlamadi: ' . $err, 'err');
             } else {
@@ -268,8 +278,14 @@ echo '<li>' . $okIco(true) . '<div><b>' . (hs_mb_setting('on') !== '1' ? "Rejim:
 echo '<li>' . $okIco($mbCount > 0) . '<div><b>Katalog: ' . $mbCount . ' ta post</b><small>'
     . 'Manba: @' . h(hs_mb_setting('channel')) . ($mbChannel ? ' (bot kanalda — yangi postlar o\'zi tushadi)' : ' (bot kanalda emas — postlar har 6 soatda kanalning ochiq sahifasidan yig\'iladi; darhol tushishi uchun botni kanalga admin qiling)')
     . ' va guruhdagi xodimlarning narxli postlari.' . (hs_setting('mb_backfill_at', '') !== '' ? ' Oxirgi yig\'ish: ' . h(date('d.m H:i', strtotime(hs_setting('mb_backfill_at')))) . '.' : '') . '</small></div></li>';
-echo '<li>' . $okIco($mbKey !== '') . '<div><b>' . ($mbKey !== '' ? 'Claude ulangan (…' . h(substr($mbKey, -4)) . ') · ' . h(hs_mb_setting('model')) : 'Claude kaliti kiritilmagan') . '</b><small>'
-    . ($mbKey !== '' ? 'Savollarni lotin/kirill, xato yozuvda ham tushunadi.' : 'Kalitsiz bot oddiy so\'z qidiruvi bilan ishlaydi va har bir savolni operatorga yuboradi. Kalit: console.anthropic.com → API Keys.') . '</small></div></li>';
+$gemini = hs_mb_provider() === 'gemini';
+$aiKey = $gemini ? hs_mb_gemini_key() : $mbKey;
+$aiNom = $gemini ? 'Gemini' : 'Claude';
+$aiModel = $gemini ? hs_mb_gemini_model() : hs_mb_setting('model');
+echo '<li>' . $okIco($aiKey !== '') . '<div><b>' . ($aiKey !== '' ? h($aiNom) . ' ulangan (…' . h(substr($aiKey, -4)) . ') · ' . h($aiModel) : h($aiNom) . ' kaliti kiritilmagan') . '</b><small>'
+    . ($aiKey !== ''
+        ? 'Savollarni lotin/kirill, xato yozuvda ham tushunadi.' . ($gemini ? ' Bepul tarifda so\'rovlar soni cheklangan va Google matnlarni o\'z mahsulotlarini yaxshilash uchun ishlatadi — shuning uchun telefon raqamlari yuborishdan oldin o\'chiriladi.' : '')
+        : 'Kalitsiz bot oddiy so\'z qidiruvi bilan ishlaydi va har bir savolni operatorga yuboradi. Kalit: ' . ($gemini ? 'aistudio.google.com → Get API key' : 'console.anthropic.com → API Keys') . '.') . '</small></div></li>';
 echo '<li>' . $okIco(true) . '<div><b>Oxirgi 7 kun: ' . (int) $mbStats['jami'] . ' ta savol</b><small>'
     . ((int) $mbStats['kuzatish'] ? 'Kuzatishda (guruhga yozilmadi): ' . (int) $mbStats['kuzatish'] . ' · ' : '')
     . 'Bot javob berdi: ' . (int) $mbStats['javob'] . ' · operator kerak: ' . (int) $mbStats['operator'] . ' · xodim javob berdi: ' . (int) $mbStats['xodim'] . ' · raqam qoldirdi (ariza): ' . (int) $mbStats['ariza'] . '</small></div></li>';
@@ -283,6 +299,15 @@ echo '<div><label for="mb_group">Mijozlar guruhi</label><input id="mb_group" typ
 echo '<div><label for="mb_channel">Mahsulot kanali</label><input id="mb_channel" type="text" name="mb_channel" maxlength="80" value="@' . h(hs_mb_setting('channel')) . '"></div>';
 echo '<div><label for="mb_notify">Xodimlarga yuborish</label><select id="mb_notify" name="mb_notify"><option value="kerak"' . (hs_mb_setting('notify') === 'kerak' ? ' selected' : '') . '>Operator kerak bo\'lganda</option><option value="hammasi"' . (hs_mb_setting('notify') === 'hammasi' ? ' selected' : '') . '>Har bir savol</option></select><p class="hint">Arizalar keladigan "barcha filiallar" chatlariga.</p></div>';
 echo '<div><label for="mb_remind_m">Javobsiz eslatma (daqiqa)</label><input id="mb_remind_m" type="number" name="mb_remind_m" min="5" max="240" value="' . h(hs_mb_setting('remind_m')) . '"></div>';
+echo '<div><label for="mb_provider">AI xizmati</label><select id="mb_provider" name="mb_provider">'
+    . '<option value="claude"' . (!$gemini ? ' selected' : '') . '>Claude (Anthropic) — pullik</option>'
+    . '<option value="gemini"' . ($gemini ? ' selected' : '') . '>Gemini (Google AI Studio) — bepul tarifi bor</option>'
+    . '</select><p class="hint">Har ikkalasining kaliti alohida saqlanadi, almashtirish bir bosishda.</p></div>';
+echo '<div><label for="mb_gemini_model">Gemini modeli</label><select id="mb_gemini_model" name="mb_gemini_model">';
+foreach (array('gemini-3.5-flash-lite' => 'Gemini 3.5 Flash Lite — eng tez, eng arzon', 'gemini-3.1-flash-lite' => 'Gemini 3.1 Flash Lite', 'gemini-3.5-flash' => 'Gemini 3.5 Flash — aniqroq') as $gv => $gl) {
+    echo '<option value="' . h($gv) . '"' . (hs_mb_gemini_model() === $gv ? ' selected' : '') . '>' . h($gl) . '</option>';
+}
+echo '</select><p class="hint">Faqat "AI xizmati: Gemini" bo\'lganda ishlatiladi.</p></div>';
 echo '<div class="span-2"><label for="mb_model">Claude modeli</label><select id="mb_model" name="mb_model">';
 foreach (array('claude-opus-5' => 'Claude Opus 5 — eng aniq (tavsiya)', 'claude-sonnet-5' => 'Claude Sonnet 5 — arzonroq', 'claude-haiku-4-5' => 'Claude Haiku 4.5 — eng arzon, tez') as $mv => $ml) {
     echo '<option value="' . h($mv) . '"' . (hs_mb_setting('model') === $mv ? ' selected' : '') . '>' . h($ml) . '</option>';
@@ -292,7 +317,8 @@ echo '</div><div class="actions"><button class="btn" type="submit">Saqlash</butt
 
 echo '<div class="grid grid-2">';
 echo '<form method="post" action="/admin/telegram.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit">'
-    . '<label for="mb_key">Claude API kaliti' . ($mbKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">'
+    . '<label for="mb_key">API kaliti' . ($aiKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-… yoki AIza…">'
+    . '<p class="hint">Qaysi xizmatniki ekani kalitning o\'zidan aniqlanadi: sk-ant-… — Claude, AIza… — Google AI Studio.</p>'
     . '<p class="hint">Faqat serverdagi bazada saqlanadi, sahifada qayta ko\'rsatilmaydi.</p><div class="actions"><button class="btn outline small" type="submit">Kalitni saqlash</button></div></form>';
 if ($mbKey !== '') {
     echo '<form method="post" action="/admin/telegram.php" class="actions" data-confirm="Claude kaliti o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit_ochir"><button class="btn danger small" type="submit">Kalitni o\'chirish</button></form>';

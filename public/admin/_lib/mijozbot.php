@@ -22,6 +22,8 @@ require_once __DIR__ . '/content.php';
 
 define('HS_MB_API', 'https://api.anthropic.com/v1/messages');
 define('HS_MB_DEFAULT_MODEL', 'claude-opus-5');
+define('HS_MB_GEMINI_API', 'https://generativelanguage.googleapis.com/v1beta/models/');
+define('HS_MB_GEMINI_DEFAULT_MODEL', 'gemini-3.5-flash-lite');
 /** Katalogdan AI ga beriladigan eng ko'p post (eng yangilari). */
 define('HS_MB_INDEX_LIMIT', 220);
 
@@ -483,6 +485,129 @@ function hs_mb_ask_claude($text, $context, $rows)
     return array($d, '');
 }
 
+/** 'claude' yoki 'gemini' — panelda tanlanadi. */
+function hs_mb_provider()
+{
+    return hs_setting('mb_provider', 'claude') === 'gemini' ? 'gemini' : 'claude';
+}
+
+function hs_mb_gemini_key()
+{
+    return trim((string) hs_setting('mb_gemini_key', ''));
+}
+
+function hs_mb_gemini_model()
+{
+    return (string) hs_setting('mb_gemini_model', HS_MB_GEMINI_DEFAULT_MODEL);
+}
+
+/**
+ * AI ga yuborishdan oldin telefon raqamlarini o'chirish.
+ *
+ * Google AI Studio'ning BEPUL tarifida yuborilgan matn Google mahsulotlarini
+ * yaxshilash uchun ishlatiladi va odamlar o'qib ko'rishi mumkin — shartlarida
+ * shunday yozilgan. Mijozlar guruhida esa odamlar ba'zan raqamini yozadi.
+ * Javob sifatiga raqamning keragi yo'q, shuning uchun u umuman yuborilmaydi.
+ * Tozalash ikkala provayderga ham qo'llanadi: kamroq shaxsiy ma'lumot
+ * yuborilgani har doim yaxshi.
+ */
+function hs_mb_scrub($s)
+{
+    return preg_replace('/\+?\d[\d\s\-().]{7,}\d/u', '[raqam]', (string) $s);
+}
+
+/**
+ * Savolni tanlangan provayderga yuboradi. Qaytishi hs_mb_ask_claude bilan
+ * bir xil: [qaror massivi yoki null, xato matni] — chaqiruvchi kod qaysi
+ * provayder ishlaganini bilmaydi.
+ */
+function hs_mb_ask_ai($text, $context, $rows)
+{
+    $text = hs_mb_scrub($text);
+    $context = hs_mb_scrub($context);
+    return hs_mb_provider() === 'gemini'
+        ? hs_mb_ask_gemini($text, $context, $rows)
+        : hs_mb_ask_claude($text, $context, $rows);
+}
+
+/**
+ * Google AI Studio (Gemini).
+ *
+ * Anthropic'dagi uch narsaning bu yerdagi muqobili:
+ *   system bloklari  -> system_instruction
+ *   JSON sxema       -> generationConfig.responseSchema (+ responseMimeType)
+ *   prompt-kesh      -> yo'q; Gemini o'zi implicit caching qiladi.
+ */
+function hs_mb_ask_gemini($text, $context, $rows)
+{
+    $key = hs_mb_gemini_key();
+    if ($key === '') {
+        return array(null, 'Gemini kaliti kiritilmagan.');
+    }
+    $user = 'Bugun: ' . date('d.m.Y') . ".\n\n"
+        . ($context !== '' ? "Mijoz shu xabarga javoban yozgan:\n\"\"\"" . mb_substr($context, 0, 800) . "\"\"\"\n\n" : '')
+        . "Mijoz xabari:\n\"\"\"" . mb_substr($text, 0, 1000) . "\"\"\"";
+    $body = array(
+        'system_instruction' => array('parts' => array(
+            array('text' => hs_mb_system_prompt()),
+            array('text' => hs_mb_catalog_block($rows)),
+        )),
+        'contents' => array(array('role' => 'user', 'parts' => array(array('text' => $user)))),
+        'generationConfig' => array(
+            'responseMimeType' => 'application/json',
+            'responseSchema' => hs_mb_gemini_schema(),
+            'temperature' => 0.2,
+            'maxOutputTokens' => 2000,
+        ),
+    );
+    $url = HS_MB_GEMINI_API . rawurlencode(hs_mb_gemini_model()) . ':generateContent';
+    $headers = array('Content-Type: application/json', 'x-goog-api-key: ' . $key);
+    if (getenv('HS_MB_FAKE_AI')) {
+        $fake = json_decode((string) @file_get_contents(getenv('HS_MB_FAKE_AI')), true);
+        @file_put_contents(hs_data_dir() . '/gemini.log', json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
+        return array(is_array($fake) ? $fake : null, is_array($fake) ? '' : "fake yo'q");
+    }
+    list($code, $resp) = hs_http('POST', $url, $headers, json_encode($body, JSON_UNESCAPED_UNICODE), 60);
+    $j = json_decode((string) $resp, true);
+    if ($code !== 200 || !is_array($j)) {
+        // 429 — bepul tarifning so'rov chegarasi tugagan.
+        $msg = is_array($j) && isset($j['error']['message']) ? (string) $j['error']['message'] : "javob yo'q";
+        return array(null, "Gemini HTTP {$code}: " . mb_substr($msg, 0, 200));
+    }
+    $reason = isset($j['candidates'][0]['finishReason']) ? (string) $j['candidates'][0]['finishReason'] : '';
+    if ($reason !== '' && $reason !== 'STOP') {
+        return array(null, 'Gemini javobni tugatmadi (' . $reason . ').');
+    }
+    $out = '';
+    foreach (isset($j['candidates'][0]['content']['parts']) ? $j['candidates'][0]['content']['parts'] : array() as $part) {
+        if (isset($part['text'])) {
+            $out .= $part['text'];
+        }
+    }
+    $d = json_decode($out, true);
+    if (!is_array($d) || !isset($d['is_question'])) {
+        return array(null, 'Gemini javobi tushunarsiz.');
+    }
+    return array($d, '');
+}
+
+/** hs_mb_schema() ni Gemini qabul qiladigan ko'rinishga o'girish. */
+function hs_mb_gemini_schema()
+{
+    $x = hs_mb_schema();
+    // Gemini `additionalProperties` ni qabul qilmaydi, turlarni katta harfda kutadi.
+    unset($x['additionalProperties']);
+    $x['type'] = 'OBJECT';
+    $x['propertyOrdering'] = array_keys($x['properties']);
+    foreach ($x['properties'] as $k => $v) {
+        $x['properties'][$k]['type'] = strtoupper($v['type']);
+        if (isset($v['items']['type'])) {
+            $x['properties'][$k]['items']['type'] = strtoupper($v['items']['type']);
+        }
+    }
+    return $x;
+}
+
 /* =============== AI siz zaxira: oddiy so'z bo'yicha qidiruv =============== */
 
 function hs_mb_normalize($s)
@@ -660,7 +785,7 @@ function hs_mb_process_question($qid)
     foreach ($rows as $r) {
         $byN[(int) $r['n']] = $r;
     }
-    list($d, $err) = hs_mb_ask_claude($q['text'], $q['context'], $rows);
+    list($d, $err) = hs_mb_ask_ai($q['text'], $q['context'], $rows);
     if ($d === null) {
         // AI yo'q yoki ishlamadi — oddiy qidiruv; savolga o'xshamasa jim turamiz.
         if (!hs_mb_looks_like_question($q['text'])) {
