@@ -236,15 +236,18 @@ function hs_rq_schema()
     return array(
         'type' => 'object',
         'properties' => array(
-            'kind' => array('type' => 'string', 'enum' => array('aksiya', 'narx', 'yangi mahsulot', "do'kon yangiligi", 'boshqa')),
+            'kind' => array('type' => 'string', 'enum' => array('mahsulot', 'aksiya', 'yangi mahsulot', "do'kon yangiligi", 'boshqa')),
             'brand' => array('type' => 'string'),
+            'model' => array('type' => 'string'),
             'summary' => array('type' => 'string'),
+            'price' => array('type' => 'integer'),
+            'months' => array('type' => 'integer'),
             'discount' => array('type' => 'integer'),
             'instalment' => array('type' => 'string'),
             'ends_at' => array('type' => 'string'),
             'important' => array('type' => 'boolean'),
         ),
-        'required' => array('kind', 'brand', 'summary', 'discount', 'instalment', 'ends_at', 'important'),
+        'required' => array('kind', 'brand', 'model', 'summary', 'price', 'months', 'discount', 'instalment', 'ends_at', 'important'),
         'additionalProperties' => false,
     );
 }
@@ -261,6 +264,10 @@ function hs_rq_system_prompt()
         . "Qoidalar:\n"
         . "- Faqat matnda YOZILGANINI yoz. Narx, foiz yoki sana matnda bo'lmasa — bo'sh qoldir, taxmin qilma.\n"
         . "- Ko'p e'lonlarda narx faqat rasm yoki videoda bo'ladi; bu normal, bo'sh qoldir.\n"
+        . "- model: mahsulot nomi va modeli matnda qanday yozilgan bo'lsa shundayligicha. Yo'q bo'lsa bo'sh.\n"
+        . "- price: OYIGA to'lanadigan summa, so'mda, faqat raqam (\"262.000 SOMDAN\" -> 262000). Yo'q bo'lsa 0.\n"
+        . "- months: necha oyga (\"12 OYGA\" -> 12). Yo'q bo'lsa 0.\n"
+        . "- kind: bitta mahsulotning narxi e'lon qilingan bo'lsa 'mahsulot'.\n"
         . "- discount: eng katta chegirma foizi, raqamda (masalan 60). Yo'q bo'lsa 0.\n"
         . "- instalment: muddatli to'lov sharti matnda qanday yozilgan bo'lsa shundayligicha (masalan \"0-0-6\", \"24 oygacha\"). Yo'q bo'lsa bo'sh.\n"
         . "- ends_at: aksiya tugash sanasi YYYY-MM-DD ko'rinishida. Yo'q bo'lsa bo'sh.\n"
@@ -376,9 +383,12 @@ function hs_rq_analyze($limit = 10)
         }
         $chegara = (int) hs_rq_setting('alert_discount');
         $important = !empty($d['important']) || (int) $d['discount'] >= $chegara ? 1 : 0;
-        $u = hs_db()->prepare('UPDATE rq_posts SET analyzed = 1, ai_error = \'\', kind = ?, brand = ?, summary = ?, discount = ?, instalment = ?, ends_at = ?, important = ? WHERE channel = ? AND post_id = ?');
+        $u = hs_db()->prepare('UPDATE rq_posts SET analyzed = 1, ai_error = \'\', kind = ?, brand = ?, model = ?, summary = ?, price = ?, months = ?, discount = ?, instalment = ?, ends_at = ?, important = ? WHERE channel = ? AND post_id = ?');
         $u->execute(array(
-            (string) $d['kind'], mb_substr((string) $d['brand'], 0, 80), mb_substr((string) $d['summary'], 0, 400),
+            (string) $d['kind'], mb_substr((string) $d['brand'], 0, 80),
+            mb_substr(isset($d['model']) ? (string) $d['model'] : '', 0, 160),
+            mb_substr((string) $d['summary'], 0, 400),
+            isset($d['price']) ? (int) $d['price'] : 0, isset($d['months']) ? (int) $d['months'] : 0,
             (int) $d['discount'], mb_substr((string) $d['instalment'], 0, 60), mb_substr((string) $d['ends_at'], 0, 10),
             $important, $p['channel'], $p['post_id'],
         ));
@@ -403,8 +413,13 @@ function hs_rq_channel_title($username)
 
 function hs_rq_line($p)
 {
-    $s = '• ' . hs_rq_channel_title($p['channel']) . ' — ' . ($p['summary'] !== '' ? $p['summary'] : mb_substr(preg_split('/\R/u', trim($p['text']))[0], 0, 90));
+    $bosh = $p['model'] !== '' ? $p['model'] : (($p['summary'] !== '' ? $p['summary'] : mb_substr(preg_split('/\R/u', trim($p['text']))[0], 0, 90)));
+    $s = '• ' . hs_rq_channel_title($p['channel']) . ' — ' . $bosh;
     $qism = array();
+    if ((int) $p['price'] > 0) {
+        $qism[] = 'oyiga ' . number_format((int) $p['price'], 0, '.', ' ') . " so'm"
+            . ((int) $p['months'] > 0 ? ' x ' . (int) $p['months'] . ' oy' : '');
+    }
     if ((int) $p['discount'] > 0) {
         $qism[] = $p['discount'] . '% chegirma';
     }

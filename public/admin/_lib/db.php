@@ -305,6 +305,7 @@ function hs_db_migrate(PDO $pdo)
             "CREATE TABLE rq_posts (
                 channel TEXT NOT NULL,
                 post_id INTEGER NOT NULL,
+                via TEXT NOT NULL DEFAULT 'kanal',
                 url TEXT NOT NULL DEFAULT '',
                 text TEXT NOT NULL,
                 media TEXT NOT NULL DEFAULT '',
@@ -312,7 +313,10 @@ function hs_db_migrate(PDO $pdo)
                 fetched_at TEXT NOT NULL,
                 kind TEXT NOT NULL DEFAULT '',
                 brand TEXT NOT NULL DEFAULT '',
+                model TEXT NOT NULL DEFAULT '',
                 summary TEXT NOT NULL DEFAULT '',
+                price INTEGER NOT NULL DEFAULT 0,
+                months INTEGER NOT NULL DEFAULT 0,
                 discount INTEGER NOT NULL DEFAULT 0,
                 instalment TEXT NOT NULL DEFAULT '',
                 ends_at TEXT NOT NULL DEFAULT '',
