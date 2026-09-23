@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_set_setting('mb_mode', hs_post('mb_mode') === 'faol' ? 'faol' : 'kuzatish');
         hs_set_setting('mb_notify', hs_post('mb_notify') === 'hammasi' ? 'hammasi' : 'kerak');
         hs_set_setting('mb_remind_m', (string) max(5, min(240, (int) hs_post('mb_remind_m'))));
+        hs_set_setting('mb_wait_s', (string) max(0, min(180, (int) hs_post('mb_wait_s'))));
         hs_set_setting('mb_provider', hs_post('mb_provider') === 'gemini' ? 'gemini' : 'claude');
         $gm = hs_post('mb_gemini_model');
         hs_set_setting('mb_gemini_model', in_array($gm, array('gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'), true) ? $gm : HS_MB_GEMINI_DEFAULT_MODEL);
@@ -261,7 +262,7 @@ if ($mbGroup && $info['me']) {
 }
 $mbKey = hs_mb_key();
 $mbCount = hs_mb_catalog_count();
-$mbStats = hs_db()->query("SELECT COUNT(*) AS jami, SUM(status = 'javob') AS javob, SUM(status = 'kuzatish') AS kuzatish, SUM(needs_operator = 1) AS operator, SUM(answered_by <> '') AS xodim, SUM(lead_id IS NOT NULL) AS ariza
+$mbStats = hs_db()->query("SELECT COUNT(*) AS jami, SUM(status = 'javob') AS javob, SUM(status = 'kuzatish') AS kuzatish, SUM(needs_operator = 1) AS operator, SUM(answered_by <> '') AS xodim, SUM(status = 'xodimda') AS xodimda, SUM(lead_id IS NOT NULL) AS ariza
     FROM mb_questions WHERE created_at > '" . date('Y-m-d H:i:s', time() - 7 * 86400) . "' AND status <> 'tashlandi'")->fetch();
 $okIco = function ($ok) {
     return '<span class="state ' . ($ok ? 'on' : 'off') . '">' . hs_icon($ok ? 'check' : 'clock') . '</span>';
@@ -290,7 +291,7 @@ echo '<li>' . $okIco($aiKey !== '') . '<div><b>' . ($aiKey !== '' ? h($aiNom) . 
         : 'Kalitsiz bot oddiy so\'z qidiruvi bilan ishlaydi va har bir savolni operatorga yuboradi. Kalit: ' . ($gemini ? 'aistudio.google.com → Get API key' : 'console.anthropic.com → API Keys') . '.') . '</small></div></li>';
 echo '<li>' . $okIco(true) . '<div><b>Oxirgi 7 kun: ' . (int) $mbStats['jami'] . ' ta savol</b><small>'
     . ((int) $mbStats['kuzatish'] ? 'Kuzatishda (guruhga yozilmadi): ' . (int) $mbStats['kuzatish'] . ' · ' : '')
-    . 'Bot javob berdi: ' . (int) $mbStats['javob'] . ' · operator kerak: ' . (int) $mbStats['operator'] . ' · xodim javob berdi: ' . (int) $mbStats['xodim'] . ' · raqam qoldirdi (ariza): ' . (int) $mbStats['ariza'] . '</small></div></li>';
+    . 'Bot javob berdi: ' . (int) $mbStats['javob'] . ' · operator kerak: ' . (int) $mbStats['operator'] . ' · xodim javob berdi: ' . (int) $mbStats['xodim'] . ' · xodim bilan suhbatda (bot aralashmadi): ' . (int) $mbStats['xodimda'] . ' · raqam qoldirdi (ariza): ' . (int) $mbStats['ariza'] . '</small></div></li>';
 echo '</ul>';
 
 echo '<form method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_sozlama">';
@@ -301,6 +302,8 @@ echo '<div><label for="mb_group">Mijozlar guruhi</label><input id="mb_group" typ
 echo '<div><label for="mb_channel">Mahsulot kanali</label><input id="mb_channel" type="text" name="mb_channel" maxlength="80" value="@' . h(hs_mb_setting('channel')) . '"></div>';
 echo '<div><label for="mb_notify">Xodimlarga yuborish</label><select id="mb_notify" name="mb_notify"><option value="kerak"' . (hs_mb_setting('notify') === 'kerak' ? ' selected' : '') . '>Operator kerak bo\'lganda</option><option value="hammasi"' . (hs_mb_setting('notify') === 'hammasi' ? ' selected' : '') . '>Har bir savol</option></select><p class="hint">Arizalar keladigan "barcha filiallar" chatlariga.</p></div>';
 echo '<div><label for="mb_remind_m">Javobsiz eslatma (daqiqa)</label><input id="mb_remind_m" type="number" name="mb_remind_m" min="5" max="240" value="' . h(hs_mb_setting('remind_m')) . '"></div>';
+echo '<div><label for="mb_wait_s">Xodimga imkon (soniya)</label><input id="mb_wait_s" type="number" name="mb_wait_s" min="0" max="180" value="' . h(hs_mb_setting('wait_s')) . '">'
+    . "<p class=\"hint\">Yangi savolga bot shuncha kutadi. Shu orada xodim javob bersa, bot yozmaydi. Mijoz xodim bilan gaplashayotgan bo'lsa, bot umuman aralashmaydi. 0 — darhol.</p></div>";
 echo '<div><label for="mb_provider">AI xizmati</label><select id="mb_provider" name="mb_provider">'
     . '<option value="claude"' . (!$gemini ? ' selected' : '') . '>Claude (Anthropic) — pullik</option>'
     . '<option value="gemini"' . ($gemini ? ' selected' : '') . '>Gemini (Google AI Studio) — bepul tarifi bor</option>'
@@ -341,6 +344,8 @@ if ($recent) {
             $state = '<span class="pill st-qongiroq">📞 ariza #' . (int) $q['lead_id'] . '</span>';
         } elseif ($q['status'] === 'xato') {
             $state = '<span class="pill pill-err">xato</span>';
+        } elseif ($q['status'] === 'xodimda') {
+            $state = '<span class="pill st-qongiroq">👤 xodim bilan suhbatda</span>';
         } elseif ($q['status'] === 'kuzatish') {
             $state = '<span class="pill st-yangi">🧪 kuzatishda</span>';
         } elseif ((int) $q['needs_operator']) {

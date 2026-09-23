@@ -41,6 +41,28 @@ Guruhning oxirgi 3 oyi (~1 400 xabar) ko'rib chiqildi:
 - Bot javob **bermaydi**: guruh adminlariga (xodimlar), salom va rahmat kabi xabarlarga, bir odamning
   takroriy savoliga, boshqa kanaldan uzatilgan postlarga.
 
+### Xodim gaplashayotganda bot aralashmaydi (2026-09-23)
+
+Ilgari bot mijoz xabariga bir necha soniyada javob yozardi. Mijoz xodimning javobiga "Naqdgachi" deb
+qaytib yozganda ham bot o'rtaga kirib umumiy gap aytdi — xodim esa aynan o'sha paytda aniq narxni
+yozayotgan edi. Endi:
+
+1. Mijoz **xodimning xabariga reply** qilsa — bu xodim bilan suhbat, bot jim.
+2. Xodim shu mijozga **so'nggi 30 daqiqada** javob bergan (reply yoki `@username` bilan belgilagan)
+   bo'lsa — mijozning keyingi xabarlari ham o'sha suhbat, bot jim.
+3. Oddiy yangi savolga bot **darhol yozmaydi** — xodimga imkon beradi (panelda «Xodimga imkon»,
+   odatda 90 soniya). Shu orada xodim javob bersa, bot umuman yozmaydi.
+
+Xodim bilan suhbatda qolgan savolga «Javobsiz eslatma» daqiqasida hech kim javob bermasa va xodim
+shu vaqtda guruhda umuman yozmagan bo'lsa, bot **guruhga yozmaydi** — xodimlar chatiga eslatma va
+javob taklifini yuboradi. "Rahmat", "xo'p" kabi xabarlarga eslatma bo'lmaydi.
+
+Xodim deb: guruh adminlari va **guruh nomidan yozgan admin** («Promoter M» kabi imzo bilan)
+hisoblanadi. Kanaldan guruhga avtomatik tushgan post xodim xabari emas — unga yozilgan savolga bot
+odatdagidek javob beradi.
+
+Panelda savol holati: **«👤 xodim bilan suhbatda»**.
+
 ## 3. Rejimlar
 
 | Rejim | Guruhda | Xodimlar chatida |
@@ -54,7 +76,8 @@ Tavsiya: bir necha kun kuzatish rejimida bot javoblarini tekshiring, to'g'ri bo'
 
 - **@hamkorsavdouz kanali**: bot kanalda admin bo'lsa, yangi va tahrirlangan postlar darhol tushadi.
   Bo'lmasa, har 6 soatda kanalning ochiq sahifasidan (t.me/s/hamkorsavdouz) yig'iladi.
-- **Guruhdagi xodimlarning narxli postlari** (narx yoki oylik to'lov yozilgan post).
+- **Guruhdagi xodimlarning narxli postlari** (narx yoki oylik to'lov yozilgan post). Xodimning mijozga
+  **reply** qilgan javobi ("1.087.000 tushadi 3oyga") katalogga tushmaydi: unda mahsulot nomi yo'q.
 - Faqat narxi bor postlar olinadi (tabrik, mijoz fikri kabi postlar kirmaydi) va faqat oxirgi 120 kunniki.
 - Mijoz boshqa do'kon kanalidan post uzatsa, u katalogga tushmaydi.
 

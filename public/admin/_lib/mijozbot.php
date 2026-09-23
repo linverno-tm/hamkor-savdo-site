@@ -43,6 +43,7 @@ function hs_mb_setting($key)
         'model' => HS_MB_DEFAULT_MODEL,
         'notify' => 'kerak',     // kerak — faqat operator kerak bo'lganda; hammasi — har bir savol
         'remind_m' => '15',      // xodimlar javob bermasa, shuncha daqiqada eslatma
+        'wait_s' => '90',        // yangi savolga bot shuncha kutadi — xodim javob bersa, bot yozmaydi
     );
     return (string) hs_setting('mb_' . $key, $defaults[$key]);
 }
@@ -706,6 +707,155 @@ function hs_mb_looks_like_question($text)
     return (bool) preg_match('/\?|bormi|борми|bor mi|narx|нарх|qancha|қанча|канча|necha|неча|muddat|муддат|qayer|қаер|каер|dostavka|доставка|yetkaz|етказ|admin|админ|kerak|керак/iu', (string) $text);
 }
 
+/* ================== xodim bilan suhbat — bot aralashmaydi ================== */
+
+/*
+ * Bot xodimning gapini bo'lmasligi kerak. Ilgari mijoz xabari kelishi bilan bir
+ * necha soniyada javob yozilardi: mijoz xodimning javobiga "Naqdgachi" deb
+ * qaytib yozsa ham, bot o'rtaga kirib umumiy gap aytardi — xodim esa aynan shu
+ * paytda aniq narxni yozayotgan edi.
+ *
+ * Endi uch qoida:
+ *  1. Mijoz XODIMNING xabariga reply qilsa — bu xodim bilan suhbat. Bot jim.
+ *  2. Xodim shu mijozga so'nggi 30 daqiqada javob bergan (reply yoki @belgi)
+ *     bo'lsa — mijozning keyingi xabarlari ham o'sha suhbat. Bot jim.
+ *  3. Oddiy yangi savolga bot darhol yozmaydi: xodimga imkon beradi (sozlamada,
+ *     odatda 90 soniya). Shu orada xodim javob bersa — bot jim.
+ *
+ * 1–2 holatda xodim ham javob bermay qolsa ("Javobsiz eslatma" daqiqasi o'tib,
+ * shu vaqtda guruhda umuman yozmagan bo'lsa), bot guruhga YOZMAYDI — xodimlar
+ * chatiga eslatma yuboradi. Mijoz odam bilan gaplashayotgan edi, suhbatni
+ * odam davom ettirgani chiroyliroq.
+ */
+
+define('HS_MB_SUHBAT_S', 1800);
+
+function hs_mb_suhbat_boshla($chatId, $userId)
+{
+    if ((string) $userId !== '') {
+        hs_cache_set('mb:suhbat:' . $chatId . ':' . $userId, time(), HS_MB_SUHBAT_S);
+    }
+}
+
+function hs_mb_suhbatda($chatId, $userId)
+{
+    return (string) $userId !== '' && hs_cache_get('mb:suhbat:' . $chatId . ':' . $userId) !== null;
+}
+
+/** Xabarni xodim yozganmi: guruh nomidan yozgan admin yoki guruh admini (bot emas). */
+function hs_mb_is_staff_msg($m, $chatId)
+{
+    if (!is_array($m)) {
+        return false;
+    }
+    // sender_chat BIRINCHI: guruh nomidan yozgan admin "bot" bo'lib keladi.
+    if (isset($m['sender_chat']['id'])) {
+        // Faqat guruhning o'z nomidan (anonim admin). Kanaldan avtomatik tushgan
+        // post ham sender_chat bilan keladi, lekin unga yozilgan savol — mahsulot
+        // haqidagi oddiy savol, uni bot javoblaydi.
+        return (string) $m['sender_chat']['id'] === (string) $chatId;
+    }
+    if (!empty($m['from']['is_bot'])) {
+        return false; // bizning bot yoki boshqa bot — xodim emas
+    }
+    return isset($m['from']['id']) && in_array((string) $m['from']['id'], hs_mb_staff_ids($chatId), true);
+}
+
+/** Xodim kimga yozgan: reply qilingan mijoz va xabarda @ bilan belgilanganlar. */
+function hs_mb_staff_addressees($msg, $chatId)
+{
+    $ids = array();
+    $r = isset($msg['reply_to_message']) ? $msg['reply_to_message'] : null;
+    if ($r && isset($r['from']['id']) && empty($r['from']['is_bot']) && !hs_mb_is_staff_msg($r, $chatId)) {
+        $ids[] = (string) $r['from']['id'];
+    }
+    $text = isset($msg['text']) ? (string) $msg['text'] : (isset($msg['caption']) ? (string) $msg['caption'] : '');
+    $ents = isset($msg['entities']) ? $msg['entities'] : (isset($msg['caption_entities']) ? $msg['caption_entities'] : array());
+    foreach ((array) $ents as $e) {
+        if (!isset($e['type'])) {
+            continue;
+        }
+        if ($e['type'] === 'text_mention' && isset($e['user']['id'])) {
+            $ids[] = (string) $e['user']['id'];
+        } elseif ($e['type'] === 'mention') {
+            // Telegram offset va length ni UTF-16 birliklarida beradi.
+            $u16 = mb_convert_encoding($text, 'UTF-16LE', 'UTF-8');
+            $name = mb_convert_encoding(substr($u16, (int) $e['offset'] * 2, (int) $e['length'] * 2), 'UTF-8', 'UTF-16LE');
+            $id = hs_cache_get('mb:un:' . $chatId . ':' . strtolower(ltrim($name, '@')));
+            if ($id !== null) {
+                $ids[] = (string) $id;
+            }
+        }
+    }
+    return array_values(array_unique($ids));
+}
+
+/**
+ * Yangi savolga javob berishdan oldin xodimga imkon berish.
+ * Qaytadi: true — xodim javob berdi yoki suhbatga kirdi (bot jim qoladi).
+ *
+ * Kutish webhook'ni ushlab turmaydi: Telegram'ga javob allaqachon qaytgan
+ * (hs_mb_defer). Serverda bu imkon bo'lmasa — kutilmaydi, aks holda Telegram
+ * javob kutib qolib, xabarni qayta yuborardi.
+ */
+function hs_mb_wait_for_staff($qid)
+{
+    $wait = (int) hs_mb_setting('wait_s');
+    if ($wait <= 0 || getenv('HS_MB_NO_WAIT') === '1'
+        || !(function_exists('fastcgi_finish_request') || function_exists('litespeed_finish_request'))) {
+        return false;
+    }
+    // Bir vaqtda ko'p savol kutib tursa, hostingdagi jarayonlar band bo'lib qoladi.
+    $st = hs_db()->prepare("SELECT COUNT(*) FROM mb_questions WHERE status = 'yangi' AND created_at > ?");
+    $st->execute(array(date('Y-m-d H:i:s', time() - $wait - 60)));
+    if ((int) $st->fetchColumn() > 5) {
+        return false;
+    }
+    @set_time_limit($wait + 150);
+    $end = time() + $wait;
+    while (time() < $end) {
+        sleep(5);
+        if (hs_mb_staff_took_over($qid)) {
+            return true;
+        }
+    }
+    return hs_mb_staff_took_over($qid);
+}
+
+/** Xodim savolni o'z qo'liga oldimi. Oldi — savol "xodimda" deb belgilanadi. */
+function hs_mb_staff_took_over($qid)
+{
+    $q = hs_mb_get_question($qid);
+    if (!$q || $q['status'] !== 'yangi') {
+        return true; // boshqa yo'l bilan hal bo'lgan
+    }
+    if ($q['answered_by'] !== '' || hs_mb_suhbatda($q['chat_id'], $q['user_id'])) {
+        hs_db()->prepare("UPDATE mb_questions SET status = 'xodimda' WHERE id = ? AND status = 'yangi'")->execute(array((int) $qid));
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Xodim bilan suhbatda qolib ketgan savol: bot guruhga yozmaydi, xodimlarga
+ * eslatadi. "Rahmat", "xo'p" kabi xabarlar savol emas — ular uchun eslatma yo'q.
+ * Qaytadi: eslatma yuborildimi.
+ */
+function hs_mb_handoff($q)
+{
+    list($d, $err) = hs_mb_ask_ai($q['text'], $q['context'], hs_mb_catalog_rows());
+    $savol = $d !== null ? !empty($d['is_question']) : hs_mb_looks_like_question($q['text']);
+    if (!$savol) {
+        hs_db()->prepare('UPDATE mb_questions SET kind = ?, error = ? WHERE id = ?')
+            ->execute(array($d !== null ? (string) $d['kind'] : '', $err, (int) $q['id']));
+        return false;
+    }
+    $taklif = $d !== null ? trim(mb_substr((string) $d['reply'], 0, 400)) : '';
+    hs_db()->prepare('UPDATE mb_questions SET reply = ?, kind = ?, needs_operator = 1, error = ? WHERE id = ?')
+        ->execute(array($taklif, $d !== null ? (string) $d['kind'] : '', $err, (int) $q['id']));
+    return hs_mb_notify_staff((int) $q['id']) > 0;
+}
+
 /* ============================ guruhdagi xabar ============================ */
 
 /**
@@ -724,14 +874,21 @@ function hs_mb_handle_group_message($msg)
     // Guruh nomidan (anonim admin) yoki kanal nomidan yozilgan — xodim.
     $anon = isset($msg['sender_chat']['id']);
     $staff = $anon || in_array($fromId, hs_mb_staff_ids($chatId), true);
-    if (!empty($from['is_bot'])) {
+    /* Guruh nomidan yozgan admin xabarida Telegram `from` ga soxta
+       @GroupAnonymousBot (is_bot = true) qo'yadi, kanal nomidan yozilganda
+       ham shunday. Ilgari bu tekshiruv sender_chat dan oldin turardi va
+       xodimning guruh nomidan yozgan javoblari umuman hisobga olinmasdi. */
+    if (!empty($from['is_bot']) && !$anon) {
         return;
     }
     // Katalogga faqat xodimning posti yoki bizning kanaldan uzatilgan post (mijoz boshqa
     // do'kon kanalidan uzatsa — katalogga tushmaydi).
     $fromOurChannel = $isForward && isset($msg['forward_origin']['chat']['username'])
         && strtolower((string) $msg['forward_origin']['chat']['username']) === strtolower(ltrim(hs_mb_setting('channel'), '@'));
-    if ($staff || $fromOurChannel) {
+    /* Xodimning mijozga REPLY qilgan javobi ("1.087.000 tushadi 3oyga") katalog
+       posti emas: unda mahsulot nomi yo'q, u bitta odamning savoliga javob.
+       Katalogga tushsa, bot keyin uni boshqa savollarga ko'rsatib yuborardi. */
+    if (($staff && !isset($msg['reply_to_message'])) || $fromOurChannel) {
         hs_mb_catalog_from_message($msg, false);
     }
     if ($staff) {
@@ -739,7 +896,17 @@ function hs_mb_handle_group_message($msg)
         if (isset($msg['reply_to_message']['message_id'])) {
             hs_mb_mark_answered_by_reply($chatId, (int) $msg['reply_to_message']['message_id'], hs_mb_who($from, $anon));
         }
+        // Xodim kimga yozgan bo'lsa — o'sha mijoz bilan suhbat boshlandi, bot aralashmaydi.
+        if (hs_mb_is_staff_msg($msg, $chatId)) {
+            foreach (hs_mb_staff_addressees($msg, $chatId) as $uid) {
+                hs_mb_suhbat_boshla($chatId, $uid);
+            }
+            hs_cache_set('mb:xodim_oxirgi:' . $chatId, time(), 86400);
+        }
         return;
+    }
+    if ($fromId !== '' && isset($from['username']) && $from['username'] !== '') {
+        hs_cache_set('mb:un:' . $chatId . ':' . strtolower($from['username']), $fromId, 86400);
     }
     if ($isForward || $text === '' || mb_strlen($text) < 3 || hs_mb_setting('on') !== '1') {
         return;
@@ -758,8 +925,16 @@ function hs_mb_handle_group_message($msg)
     hs_db()->prepare('INSERT INTO mb_questions(created_at, chat_id, message_id, user_id, user_name, text, context) VALUES(?, ?, ?, ?, ?, ?, ?)')
         ->execute(array(hs_now(), $chatId, (int) $msg['message_id'], $fromId, $name !== '' ? $name : (isset($from['username']) ? '@' . $from['username'] : ''), mb_substr($text, 0, 2000), mb_substr($context, 0, 2000)));
     $qid = (int) hs_db()->lastInsertId();
+    // Mijoz xodim bilan gaplashyapti — bot aralashmaydi (yuqoridagi izohga qarang).
+    $xodimga = isset($msg['reply_to_message']) && hs_mb_is_staff_msg($msg['reply_to_message'], $chatId);
+    if ($xodimga || hs_mb_suhbatda($chatId, $fromId)) {
+        hs_db()->prepare("UPDATE mb_questions SET status = 'xodimda' WHERE id = ?")->execute(array($qid));
+        return;
+    }
     hs_mb_defer(function () use ($qid) {
-        hs_mb_process_question($qid);
+        if (!hs_mb_wait_for_staff($qid)) {
+            hs_mb_process_question($qid);
+        }
     });
 }
 
@@ -883,6 +1058,13 @@ function hs_mb_staff_text($q)
         $lines[] = $q['reply'];
         $lines[] = '';
         $lines[] = (int) $q['needs_operator'] ? '👉 Mijozga siz javob bering.' : "👉 Bot javobi to'g'rimi — tekshiring; mijozga baribir siz javob bering.";
+    } elseif ($q['status'] === 'xodimda') {
+        $lines[] = '';
+        $lines[] = "👤 Mijoz xodim bilan gaplashayotgan edi, " . max(1, (int) floor((time() - strtotime($q['created_at'])) / 60))
+            . " daqiqadan beri javob yo'q. Bot guruhga yozmadi — suhbatni davom ettiring.";
+        if ($q['reply'] !== '') {
+            $lines[] = '💡 Javob taklifi: ' . $q['reply'];
+        }
     } elseif ($q['reply'] !== '') {
         $lines[] = '';
         $lines[] = '🤖 Bot javobi: ' . $q['reply'];
@@ -1059,6 +1241,37 @@ function hs_mb_tasks()
             foreach ($m->fetchAll() as $row) {
                 hs_tg_api('sendMessage', array('chat_id' => $row['chat_id'], 'text' => '⏰ Mijoz ' . max(1, (int) floor((time() - strtotime($q['created_at'])) / 60)) . " daqiqadan beri javob kutyapti (savol #" . (int) $q['id'] . ').',
                     'reply_parameters' => json_encode(array('message_id' => (int) $row['message_id'], 'allow_sending_without_reply' => true))));
+                $done++;
+            }
+        }
+        // Xodim bilan suhbatda qolgan savol: xodim shu vaqtda guruhda umuman
+        // yozmagan bo'lsa — xodimlarga eslatma. Bir mijozga bitta eslatma.
+        $st = hs_db()->prepare("SELECT * FROM mb_questions WHERE status = 'xodimda' AND answered_by = '' AND reminded = 0
+            AND created_at < ? AND created_at > ? ORDER BY id DESC");
+        $st->execute(array($cut, date('Y-m-d H:i:s', time() - 86400)));
+        $korildi = array();
+        foreach ($st->fetchAll() as $q) {
+            hs_db()->prepare('UPDATE mb_questions SET reminded = 1 WHERE id = ?')->execute(array((int) $q['id']));
+            $k = $q['chat_id'] . ':' . $q['user_id'];
+            if (isset($korildi[$k]) || (int) hs_cache_get('mb:xodim_oxirgi:' . $q['chat_id']) >= strtotime($q['created_at'])) {
+                continue; // shu mijozning yangiroq xabari bor, yoki xodim keyin guruhda yozgan
+            }
+            $korildi[$k] = true;
+            if (hs_mb_handoff($q)) {
+                $done++;
+            }
+        }
+    }
+    /* Zaxira: xodimni kutayotgan jarayonni hosting uzoq so'rov deb to'xtatib
+       qo'ysa, savol "yangi" holatda qolib ketadi va unga hech kim javob
+       bermaydi. Kutish vaqtidan 3 daqiqa o'tib ham "yangi" turgan savol shu
+       yerda qayta ishlanadi — xodim o'rtada javob bergan bo'lsa, bot jim. */
+    if (hs_mb_setting('on') === '1') {
+        $st = hs_db()->prepare("SELECT id FROM mb_questions WHERE status = 'yangi' AND created_at < ? AND created_at > ?");
+        $st->execute(array(date('Y-m-d H:i:s', time() - (int) hs_mb_setting('wait_s') - 180), date('Y-m-d H:i:s', time() - 3600)));
+        foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $qid) {
+            if (!hs_mb_staff_took_over((int) $qid)) {
+                hs_mb_process_question((int) $qid);
                 $done++;
             }
         }
