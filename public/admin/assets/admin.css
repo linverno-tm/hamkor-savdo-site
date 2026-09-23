@@ -906,3 +906,34 @@ table.ij-who td:nth-child(2) { min-width: 130px; }
 .ij-bell-panel .ij-remind-list .btn { display: none; }
 .ij-bell-panel .ij-remind-list small { font-size: .8rem; }
 .ij-zones { margin-top: .6rem; }
+
+/* ---- Sahifa ichidagi tablar (Telegram: arizalar / mijozlar boti / AI / eslatma) ---- */
+.tabs {
+  display: flex; gap: .3rem; margin: 0 0 1.1rem; padding: .3rem;
+  background: var(--ground); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); overflow-x: auto; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  display: flex; align-items: center; gap: .5rem; flex: 1 0 auto; justify-content: center;
+  padding: .6rem .85rem; border-radius: 12px; color: var(--ink-2); text-decoration: none;
+  font-weight: 550; white-space: nowrap;
+  transition: background-color .15s var(--ease), color .15s var(--ease);
+}
+.tab:hover { background: var(--ground-2); color: var(--ink); }
+.tab.active { background: var(--purple-50); color: var(--purple-ink); font-weight: 650; }
+.tab .ico { flex: none; }
+.tab-note {
+  font-size: .75rem; font-weight: 550; color: var(--ink-3);
+  padding: .1rem .45rem; border-radius: 999px; background: var(--ground-2);
+}
+.tab.active .tab-note { background: var(--ground); color: var(--purple-ink); }
+/* Faol tabda ham ogohlantirish qizil qolsin (yuqoridagi qoidadan kuchliroq). */
+.tab .tab-note.warn, .tab.active .tab-note.warn { color: var(--err); background: var(--err-bg); }
+/* Telefonda to'rtta tab bir qatorga sig'maydi va yon tomonga siljitish kerak
+   bo'lardi — faol tab ham ko'rinmay qolardi. 2x2 jadval: hammasi bir qarashda. */
+@media (max-width: 720px) {
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; }
+  .tab { flex-wrap: wrap; justify-content: flex-start; white-space: normal; padding: .55rem .6rem; gap: .3rem .45rem; }
+  .tab-note { font-size: .7rem; }
+}
