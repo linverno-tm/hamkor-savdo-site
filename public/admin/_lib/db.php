@@ -288,6 +288,44 @@ function hs_db_migrate(PDO $pdo)
             )",
             "CREATE INDEX ij_files_tenant ON ij_files(tenant_id)",
         ),
+        // Raqobat kuzatuvi (_lib/kuzatuv.php): boshqa do'konlarning ochiq
+        // Telegram kanallari va ulardan yig'ilgan e'lonlar. Mijozlar botiga
+        // hech qanday aloqasi yo'q — alohida bot, alohida guruh.
+        9 => array(
+            "CREATE TABLE rq_channels (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                title TEXT NOT NULL DEFAULT '',
+                active INTEGER NOT NULL DEFAULT 1,
+                last_post_id INTEGER NOT NULL DEFAULT 0,
+                last_fetch TEXT NOT NULL DEFAULT '',
+                last_error TEXT NOT NULL DEFAULT '',
+                added_at TEXT NOT NULL
+            )",
+            "CREATE TABLE rq_posts (
+                channel TEXT NOT NULL,
+                post_id INTEGER NOT NULL,
+                url TEXT NOT NULL DEFAULT '',
+                text TEXT NOT NULL,
+                media TEXT NOT NULL DEFAULT '',
+                posted_at TEXT NOT NULL,
+                fetched_at TEXT NOT NULL,
+                kind TEXT NOT NULL DEFAULT '',
+                brand TEXT NOT NULL DEFAULT '',
+                summary TEXT NOT NULL DEFAULT '',
+                discount INTEGER NOT NULL DEFAULT 0,
+                instalment TEXT NOT NULL DEFAULT '',
+                ends_at TEXT NOT NULL DEFAULT '',
+                important INTEGER NOT NULL DEFAULT 0,
+                analyzed INTEGER NOT NULL DEFAULT 0,
+                ai_error TEXT NOT NULL DEFAULT '',
+                alerted INTEGER NOT NULL DEFAULT 0,
+                digested INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (channel, post_id)
+            )",
+            "CREATE INDEX rq_posts_posted ON rq_posts(posted_at)",
+            "CREATE INDEX rq_posts_todo ON rq_posts(analyzed, posted_at)",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

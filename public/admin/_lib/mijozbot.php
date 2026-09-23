@@ -288,7 +288,12 @@ function hs_mb_parse_channel_page($html, $channel)
         if ($text === '') {
             continue;
         }
-        $out[] = array('id' => (int) $m[1], 'text' => $text, 'photo' => strpos($part, 'tgme_widget_message_photo') !== false, 'at' => $at);
+        $photo = strpos($part, 'tgme_widget_message_photo') !== false;
+        $video = strpos($part, 'tgme_widget_message_video') !== false;
+        // 'media' — kuzatuv bo'limi uchun: postda video bo'lsa, narx ko'pincha
+        // faqat videoda bo'ladi va matndan chiqmaydi.
+        $out[] = array('id' => (int) $m[1], 'text' => $text, 'photo' => $photo,
+            'media' => $video ? 'video' : ($photo ? 'foto' : ''), 'at' => $at);
     }
     return $out;
 }

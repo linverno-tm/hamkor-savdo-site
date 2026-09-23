@@ -15,6 +15,7 @@
 require_once __DIR__ . '/tgchats.php';
 require_once __DIR__ . '/leads.php';
 require_once __DIR__ . '/mijozbot.php';
+require_once __DIR__ . '/kuzatuv.php';
 
 function hs_task_setting($key)
 {
@@ -60,6 +61,11 @@ function hs_tasks_run($fromCron = false)
         $mb = hs_mb_tasks();
         if ($mb) {
             $done[] = "{$mb} ta savol eslatmasi";
+        }
+        // Raqobatchilar: yangi e'lonlarni yig'ish, tahlil va xulosa (alohida bot).
+        $rq = hs_rq_tasks();
+        if ($rq) {
+            $done[] = "{$rq} ta raqobatchi e'loni";
         }
     } catch (Throwable $e) {
         error_log('HAMKOR SAVDO: vazifalar xatosi: ' . $e->getMessage());
