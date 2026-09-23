@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rows = hs_mb_catalog_rows();
             list($d, $err) = hs_mb_ask_ai($savol, '', $rows);
             if ($d === null) {
-                hs_flash('Claude ishlamadi: ' . $err, 'err');
+                hs_flash((hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') . ' ishlamadi: ' . $err, 'err');
             } else {
                 $byN = array();
                 foreach ($rows as $r) {
