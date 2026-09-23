@@ -568,18 +568,26 @@ function hs_rq_alerts()
     if (!hs_rq_on() || hs_rq_setting('alerts') !== '1') {
         return 0;
     }
-    $rows = hs_db()->query('SELECT * FROM rq_posts WHERE analyzed = 1 AND important = 1 AND alerted = 0 ORDER BY posted_at LIMIT 5')->fetchAll();
+    /* Faqat so'nggi 2 kundagi e'lonlar. Yangi manba qo'shilganda uning oxirgi
+       o'nlab posti birdaniga keladi — ba'zilari bir haftalik. Eski aksiyani
+       "Diqqat" deb yuborish chalg'itadi; ular kunlik xulosaga tushadi. */
+    $st = hs_db()->prepare('SELECT * FROM rq_posts WHERE analyzed = 1 AND important = 1 AND alerted = 0 AND posted_at > ? ORDER BY posted_at LIMIT 5');
+    $st->execute(array(date('Y-m-d H:i:s', time() - 2 * 86400)));
+    $rows = $st->fetchAll();
     $belgila = hs_db()->prepare('UPDATE rq_posts SET alerted = 1, digested = 1 WHERE channel = ? AND post_id = ?');
-    /* Bitta aksiyani do'kon bir necha post qilib chiqaradi: matni har xil,
-       sharti bir xil. Har biriga alohida ogohlantirish yuborilsa, guruhni
-       bir haftada hech kim o'qimay qo'yadi. Sharti bir xil e'lon ikkinchi
-       marta yuborilmaydi — u jimgina kunlik xulosaga tushadi. */
-    $xuddishu = hs_db()->prepare('SELECT COUNT(*) FROM rq_posts WHERE channel = ? AND alerted = 1
-        AND discount = ? AND instalment = ? AND ends_at = ? AND posted_at > ?');
+    /* Bitta aksiya bir necha post bo'lib chiqadi, ustiga bitta do'kon uni
+       kanalida ham, har filial guruhida ham tashlaydi (ISHONCH: kanal va 3 ta
+       guruh). Sharti bir xil e'lon ikkinchi marta yuborilmaydi — u jimgina
+       kunlik xulosaga tushadi.
+       Sharti: chegirma + oy soni + tugash sanasi. Sana bor bo'lsa, boshqa
+       manbadagisi ham takror hisoblanadi — bir xil foiz, oy va sana tasodifan
+       mos kelishi juda kam. Sana bo'lmasa — faqat o'sha manba ichida. */
+    $xuddishu = hs_db()->prepare("SELECT COUNT(*) FROM rq_posts WHERE alerted = 1 AND posted_at > ?
+        AND discount = ? AND months = ? AND ends_at = ? AND (channel = ? OR ends_at <> '')");
     $n = 0;
     foreach ($rows as $p) {
-        $xuddishu->execute(array($p['channel'], (int) $p['discount'], $p['instalment'], $p['ends_at'],
-            date('Y-m-d H:i:s', time() - 14 * 86400)));
+        $xuddishu->execute(array(date('Y-m-d H:i:s', time() - 14 * 86400),
+            (int) $p['discount'], (int) $p['months'], $p['ends_at'], $p['channel']));
         if ((int) $xuddishu->fetchColumn() > 0) {
             $belgila->execute(array($p['channel'], $p['post_id']));
             continue;
@@ -592,6 +600,43 @@ function hs_rq_alerts()
         $n++;
     }
     return $n;
+}
+
+/**
+ * Matnni Telegram chegarasiga sig'adigan bo'laklarga ajratish.
+ * Bo'lish faqat bo'limlar (do'konlar) va qatorlar orasida — e'lon o'rtasidan
+ * kesilmaydi. Ilgari hammasi bitta xabar edi va 4000 belgida jimgina
+ * kesilib qolardi: 80 ta e'londan yarmi yo'qolardi.
+ */
+function hs_rq_bolakla($bolimlar, $sarlavha, $chegara = 3800)
+{
+    $xabarlar = array();
+    $joriy = $sarlavha;
+    foreach ($bolimlar as $bolim) {
+        $qism = "\n\n" . $bolim;
+        if (mb_strlen($joriy . $qism) <= $chegara) {
+            $joriy .= $qism;
+            continue;
+        }
+        if (trim($joriy) !== '' && $joriy !== $sarlavha) {
+            $xabarlar[] = $joriy;
+            $joriy = '(davomi)';
+            $qism = "\n\n" . $bolim;
+        }
+        // Bitta do'konning o'zi sig'masa — qatorlab.
+        $joriy .= "\n";
+        foreach (explode("\n", $bolim) as $qator) {
+            if (mb_strlen($joriy . "\n" . $qator) > $chegara) {
+                $xabarlar[] = $joriy;
+                $joriy = '(davomi)';
+            }
+            $joriy .= "\n" . $qator;
+        }
+    }
+    if (trim($joriy) !== '' && $joriy !== '(davomi)') {
+        $xabarlar[] = $joriy;
+    }
+    return $xabarlar;
 }
 
 /** Kunlik xulosa — belgilangan soatda, kuniga bir marta, do'konlar bo'yicha. */
@@ -621,17 +666,18 @@ function hs_rq_digest($force = false)
         $guruhlangan[$p['channel']][] = hs_rq_line($p);
     }
     if ($guruhlangan) {
-        $qismlar = array();
+        $bolimlar = array();
         $jami = 0;
         foreach ($guruhlangan as $kanal => $qatorlar) {
             $jami += count($qatorlar);
-            $qismlar[] = hs_rq_channel_title($kanal) . "\n" . implode("\n", $qatorlar);
+            $bolimlar[] = hs_rq_channel_title($kanal) . ' — ' . count($qatorlar) . " ta\n" . implode("\n", $qatorlar);
         }
-        $text = "Raqobatchilar — " . date('d.m.Y') . "\n\n" . implode("\n\n", $qismlar)
-            . "\n\nJami {$jami} ta e'lon.";
-        list($ok) = hs_rq_send($text);
-        if (!$ok) {
-            return false;
+        $xabarlar = hs_rq_bolakla($bolimlar, 'Raqobatchilar — ' . date('d.m.Y') . " · jami {$jami} ta e'lon");
+        foreach ($xabarlar as $i => $matn) {
+            list($ok) = hs_rq_send($matn . (count($xabarlar) > 1 ? "\n\n[" . ($i + 1) . '/' . count($xabarlar) . ']' : ''));
+            if (!$ok) {
+                return false;
+            }
         }
     }
     $u = hs_db()->prepare('UPDATE rq_posts SET digested = 1 WHERE digested = 0 AND analyzed = 1');
