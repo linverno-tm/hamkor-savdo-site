@@ -322,12 +322,12 @@ echo '<form method="post" action="/admin/telegram.php" autocomplete="off">' . hs
     . '<label for="mb_key">API kaliti' . ($aiKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-… , AIza… yoki AQ.…">'
     . '<p class="hint">Qaysi xizmatniki ekani kalitning o\'zidan aniqlanadi: sk-ant-… — Claude, AIza… yoki AQ.… — Google AI Studio.</p>'
     . '<p class="hint">Faqat serverdagi bazada saqlanadi, sahifada qayta ko\'rsatilmaydi.</p><div class="actions"><button class="btn outline small" type="submit">Kalitni saqlash</button></div></form>';
-if ($mbKey !== '') {
-    echo '<form method="post" action="/admin/telegram.php" class="actions" data-confirm="Claude kaliti o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit_ochir"><button class="btn danger small" type="submit">Kalitni o\'chirish</button></form>';
+if ($aiKey !== '') {
+    echo '<form method="post" action="/admin/telegram.php" class="actions" data-confirm="' . h($aiNom) . ' kaliti o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit_ochir"><button class="btn danger small" type="submit">Kalitni o\'chirish</button></form>';
 }
 echo '<form method="post" action="/admin/telegram.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_sinov">'
     . '<label for="savol">Sinab ko\'rish (guruhga hech narsa yuborilmaydi)</label><input id="savol" type="text" name="savol" maxlength="500" placeholder="masalan: Assalomu alaykum planshetlar ham bormi">'
-    . '<div class="actions"><button class="btn outline small" type="submit"' . ($mbKey === '' ? ' disabled' : '') . '>Sinash</button></div></form>';
+    . '<div class="actions"><button class="btn outline small" type="submit"' . ($aiKey === '' ? ' disabled' : '') . '>Sinash</button></div></form>';
 echo '</div>';
 echo '<form method="post" action="/admin/telegram.php" class="actions">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_katalog"><button class="btn outline small" type="submit">🔄 Katalogni kanaldan yangilash</button></form>';
 
