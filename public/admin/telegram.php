@@ -60,12 +60,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_set_setting('mb_claude_key', $key);
             hs_audit($user['login'], 'mijozlar guruhi: Claude kaliti saqlandi', '…' . substr($key, -4));
             hs_flash('Claude kaliti saqlandi. "Sinab ko\'rish" bilan tekshiring.');
-        } elseif (preg_match('/^AIza[A-Za-z0-9_\-]{20,100}$/', $key)) {
+        // Google AI Studio kalitlari ikki ko'rinishda: eskisi "AIza…",
+        // yangisi "AQ.…". Ikkalasi ham qabul qilinadi.
+        } elseif (preg_match('/^(AIza[A-Za-z0-9_\-]{20,100}|AQ\.[A-Za-z0-9_.\-]{20,150})$/', $key)) {
             hs_set_setting('mb_gemini_key', $key);
             hs_audit($user['login'], 'mijozlar guruhi: Gemini kaliti saqlandi', '…' . substr($key, -4));
             hs_flash('Gemini kaliti saqlandi. Provayderni "Gemini" ga o\'tkazing va "Sinab ko\'rish" bilan tekshiring.');
         } else {
-            hs_flash("Kalit formati noto'g'ri. Claude kaliti sk-ant-… , Google AI Studio kaliti AIza… bilan boshlanadi.", 'err');
+            hs_flash("Kalit formati noto'g'ri. Claude kaliti sk-ant-… , Google AI Studio kaliti AIza… yoki AQ.… bilan boshlanadi.", 'err');
         }
     } elseif ($action === 'mb_kalit_ochir') {
         $qaysi = hs_mb_provider() === 'gemini' ? 'mb_gemini_key' : 'mb_claude_key';
@@ -317,8 +319,8 @@ echo '</div><div class="actions"><button class="btn" type="submit">Saqlash</butt
 
 echo '<div class="grid grid-2">';
 echo '<form method="post" action="/admin/telegram.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit">'
-    . '<label for="mb_key">API kaliti' . ($aiKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-… yoki AIza…">'
-    . '<p class="hint">Qaysi xizmatniki ekani kalitning o\'zidan aniqlanadi: sk-ant-… — Claude, AIza… — Google AI Studio.</p>'
+    . '<label for="mb_key">API kaliti' . ($aiKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-… , AIza… yoki AQ.…">'
+    . '<p class="hint">Qaysi xizmatniki ekani kalitning o\'zidan aniqlanadi: sk-ant-… — Claude, AIza… yoki AQ.… — Google AI Studio.</p>'
     . '<p class="hint">Faqat serverdagi bazada saqlanadi, sahifada qayta ko\'rsatilmaydi.</p><div class="actions"><button class="btn outline small" type="submit">Kalitni saqlash</button></div></form>';
 if ($mbKey !== '') {
     echo '<form method="post" action="/admin/telegram.php" class="actions" data-confirm="Claude kaliti o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit_ochir"><button class="btn danger small" type="submit">Kalitni o\'chirish</button></form>';
