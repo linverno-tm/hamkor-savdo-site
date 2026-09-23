@@ -346,6 +346,7 @@ function hs_rq_schema()
             'kind' => array('type' => 'string', 'enum' => array('mahsulot', 'aksiya', 'yangi mahsulot', "do'kon yangiligi", 'boshqa')),
             'brand' => array('type' => 'string'),
             'model' => array('type' => 'string'),
+            'turkum' => array('type' => 'string'),
             'summary' => array('type' => 'string'),
             'price' => array('type' => 'integer'),
             'months' => array('type' => 'integer'),
@@ -354,7 +355,7 @@ function hs_rq_schema()
             'instalment' => array('type' => 'string'),
             'ends_at' => array('type' => 'string'),
         ),
-        'required' => array('kind', 'brand', 'model', 'summary', 'price', 'months', 'price_total', 'discount', 'instalment', 'ends_at'),
+        'required' => array('kind', 'brand', 'model', 'turkum', 'summary', 'price', 'months', 'price_total', 'discount', 'instalment', 'ends_at'),
         'additionalProperties' => false,
     );
 }
@@ -370,6 +371,8 @@ function hs_rq_system_prompt()
         . "- price_total: mahsulotning to'liq narxi — odatda oylik to'lov yonida alohida turgan kattaroq summa (masalan \"1 793 000\"). Yo'q bo'lsa 0.\n"
         . "- months: necha oyga. Yo'q bo'lsa 0.\n"
         . "- model: mahsulot brendi va nomi, rasmda yoki matnda qanday yozilgan bo'lsa (masalan \"AVALON changyutkich\"). Yo'q bo'lsa bo'sh.\n"
+        . "- turkum: mahsulot turi — o'zbekcha, kichik harf, birlikda, 1-3 so'z: changyutkich, muzlatgich, kir yuvish mashinasi, "
+        . "konditsioner, televizor, gaz plita, duxovka, shkaf, divan, skuter, telefon va h.k. Brend va model bu yerga yozilmaydi. Aniqlab bo'lmasa bo'sh.\n"
         . "- Bir e'londa bir nechta mahsulot bo'lsa — eng ko'zga tashlanadiganini yoz.\n"
         . "- kind: bitta mahsulot narxi — 'mahsulot'; chegirma yoki aksiya — 'aksiya'; yangi do'kon yoki filial — 'do'kon yangiligi'; "
         . "hazil rolik, tabrik, umumiy reklama — 'boshqa'.\n"
@@ -506,7 +509,7 @@ function hs_rq_analyze($limit = 10)
     $st->execute(array((int) $limit));
     $rows = $st->fetchAll();
     $n = 0;
-    $u = hs_db()->prepare("UPDATE rq_posts SET analyzed = 1, ai_error = '', kind = ?, brand = ?, model = ?, summary = ?, price = ?, months = ?,
+    $u = hs_db()->prepare("UPDATE rq_posts SET analyzed = 1, ai_error = '', kind = ?, brand = ?, model = ?, turkum = ?, summary = ?, price = ?, months = ?,
         price_total = ?, discount = ?, instalment = ?, ends_at = ?, important = ? WHERE channel = ? AND post_id = ?");
     foreach ($rows as $p) {
         list($d, $err) = hs_rq_ai($p);
@@ -530,6 +533,7 @@ function hs_rq_analyze($limit = 10)
         $u->execute(array(
             (string) $d['kind'], mb_substr((string) $d['brand'], 0, 80),
             mb_substr(isset($d['model']) ? (string) $d['model'] : '', 0, 160),
+            mb_strtolower(mb_substr(isset($d['turkum']) ? trim((string) $d['turkum']) : '', 0, 40)),
             mb_substr((string) $d['summary'], 0, 400),
             isset($d['price']) ? (int) $d['price'] : 0, $natija['months'],
             isset($d['price_total']) ? (int) $d['price_total'] : 0,
@@ -665,24 +669,121 @@ function hs_rq_alert_text($p)
     return $s . "\n\n" . $p['url'];
 }
 
-/** Narxlar xabaridagi bitta qator — ixcham: nomi, oylik to'lov, to'liq narx, havola. */
-function hs_rq_line($p)
+/**
+ * Mahsulot turkumi: AI bergan bo'lsa o'sha, bo'lmasa nomidagi so'zdan.
+ * Oldin tahlil qilingan e'lonlarda turkum yo'q — ular ham guruhlansin.
+ */
+function hs_rq_turkum($p)
 {
-    $q = array();
-    if ((int) $p['price'] > 0) {
-        $q[] = 'oyiga ' . hs_rq_som($p['price']) . ((int) $p['months'] > 0 ? ' × ' . (int) $p['months'] . ' oy' : '');
+    if (isset($p['turkum']) && trim((string) $p['turkum']) !== '') {
+        return mb_strtolower(trim((string) $p['turkum']));
     }
-    if ((int) $p['price_total'] > 0) {
-        $q[] = 'narxi ' . hs_rq_som($p['price_total']);
+    $matn = ' ' . mb_strtolower($p['model'] . ' ' . $p['summary'] . ' ' . mb_substr((string) $p['text'], 0, 80)) . ' ';
+    $lugat = array(
+        'changyutkich' => array('changyut', 'chang yut', 'пылесос'),
+        'kir yuvish mashinasi' => array('kir yuv', 'kiryuv', 'стирал'),
+        'muzlatgich' => array('muzlatgich', 'muzlatkich', 'xolodilnik', 'холодильник'),
+        'konditsioner' => array('konditsioner', 'kondision', 'кондиционер'),
+        'televizor' => array('televizor', 'телевизор', ' tv '),
+        'gaz plita' => array('gaz plita', 'газ плит', 'gazplita'),
+        'duxovka' => array('duxovka', 'духовк'),
+        "mikroto'lqinli pech" => array('mikroto', 'mikrovolnov', 'микроволнов'),
+        'suv isitgich' => array('vodonagrevatel', 'водонагреват', 'suv isit'),
+        'shkaf' => array('shkaf', 'шкаф'),
+        'divan' => array('divan', 'диван'),
+        'krovat' => array('krovat', 'кровать', 'yotoqxona'),
+        'skuter' => array('skuter', 'скутер', 'moped', 'мопед'),
+        'velosiped' => array('velosiped', 'велосипед'),
+        'telefon' => array('telefon', 'smartfon', 'iphone', 'телефон', 'смартфон'),
+        'noutbuk' => array('noutbuk', 'ноутбук', 'laptop'),
+        'dazmol' => array('dazmol', 'утюг'),
+    );
+    foreach ($lugat as $turkum => $sozlar) {
+        foreach ($sozlar as $w) {
+            if (mb_strpos($matn, $w) !== false) {
+                return $turkum;
+            }
+        }
     }
-    if ((int) $p['discount'] > 0) {
-        $q[] = (int) $p['discount'] . '% chegirma';
+    $nom = trim($p['model'] !== '' ? $p['model'] : $p['summary']);
+    return $nom !== '' ? mb_strtolower(mb_substr($nom, 0, 30)) : 'boshqa';
+}
+
+/** 156000 -> "156 ming", 1219000 -> "1,2 mln", 1008000 -> "1 mln". Odamlar shunday gapiradi. */
+function hs_rq_pul($n)
+{
+    $n = (int) $n;
+    if ($n >= 1000000) {
+        $m = rtrim(rtrim(number_format(round($n / 1000000, 1), 1, '.', ''), '0'), '.');
+        return str_replace('.', ',', $m) . ' mln';
     }
-    $sana = hs_rq_sana($p['ends_at']);
-    if ($sana !== '') {
-        $q[] = $sana;
+    if ($n >= 1000) {
+        return number_format(round($n / 1000), 0, '.', ' ') . ' ming';
     }
-    return '• ' . hs_rq_sarlavha($p) . ($q ? "\n  " . implode(' · ', $q) : '') . "\n  " . $p['url'];
+    return $n . " so'm";
+}
+
+/** Narxlar oralig'i: "148–294 ming", "885 ming – 1,2 mln", yoki bitta narx. */
+function hs_rq_oraliq($sonlar)
+{
+    $a = hs_rq_pul(min($sonlar));
+    $b = hs_rq_pul(max($sonlar));
+    if ($a === $b) {
+        return $a;
+    }
+    foreach (array(' ming', ' mln') as $birlik) {
+        if (substr($a, -strlen($birlik)) === $birlik && substr($b, -strlen($birlik)) === $birlik) {
+            return substr($a, 0, -strlen($birlik)) . '–' . $b;
+        }
+    }
+    return $a . ' – ' . $b;
+}
+
+/** Bitta turkum bir qatorda: "Changyutkich — 148–294 ming (Shivaki, Samsung, Artel) · 6 ta". */
+function hs_rq_turkum_qatori($turkum, $ps, $birOy)
+{
+    $oylik = array();
+    $toliq = array();
+    $brendlar = array();
+    $oylar = array();
+    foreach ($ps as $p) {
+        if ((int) $p['price'] > 0) {
+            $oylik[] = (int) $p['price'];
+        } elseif ((int) $p['price_total'] > 0) {
+            $toliq[] = (int) $p['price_total'];
+        }
+        $brend = trim((string) $p['brand']);
+        if ($brend !== '') {
+            $brendlar[mb_strtolower($brend)] = hs_rq_bosh_harf($brend);
+        }
+        if ((int) $p['months'] > 0) {
+            $oylar[(int) $p['months']] = true;
+        }
+    }
+    $s = hs_rq_bosh_harf($turkum) . ' — ' . ($oylik ? hs_rq_oraliq($oylik) : 'narxi ' . hs_rq_oraliq($toliq));
+    if (!$birOy && $oylar) {
+        $s .= ' · ' . (count($oylar) === 1 ? key($oylar) : min(array_keys($oylar)) . '–' . max(array_keys($oylar))) . ' oy';
+    }
+    if ($brendlar) {
+        $s .= ' (' . implode(', ', array_slice(array_values($brendlar), 0, 3)) . (count($brendlar) > 3 ? '…' : '') . ')';
+    }
+    return $s . (count($ps) > 1 ? ' · ' . count($ps) . ' ta' : '');
+}
+
+/** Hisobot sahifasi kaliti — havolada turadi, sahifani panelga kirmasdan ochish uchun. */
+function hs_rq_hisobot_kalit($yangi = false)
+{
+    $k = (string) hs_setting('rq_hisobot_key', '');
+    if ($k === '' || $yangi) {
+        $k = hs_random_hex(16);
+        hs_set_setting('rq_hisobot_key', $k);
+    }
+    return $k;
+}
+
+function hs_rq_hisobot_url()
+{
+    return hs_site_url() . '/api/narxlar.php?k=' . hs_rq_hisobot_kalit();
 }
 
 /** Muhim e'lonlar — darhol. Qaytadi: yuborilgan xabarlar soni. */
@@ -796,15 +897,34 @@ function hs_rq_narxlar($force = false)
     if (!$rows) {
         return 0;
     }
-    $guruhlangan = array();
+    /* Har mahsulot uch qator va uzun havola edi — 34 ta narx ekranga sig'mas va
+       o'qilmas edi. Endi do'kon -> turkum -> narx oralig'i, "ming/mln" da.
+       Har bir mahsulot alohida (havolasi bilan) — hisobot sahifasida. */
+    $oylar = array();
+    $dokonlar = array();
     foreach ($rows as $p) {
-        $guruhlangan[$p['channel']][] = hs_rq_line($p);
+        if ((int) $p['months'] > 0) {
+            $oylar[(int) $p['months']] = true;
+        }
+        $dokonlar[$p['channel']][hs_rq_turkum($p)][] = $p;
     }
+    $birOy = count($oylar) === 1 ? (int) key($oylar) : 0;
     $bolimlar = array();
-    foreach ($guruhlangan as $kanal => $qatorlar) {
-        $bolimlar[] = hs_rq_channel_title($kanal) . "\n" . implode("\n", $qatorlar);
+    foreach ($dokonlar as $kanal => $turkumlar) {
+        uasort($turkumlar, function ($a, $b) {
+            return count($b) - count($a);
+        });
+        $jami = 0;
+        $qatorlar = array();
+        foreach ($turkumlar as $turkum => $ps) {
+            $jami += count($ps);
+            $qatorlar[] = '• ' . hs_rq_turkum_qatori($turkum, $ps, $birOy);
+        }
+        $bolimlar[] = '🏪 ' . hs_rq_channel_title($kanal) . ' — ' . $jami . " ta\n" . implode("\n", $qatorlar);
     }
-    $sarlavha = '💰 ' . ($kunlik ? 'Raqobatchilar narxlari — ' . date('d.m.Y') : 'Yangi narxlar') . ' · ' . count($rows) . ' ta';
+    $bolimlar[] = "📊 Har bir mahsulot alohida, havolasi bilan:\n" . hs_rq_hisobot_url();
+    $sarlavha = '💰 ' . ($kunlik ? 'Raqobatchilar narxlari — ' . date('d.m.Y') : 'Yangi narxlar') . ' · ' . count($rows) . ' ta'
+        . "\nOylik to'lov" . ($birOy ? ", hammasi {$birOy} oyga" : '');
     $xabarlar = hs_rq_bolakla($bolimlar, $sarlavha);
     foreach ($xabarlar as $i => $matn) {
         list($ok) = hs_rq_send($matn . (count($xabarlar) > 1 ? "\n\n[" . ($i + 1) . '/' . count($xabarlar) . ']' : ''));

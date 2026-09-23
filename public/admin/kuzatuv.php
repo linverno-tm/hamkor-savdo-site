@@ -97,6 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_rq_ingest_key_new();
         hs_audit($user['login'], "kuzatuv: o'quvchi dastur kaliti yangilandi");
         hs_flash("Yangi kalit yaratildi. Uni kompyuterdagi sozlama.ini ga ko'chiring - eskisi endi ishlamaydi.");
+    } elseif ($action === 'hisobot_kalit') {
+        hs_rq_hisobot_kalit(true);
+        hs_audit($user['login'], 'kuzatuv: hisobot havolasi yangilandi');
+        hs_flash("Narxlar jadvalining yangi havolasi yaratildi. Eski havola endi ochilmaydi.");
     } elseif ($action === 'sinov') {
         list($ok, $err) = hs_rq_send("Sinov xabari — HAMKOR SAVDO kuzatuv boti ishlayapti.");
         hs_flash($ok ? 'Xabar yuborildi — guruhni tekshiring.' : 'Yuborilmadi: ' . $err, $ok ? 'ok' : 'err');
@@ -150,6 +154,9 @@ if (hs_rq_on()) {
     echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="yigish"><button class="btn outline small" type="submit">Hozir yig\'ish</button></form>';
     echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="xulosa"><button class="btn outline small" type="submit">Narxlarni hozir yuborish</button></form>';
     echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sinov"><button class="btn outline small" type="submit">Sinov xabari</button></form>';
+    echo '<a class="btn outline small" href="' . h(hs_rq_hisobot_url()) . '" target="_blank" rel="noopener noreferrer">📊 Narxlar jadvali</a>';
+    echo '<form method="post" class="inline-form" data-confirm="Eski havola ochilmay qoladi. Yangisi Telegram xabarlarida keladi. Davom etilsinmi?">' . hs_csrf_field()
+        . '<input type="hidden" name="amal" value="hisobot_kalit"><button class="btn outline small" type="submit">Jadval havolasini yangilash</button></form>';
     if ($xato) {
         echo '<form method="post" class="inline-form">' . hs_csrf_field() . '<input type="hidden" name="amal" value="qayta"><button class="btn outline small" type="submit">Tahlilni qayta urinish</button></form>';
     }

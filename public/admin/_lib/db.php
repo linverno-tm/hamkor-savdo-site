@@ -338,6 +338,11 @@ function hs_db_migrate(PDO $pdo)
             "ALTER TABLE rq_posts ADD COLUMN price_total INTEGER NOT NULL DEFAULT 0",
             "ALTER TABLE rq_posts ADD COLUMN rasm TEXT NOT NULL DEFAULT ''",
         ),
+        // Narxlar xabari turkum bo'yicha yig'iladi ("Changyutkich — 148–294 ming"):
+        // har mahsulotni alohida qatorda yozish o'qib bo'lmas darajada uzun edi.
+        11 => array(
+            "ALTER TABLE rq_posts ADD COLUMN turkum TEXT NOT NULL DEFAULT ''",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {
