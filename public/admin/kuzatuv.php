@@ -140,8 +140,8 @@ echo '<li>' . $okIco(count($faol) > 0) . '<div><b>' . count($faol) . ' ta kanal 
     . 'Jami ' . $jami . ' ta e\'lon saqlangan, oxirgi 7 kunda ' . $yangi . ' ta.</small></div></li>';
 $aiKey = hs_mb_provider() === 'gemini' ? hs_mb_gemini_key() : hs_mb_key();
 echo '<li>' . $okIco($aiKey !== '') . '<div><b>' . ($aiKey !== '' ? 'Tahlil: ' . (hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') : 'AI kaliti yo\'q') . '</b><small>'
-    . ($aiKey !== '' ? 'Telegram bo\'limidagi o\'sha kalit ishlatiladi — alohida kalit kerak emas.' . ($xato ? ' Oxirgi xato: ' . h($xato) : '')
-        : 'Kalitsiz e\'lonlar yig\'iladi, lekin tahlil qilinmaydi. Kalit: Telegram bo\'limida.') . '</small></div></li>';
+    . ($aiKey !== '' ? 'Telegram bo\'limidagi o\'sha kalit ishlatiladi — alohida kalit kerak emas. <a href="/admin/telegram.php#mb_key">Kalitni ochish</a>.' . ($xato ? ' Oxirgi xato: ' . h($xato) : '')
+        : 'Kalitsiz e\'lonlar yig\'iladi, lekin tahlil qilinmaydi. Kalit: <a href="/admin/telegram.php#mb_key">Telegram bo\'limida</a>.') . '</small></div></li>';
 echo '</ul>';
 
 if (hs_rq_on()) {
