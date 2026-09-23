@@ -296,6 +296,7 @@ function hs_db_migrate(PDO $pdo)
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL UNIQUE,
                 title TEXT NOT NULL DEFAULT '',
+                kind TEXT NOT NULL DEFAULT 'kanal',
                 active INTEGER NOT NULL DEFAULT 1,
                 last_post_id INTEGER NOT NULL DEFAULT 0,
                 last_fetch TEXT NOT NULL DEFAULT '',

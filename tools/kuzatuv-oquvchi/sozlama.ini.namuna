@@ -1,0 +1,25 @@
+; HAMKOR SAVDO — kuzatuv o'quvchisi sozlamasi.
+;
+; Shu fayldan nusxa oling va nomini sozlama.ini qiling, so'ng to'ldiring.
+; sozlama.ini va seans.session fayllari git'ga tushmaydi — ularda kalitlar bor,
+; ularni hech kimga yubormang.
+
+[kuzatuv]
+
+; 1) my.telegram.org -> "API development tools" dan olinadi.
+;    Kirish uchun @fortasks_management akkauntining raqami ishlatiladi.
+api_id =
+api_hash =
+
+; 2) Sayt manzili (oxirida / kerak emas).
+sayt = https://hamkorsavdo.uz
+
+; 3) Panel -> Raqobatchilar -> "O'quvchi dastur kaliti" dan nusxa olinadi.
+kalit =
+
+; 4) Necha daqiqada bir marta tekshirsin. 5 daqiqa yetarli, kamaytirmang —
+;    Telegram tez-tez so'rovni yoqtirmaydi.
+oraliq_daqiqa = 5
+
+; 5) Bir guruhdan bir martada ko'pi bilan nechta xabar olsin.
+bir_martada = 50

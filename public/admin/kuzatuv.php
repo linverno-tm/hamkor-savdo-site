@@ -92,6 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $n = hs_db()->exec("UPDATE rq_posts SET ai_error = '' WHERE ai_error <> ''");
         $t = hs_rq_analyze(10);
         hs_flash("{$n} ta e'lon navbatga qaytarildi, {$t} tasi tahlil qilindi.");
+    } elseif ($action === 'kalit_yangi') {
+        hs_rq_ingest_key_new();
+        hs_audit($user['login'], "kuzatuv: o'quvchi dastur kaliti yangilandi");
+        hs_flash("Yangi kalit yaratildi. Uni kompyuterdagi sozlama.ini ga ko'chiring - eskisi endi ishlamaydi.");
     } elseif ($action === 'sinov') {
         list($ok, $err) = hs_rq_send("Sinov xabari — HAMKOR SAVDO kuzatuv boti ishlayapti.");
         hs_flash($ok ? 'Xabar yuborildi — guruhni tekshiring.' : 'Yuborilmadi: ' . $err, $ok ? 'ok' : 'err');
@@ -184,6 +188,40 @@ if ($token !== '') {
 }
 echo '</section>';
 
+/* -------------------- kompyuterdagi o'quvchi dastur -------------------- */
+$guruhSoni = 0;
+foreach ($channels as $c) {
+    if ($c["kind"] === "guruh") {
+        $guruhSoni++;
+    }
+}
+$ingestKey = hs_rq_ingest_key();
+$ingestAt = hs_setting("rq_ingest_at", "");
+echo '<section class="card"><div class="card-head"><h2>Guruhlarni o&rsquo;qish</h2></div>';
+echo "<p class=\"hint\">Telegram boti faqat O'ZI a'zo bo'lgan chatni ko'ra oladi - bu Telegram qoidasi. "
+    . "Shuning uchun raqobatchilarning do'kon guruhlarini (model va oylik to'lov aynan o'sha yerda yoziladi) bot o'qiy olmaydi. "
+    . "Ularni do'kondagi kompyuterda ishlaydigan kichik dastur o'qiydi va shu yerga yuboradi. "
+    . "Ochiq kanallar uchun bu dastur kerak emas - ularni panelning o'zi oladi.</p>";
+echo '<ul class="checklist">';
+echo "<li>" . $okIco($guruhSoni > 0) . "<div><b>{$guruhSoni} ta guruh ro'yxatda</b><small>"
+    . "Guruhni pastdagi maydonga oddiy nom bilan qo'shasiz (masalan shahrixon_imkon) - panel uni guruh deb tanib oladi.</small></div></li>";
+echo "<li>" . $okIco($ingestAt !== "") . "<div><b>" . ($ingestAt !== "" ? "Oxirgi qabul: " . h(date("d.m H:i", strtotime($ingestAt))) : "Dasturdan hali xabar kelmagan") . "</b><small>"
+    . "Dastur kompyuter yoqilganda o'tkazib yuborilgan xabarlarni ham olib keladi.</small></div></li>";
+echo "</ul>";
+if ($ingestKey === "") {
+    echo "<p class=\"muted\">Kalit hali yaratilmagan. Dastur ishlashi uchun kalit kerak.</p>";
+} else {
+    echo "<label for=\"ikey\">O'quvchi dastur kaliti</label>"
+        . "<input id=\"ikey\" type=\"text\" value=\"" . h($ingestKey) . "\" readonly onclick=\"this.select()\">"
+        . "<p class=\"hint\">Shuni kompyuterdagi <code>sozlama.ini</code> faylidagi <code>kalit</code> qatoriga qo'ying. "
+        . "Kalitni hech kimga bermang - u bilan saytga e'lon yuborish mumkin.</p>";
+}
+echo '<form method="post" class="actions"' . ($ingestKey !== "" ? ' data-confirm="Yangi kalit yaratilsinmi? Eski kalit ishlamay qoladi va dasturni qayta sozlash kerak."' : '') . '>'
+    . hs_csrf_field() . '<input type="hidden" name="amal" value="kalit_yangi">'
+    . '<button class="btn outline small" type="submit">' . ($ingestKey === "" ? "Kalit yaratish" : "Kalitni yangilash") . '</button></form>';
+echo "<p class=\"hint\">O'rnatish tartibi: <code>tools/kuzatuv-oquvchi/README.md</code>.</p>";
+echo '</section>';
+
 /* ---------------------------- sozlamalar ---------------------------- */
 echo '<section class="card"><div class="card-head"><h2>Sozlamalar</h2></div>';
 echo '<form method="post">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sozlama"><div class="grid grid-2">';
@@ -206,12 +244,13 @@ echo '</section>';
 echo '<section class="card"><div class="card-head"><h2>Kuzatilayotgan kanallar</h2></div>';
 echo '<p class="hint">Faqat <b>ochiq</b> kanallar. Yopiq guruh yoki kanalni kuzatib bo\'lmaydi — u yerga kirish uchun odamning akkaunti kerak bo\'lardi, bu yo\'l ataylab qo\'shilmagan.</p>';
 if ($channels) {
-    echo '<div class="table-wrap"><table><thead><tr><th>Kanal</th><th>E\'lonlar</th><th>Oxirgi yig\'ish</th><th>Holat</th><th></th></tr></thead><tbody>';
+    echo '<div class="table-wrap"><table><thead><tr><th>Manba</th><th>Turi</th><th>E\'lonlar</th><th>Oxirgi yig\'ish</th><th>Holat</th><th></th></tr></thead><tbody>';
     foreach ($channels as $c) {
         $st = hs_db()->prepare('SELECT COUNT(*) FROM rq_posts WHERE channel = ?');
         $st->execute(array($c['username']));
         echo '<tr><td><a href="https://t.me/' . h($c['username']) . '" target="_blank" rel="noopener noreferrer">'
             . h($c['title'] !== '' ? $c['title'] : '@' . $c['username']) . '</a><small class="muted"> @' . h($c['username']) . '</small></td>'
+            . "<td>" . ($c["kind"] === "guruh" ? "Guruh - dastur o'qiydi" : "Kanal - avtomatik") . "</td>"
             . '<td>' . (int) $st->fetchColumn() . '</td>'
             . '<td>' . h($c['last_fetch'] !== '' ? date('d.m H:i', strtotime($c['last_fetch'])) : '—')
             . ($c['last_error'] !== '' ? '<br><small class="muted">' . h($c['last_error']) . '</small>' : '') . '</td>'

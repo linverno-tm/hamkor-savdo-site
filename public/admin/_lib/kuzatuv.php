@@ -153,31 +153,41 @@ function hs_rq_channels($onlyActive = false)
 /** Kanalni qo'shishdan oldin haqiqatan ochiq va mavjudligini tekshiramiz. */
 function hs_rq_channel_add($username)
 {
-    $username = ltrim(trim((string) $username), '@');
-    $username = preg_replace('#^https?://t\.me/(s/)?#i', '', $username);
-    $username = trim($username, '/');
-    if (!preg_match('/^[A-Za-z0-9_]{4,64}$/', $username)) {
-        return array(false, "Kanal nomi noto'g'ri. Masalan: ishonch yoki t.me/ishonch");
+    $username = ltrim(trim((string) $username), "@");
+    $username = preg_replace("#^https?://t[.]me/(s/)?#i", "", $username);
+    $username = trim($username, "/");
+    if (!preg_match("/^[A-Za-z0-9_]{4,64}$/", $username)) {
+        return array(false, "Nomi noto'g'ri. Masalan: ishonch yoki t.me/ishonch");
     }
-    $st = hs_db()->prepare('SELECT COUNT(*) FROM rq_channels WHERE username = ?');
+    $st = hs_db()->prepare("SELECT COUNT(*) FROM rq_channels WHERE username = ?");
     $st->execute(array($username));
     if ((int) $st->fetchColumn() > 0) {
-        return array(false, '@' . $username . ' ro\'yxatda bor.');
+        return array(false, "@" . $username . " ro'yxatda bor.");
     }
-    list($code, $html) = hs_http('GET', 'https://t.me/s/' . $username, array('User-Agent: Mozilla/5.0 (HamkorSavdo kuzatuv)'), null, 20);
-    if ($code !== 200 || $html === '') {
-        return array(false, "Kanal sahifasi ochilmadi (HTTP {$code}). Yopiq kanal yoki guruhni kuzatib bo'lmaydi.");
+    $ua = array("User-Agent: Mozilla/5.0 (HamkorSavdo kuzatuv)");
+    list($code, $html) = hs_http("GET", "https://t.me/s/" . $username, $ua, null, 20);
+    $kind = "kanal";
+    $title = "";
+    if ($code === 200 && $html !== "" && strpos($html, "tgme_widget_message_wrap") !== false) {
+        if (preg_match('#<meta property="og:title" content="([^"]*)"#', $html, $m)) {
+            $title = trim(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, "UTF-8"));
+        }
+    } else {
+        /* Guruhning ochiq sahifasi yo'q — Telegram guruhlarga t.me/s/ bermaydi.
+           Bunday manbani kompyuterdagi o'quvchi dastur o'qiydi. */
+        list($c2, $page) = hs_http("GET", "https://t.me/" . $username, $ua, null, 20);
+        if ($c2 !== 200 || $page === "" || strpos($page, "tgme_page_extra") === false) {
+            return array(false, "Bunday kanal yoki guruh topilmadi (HTTP {$code}/{$c2}).");
+        }
+        if (preg_match('#<meta property="og:title" content="([^"]*)"#', $page, $m)) {
+            $title = trim(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, "UTF-8"));
+        }
+        $kind = "guruh";
     }
-    if (strpos($html, 'tgme_widget_message_wrap') === false) {
-        return array(false, 'Bu sahifada postlar ko\'rinmaydi — yopiq kanal yoki guruh bo\'lishi mumkin.');
-    }
-    $title = '';
-    if (preg_match('#<meta property="og:title" content="([^"]*)"#', $html, $m)) {
-        $title = trim(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-    }
-    $ins = hs_db()->prepare('INSERT INTO rq_channels (username, title, active, added_at) VALUES (?, ?, 1, ?)');
-    $ins->execute(array($username, $title, hs_now()));
-    return array(true, ($title !== '' ? $title : '@' . $username) . ' qo\'shildi.');
+    $ins = hs_db()->prepare("INSERT INTO rq_channels (username, title, kind, active, added_at) VALUES (?, ?, ?, 1, ?)");
+    $ins->execute(array($username, $title, $kind, hs_now()));
+    return array(true, ($title !== "" ? $title : "@" . $username) . " qo'shildi"
+        . ($kind === "guruh" ? " — bu GURUH, uni kompyuterdagi o'quvchi dastur o'qiydi." : "."));
 }
 
 /* ============================= postlarni olish ============================= */
@@ -219,6 +229,9 @@ function hs_rq_fetch_all()
     $n = 0;
     $errs = array();
     foreach (hs_rq_channels(true) as $ch) {
+        if ($ch['kind'] !== 'kanal') {
+            continue; // guruhni kompyuterdagi dastur yuboradi
+        }
         list($k, $e) = hs_rq_fetch($ch);
         $n += $k;
         if ($e !== '') {
@@ -518,6 +531,70 @@ function hs_rq_digest($force = false)
     $u = hs_db()->prepare('UPDATE rq_posts SET digested = 1 WHERE digested = 0 AND analyzed = 1');
     $u->execute();
     return (bool) $lines;
+}
+
+/* ====================== kompyuterdagi o'quvchi dastur ====================== */
+
+/*
+ * Guruhni bot o'qiy olmaydi — Telegram bunga yo'l bermaydi: bot faqat o'zi
+ * a'zo bo'lgan chatni ko'radi. Shuning uchun do'kondagi kompyuterda kichik
+ * dastur ishlaydi (tools/kuzatuv-oquvchi): u oddiy Telegram akkaunti bilan
+ * ochiq guruhlarga a'zo bo'ladi, yangi xabarlarni o'qiydi va quyidagi kalit
+ * bilan /api/kuzatuv.php ga yuboradi. Dastur hech qayerga hech narsa
+ * yozmaydi, hech kimni qo'shmaydi — faqat o'qiydi.
+ */
+
+function hs_rq_ingest_key()
+{
+    return (string) hs_setting('rq_ingest_key', '');
+}
+
+function hs_rq_ingest_key_new()
+{
+    $k = hs_random_hex(24);
+    hs_set_setting('rq_ingest_key', $k);
+    return $k;
+}
+
+/** Dastur yuborgan xabarlarni yozish. Qaytadi: [yozilgan, o'tkazilgan]. */
+function hs_rq_ingest($posts)
+{
+    $ins = hs_db()->prepare("INSERT OR IGNORE INTO rq_posts (channel, post_id, via, url, text, media, posted_at, fetched_at) VALUES (?, ?, 'guruh', ?, ?, ?, ?, ?)");
+    $n = 0;
+    $skip = 0;
+    foreach ((array) $posts as $p) {
+        $src = isset($p['source']) ? preg_replace('/[^A-Za-z0-9_]/', '', (string) $p['source']) : '';
+        $id = isset($p['post_id']) ? (int) $p['post_id'] : 0;
+        $text = isset($p['text']) ? trim((string) $p['text']) : '';
+        if ($src === '' || $id <= 0 || $text === '') {
+            $skip++;
+            continue;
+        }
+        $ts = isset($p['posted_at']) ? strtotime((string) $p['posted_at']) : 0;
+        $media = isset($p['media']) && in_array($p['media'], array('foto', 'video'), true) ? $p['media'] : '';
+        $ins->execute(array($src, $id, 'https://t.me/' . $src . '/' . $id,
+            mb_substr($text, 0, 4000), $media, $ts ? date('Y-m-d H:i:s', $ts) : hs_now(), hs_now()));
+        $n += $ins->rowCount() > 0 ? 1 : 0;
+    }
+    if ($n) {
+        hs_set_setting('rq_ingest_at', hs_now());
+    }
+    return array($n, $skip);
+}
+
+/** Dasturga beriladigan ro'yxat: qaysi guruhlarni, qaysi xabardan keyin. */
+function hs_rq_group_list()
+{
+    $out = array();
+    $st = hs_db()->prepare('SELECT MAX(post_id) FROM rq_posts WHERE channel = ?');
+    foreach (hs_rq_channels(true) as $c) {
+        if ($c['kind'] !== 'guruh') {
+            continue;
+        }
+        $st->execute(array($c['username']));
+        $out[] = array('username' => $c['username'], 'title' => $c['title'], 'last_id' => (int) $st->fetchColumn());
+    }
+    return $out;
 }
 
 /** Cron: yig'ish → tahlil → ogohlantirish → kunlik xulosa. */

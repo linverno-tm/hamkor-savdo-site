@@ -1,0 +1,4 @@
+# Kalitlar va Telegram seansi — hech qachon git'ga tushmasin.
+sozlama.ini
+*.session
+*.session-journal
