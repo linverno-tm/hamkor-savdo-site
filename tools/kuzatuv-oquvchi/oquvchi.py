@@ -272,8 +272,15 @@ async def asosiy():
         await asyncio.sleep(cfg["oraliq"] * 60)
 
 
+def ishga_tushir(coro):
+    # asyncio.run Python 3.7 dan bor; hostingdagi eskiroq Python'da ham ishlasin.
+    if hasattr(asyncio, "run"):
+        return asyncio.run(coro)
+    return asyncio.get_event_loop().run_until_complete(coro)
+
+
 if __name__ == "__main__":
     try:
-        asyncio.run(asosiy())
+        ishga_tushir(asosiy())
     except KeyboardInterrupt:
         print("\nTo'xtatildi.")
