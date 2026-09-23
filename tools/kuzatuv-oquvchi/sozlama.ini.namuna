@@ -23,3 +23,7 @@ oraliq_daqiqa = 5
 
 ; 5) Bir guruhdan bir martada ko'pi bilan nechta xabar olsin.
 bir_martada = 50
+
+; 6) Kuzatuv akkauntining raqami (+ bilan, bo'shliqsiz). Yozilgan bo'lsa,
+;    dastur uni so'ramaydi — faqat Telegram yuborgan kodni kiritasiz.
+telefon = 

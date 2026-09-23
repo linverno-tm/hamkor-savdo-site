@@ -59,6 +59,7 @@ def sozlamani_oqi():
         "kalit": s["kalit"].strip(),
         "oraliq": max(3, int(s.get("oraliq_daqiqa", "5"))),
         "eng_kop": int(s.get("bir_martada", "50")),
+        "telefon": s.get("telefon", "").strip(),
     }
 
 
@@ -212,7 +213,13 @@ async def asosiy():
     # Birinchi ishga tushirishda Telegram telefon raqami va SMS kodini so'raydi —
     # ularni KOMPYUTER OLDIDAGI ODAM kiritadi. Keyin seans faylga saqlanadi va
     # boshqa so'ralmaydi.
-    await client.start()
+    # Telefon sozlamada bo'lsa, qo'lda yozilmaydi: birinchi urinishda raqam
+    # terminalda xato terilib, kod boshqa raqamga ketgan edi.
+    if cfg["telefon"]:
+        print("Kirish: " + cfg["telefon"] + " — kod Telegram ilovasiga keladi.")
+        await client.start(phone=cfg["telefon"])
+    else:
+        await client.start()
     men = await client.get_me()
     nom = "@" + men.username if men.username else "(username yo'q)"
     print(f"Telegram akkaunt: {men.first_name} {nom}")
