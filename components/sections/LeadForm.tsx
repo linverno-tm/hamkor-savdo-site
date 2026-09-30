@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { branches } from "@/data/branches";
 import { site } from "@/data/site";
+import { telefonInput } from "@/lib/telefon";
 import { useLeadSubmit } from "@/lib/lead";
 
 /**
@@ -147,6 +148,7 @@ export function LeadForm({
                 </label>
                 <input
                   id="lead-phone"
+                  onInput={telefonInput}
                   name="phone"
                   type="tel"
                   required

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { branches } from "@/data/branches";
 import { site } from "@/data/site";
+import { telefonInput } from "@/lib/telefon";
 import { useLeadSubmit } from "@/lib/lead";
 
 /**
@@ -71,6 +72,7 @@ export function HeroLead() {
           </label>
           <input
             id="hero-phone"
+            onInput={telefonInput}
             name="phone"
             type="tel"
             required
