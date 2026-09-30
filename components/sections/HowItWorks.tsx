@@ -26,7 +26,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="qanday-ishlaydi" aria-labelledby="how-title" className="bg-ground-2 py-16 sm:py-24">
+    <section id="qanday-ishlaydi" aria-labelledby="how-title" className="bg-ground-2 py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading id="how-title" align="center" kicker="Oson va tez" title="3 qadamda xarid qiling" />
         <ol data-reveal className="mt-12 grid gap-5 md:grid-cols-3">

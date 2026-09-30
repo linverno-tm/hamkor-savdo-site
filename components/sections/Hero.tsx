@@ -31,7 +31,7 @@ export function Hero() {
 
             <h1
               id="hero-title"
-              className="display mt-6 text-[2.6rem] leading-[1.04] sm:text-6xl lg:text-[4.25rem]"
+              className="display mt-6 text-[2.15rem] leading-[1.06] sm:text-6xl lg:text-[4.25rem]"
             >
               <span className="line-mask">
                 <span style={{ ["--i" as string]: 1 }}>Oilangiz uchun</span>
@@ -62,7 +62,7 @@ export function Hero() {
 
             {/* Do'konning o'ziga xos va'dasi — alohida, sariq. */}
             <a
-              href="#maxsus-buyurtma"
+              href="#ariza"
               className="rise group tap btn-lift mt-6 flex max-w-lg items-center gap-3 rounded-[16px] border-2 border-yellow bg-yellow/10 px-4 py-3 hover:bg-yellow/20"
               style={{ ["--i" as string]: 5 }}
             >
@@ -76,7 +76,7 @@ export function Hero() {
             </a>
           </div>
 
-          <div className="rise" style={{ ["--i" as string]: 6 }}>
+          <div className="rise hidden lg:block" style={{ ["--i" as string]: 6 }}>
             <HeroLead />
           </div>
         </div>

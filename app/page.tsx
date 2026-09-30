@@ -11,7 +11,6 @@ import { Promotions } from "@/components/sections/Promotions";
 import { Catalog } from "@/components/sections/Catalog";
 import { Installment } from "@/components/sections/Installment";
 import { HowItWorks } from "@/components/sections/HowItWorks";
-import { SpecialOrder } from "@/components/sections/SpecialOrder";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { About } from "@/components/sections/About";
 import { Store } from "@/components/sections/Store";
@@ -116,21 +115,30 @@ export default function Home() {
       <main id="asosiy" tabIndex={-1}>
         {/* Tartib: kim va nima (hero + kategoriyalar) → ishonch → aksiya va
             katalog (bo'sh bo'lsa ko'rinmaydi) → muddatli to'lov → qanday
-            xarid qilinadi → "bizda yo'q" va ariza → biz haqimizda → jonli do'kon suratlari → filiallar
-            va xarita → sharhlar → savollar → yakuniy chaqiriq. */}
+            xarid qilinadi → biz haqimizda → jonli do'kon suratlari → filiallar
+            va xarita → sharhlar → savollar → ariza va yakuniy chaqiriq.
+
+            Ariza formasi oxirda, yakuniy chaqiriq bilan yonma-yon: ilgari u
+            o'rtada turardi va pastdagi "Ariza qoldirish" tugmasi odamni o'n
+            ekran tepaga qaytarardi. Tezroq yozmoqchi bo'lgan odam uchun hero
+            ichidagi qisqa forma bor.
+
+            "Bizda yo'qmi? Baribir olamiz" alohida bo'lim edi — yakuniy
+            chaqiriqdagi "Kerakli mahsulotni birga topamiz" bilan bir xil
+            va'da. Endi u bitta joyda: hero ostidagi havola va formadagi
+            "boshqa joyda ko'rganman" katagi. */}
         <Hero />
         <Trust />
         <Promotions />
         <Catalog />
         <Installment />
         <HowItWorks />
-        <SpecialOrder />
-        <LeadForm />
         <About />
         <Store />
         <Branches />
         <Reviews />
         <Faq />
+        <LeadForm />
         <FinalCta />
       </main>
       <Footer />

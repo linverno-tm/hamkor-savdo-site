@@ -13,7 +13,7 @@ export function Reviews() {
   const full = Math.floor(reviews.rating);
 
   return (
-    <section id="sharhlar" aria-labelledby="reviews-title" className="bg-ground-2 py-16 sm:py-24">
+    <section id="sharhlar" aria-labelledby="reviews-title" className="bg-ground-2 py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div data-reveal className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="card flex flex-col justify-between gap-8 p-7 sm:p-10">

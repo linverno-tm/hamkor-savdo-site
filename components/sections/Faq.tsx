@@ -20,7 +20,7 @@ export function Faq() {
   };
 
   return (
-    <section id="savollar" aria-labelledby="faq-title" className="bg-ground-2 py-16 sm:py-24">
+    <section id="savollar" aria-labelledby="faq-title" className="bg-ground-2 py-12 sm:py-24">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="mx-auto max-w-3xl px-5 sm:px-8">
         <SectionHeading id="faq-title" align="center" kicker="Savol-javob" title="Ko'p so'raladigan savollar" />

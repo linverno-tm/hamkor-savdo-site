@@ -28,7 +28,7 @@ export function Branches() {
   }));
 
   return (
-    <section id="filiallar" aria-labelledby="branches-title" className="scroll-mt-20 bg-ground py-16 sm:py-24">
+    <section id="filiallar" aria-labelledby="branches-title" className="scroll-mt-20 bg-ground py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           id="branches-title"

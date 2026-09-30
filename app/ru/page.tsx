@@ -79,7 +79,7 @@ export default function RuHome() {
           </div>
         </section>
 
-        <section aria-labelledby="ru-dirs" className="bg-ground-2 py-16 sm:py-20">
+        <section aria-labelledby="ru-dirs" className="bg-ground-2 py-12 sm:py-20">
           <div className="mx-auto max-w-7xl px-5 sm:px-8">
             <h2 id="ru-dirs" className="display text-3xl sm:text-4xl">
               Что можно купить в рассрочку
@@ -107,7 +107,7 @@ export default function RuHome() {
           </div>
         </section>
 
-        <section aria-labelledby="ru-branches" className="py-16 sm:py-20">
+        <section aria-labelledby="ru-branches" className="py-12 sm:py-20">
           <div className="mx-auto max-w-7xl px-5 sm:px-8">
             <h2 id="ru-branches" className="display text-3xl sm:text-4xl">
               Наши магазины
@@ -127,7 +127,7 @@ export default function RuHome() {
           </div>
         </section>
 
-        <section aria-labelledby="ru-faq" className="bg-ground-2 py-16 sm:py-20">
+        <section aria-labelledby="ru-faq" className="bg-ground-2 py-12 sm:py-20">
           <div className="mx-auto max-w-3xl px-5 sm:px-8">
             <h2 id="ru-faq" className="display text-3xl sm:text-4xl">
               Частые вопросы

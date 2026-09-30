@@ -20,7 +20,7 @@ export function Trust() {
   ];
 
   return (
-    <section id="nega-hamkor" aria-labelledby="trust-title" className="bg-ground-2 py-16 sm:py-20">
+    <section id="nega-hamkor" aria-labelledby="trust-title" className="bg-ground-2 py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div data-reveal className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>

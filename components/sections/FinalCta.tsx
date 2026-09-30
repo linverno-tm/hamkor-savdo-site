@@ -16,7 +16,7 @@ const PHOTOS = [
 export function FinalCta() {
   const rating = site.reviews.rating.toFixed(1).replace(".", ",");
   return (
-    <section id="hamkor-boling" aria-labelledby="cta-title" className="bg-ground py-16 sm:py-24">
+    <section id="hamkor-boling" aria-labelledby="cta-title" className="bg-ground py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div data-reveal className="cta-panel on-purple relative overflow-hidden rounded-[32px] text-white">
           <Logo

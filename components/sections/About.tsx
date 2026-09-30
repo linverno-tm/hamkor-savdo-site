@@ -28,7 +28,7 @@ export function About() {
     <section
       id="biz-haqimizda"
       aria-labelledby="about-title"
-      className="relative bg-ground py-16 sm:py-24"
+      className="relative bg-ground py-12 sm:py-24"
     >
       <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
         <div data-reveal>

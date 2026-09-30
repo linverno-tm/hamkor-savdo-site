@@ -50,7 +50,7 @@ export function Catalog() {
   const shown = products.slice(0, 8);
 
   return (
-    <section id="katalog" aria-labelledby="catalog-title" className="bg-ground-2 py-16 sm:py-24">
+    <section id="katalog" aria-labelledby="catalog-title" className="bg-ground-2 py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <p className="kicker">Katalog</p>
         <h2 id="catalog-title" className="display mt-3 text-4xl sm:text-5xl">

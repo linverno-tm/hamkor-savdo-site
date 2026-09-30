@@ -87,7 +87,7 @@ export function BranchGallery({
   const cells = layoutCells(rest.length);
 
   return (
-    <section id="suratlar" aria-labelledby="gallery-title" className="bg-ground py-16 sm:py-20">
+    <section id="suratlar" aria-labelledby="gallery-title" className="bg-ground py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <p className="kicker">Haqiqiy do&apos;kon</p>
         <h2 id="gallery-title" className="display mt-3 text-3xl sm:text-4xl">

@@ -187,7 +187,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         </section>
 
         {/* ---- matn ---- */}
-        <section aria-labelledby="topic-more" className="py-16 sm:py-20">
+        <section aria-labelledby="topic-more" className="py-12 sm:py-20">
           <div className="mx-auto max-w-3xl px-5 sm:px-8">
             <h2 id="topic-more" className="display text-3xl sm:text-4xl">
               {ui.more}
@@ -219,7 +219,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         </section>
 
         {/* ---- filiallar ---- */}
-        <section aria-labelledby="topic-branches" className="py-16 sm:py-20">
+        <section aria-labelledby="topic-branches" className="py-12 sm:py-20">
           <div className="mx-auto max-w-7xl px-5 sm:px-8">
             <h2 id="topic-branches" className="display text-3xl sm:text-4xl">
               {ui.branchesTitle}
@@ -246,7 +246,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         </section>
 
         {/* ---- savol-javob ---- */}
-        <section aria-labelledby="topic-faq" className="bg-ground-2 py-16 sm:py-20">
+        <section aria-labelledby="topic-faq" className="bg-ground-2 py-12 sm:py-20">
           <div className="mx-auto max-w-3xl px-5 sm:px-8">
             <h2 id="topic-faq" className="display text-3xl sm:text-4xl">
               {ui.faqTitle}
@@ -270,7 +270,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         <LeadForm lang={lang} page={self} lead={t.cta} />
 
         {/* ---- boshqa yo'nalishlar (ichki havolalar qidiruv uchun ham muhim) ---- */}
-        <section aria-labelledby="topic-other" className="bg-ground-2 py-16">
+        <section aria-labelledby="topic-other" className="bg-ground-2 py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-5 sm:px-8">
             <h2 id="topic-other" className="display text-3xl">
               {ui.otherTitle}

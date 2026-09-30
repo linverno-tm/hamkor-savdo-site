@@ -116,7 +116,7 @@ export function Contact() {
   ];
 
   return (
-    <section id="aloqa" aria-labelledby="contact-title" className="bg-ground py-16 sm:py-24">
+    <section id="aloqa" aria-labelledby="contact-title" className="bg-ground py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           id="contact-title"

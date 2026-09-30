@@ -89,7 +89,7 @@ export default function AloqaPage() {
           </div>
         </section>
 
-        <section aria-labelledby="aloqa-filiallar" className="bg-ground-2 py-16 sm:py-20">
+        <section aria-labelledby="aloqa-filiallar" className="bg-ground-2 py-12 sm:py-20">
           <div className="mx-auto max-w-7xl px-5 sm:px-8">
             <h2 id="aloqa-filiallar" className="display text-3xl sm:text-4xl">
               Filiallar manzili

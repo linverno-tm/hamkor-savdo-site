@@ -23,7 +23,7 @@ export function Store() {
   });
 
   return (
-    <section id="dokon" aria-labelledby="store-title" className="bg-ground py-16 sm:py-24">
+    <section id="dokon" aria-labelledby="store-title" className="bg-ground py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           id="store-title"

@@ -16,7 +16,7 @@ export function Installment() {
   ];
 
   return (
-    <section id="muddatli-tolov" aria-labelledby="installment-title" className="scroll-mt-20 bg-ground py-16 sm:py-24">
+    <section id="muddatli-tolov" aria-labelledby="installment-title" className="scroll-mt-20 bg-ground py-12 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div
           data-reveal
