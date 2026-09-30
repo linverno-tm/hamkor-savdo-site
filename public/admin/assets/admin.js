@@ -380,3 +380,16 @@ document.addEventListener("DOMContentLoaded", function () {
   if (n > 0 && n > seen) bell.setAttribute("open", "");
   try { store.setItem("ijBellSeen", String(n)); } catch (e) {}
 });
+
+// Jadval sarlavhasidagi "hammasini belgilash" katagi (katalogni kanaldan
+// to'ldirish ro'yxati). Katak o'sha jadvalning ichidagilarni boshqaradi —
+// sahifada bir nechta bunday ro'yxat bo'lsa ham aralashib ketmaydi.
+document.addEventListener("change", function (e) {
+  var bosh = e.target.closest ? e.target.closest("[data-hammasi]") : null;
+  if (!bosh || bosh !== e.target) return;
+  var jadval = bosh.closest("table");
+  if (!jadval) return;
+  jadval.querySelectorAll('tbody input[type="checkbox"]').forEach(function (k) {
+    k.checked = bosh.checked;
+  });
+});

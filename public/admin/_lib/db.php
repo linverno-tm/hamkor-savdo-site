@@ -343,6 +343,32 @@ function hs_db_migrate(PDO $pdo)
         11 => array(
             "ALTER TABLE rq_posts ADD COLUMN turkum TEXT NOT NULL DEFAULT ''",
         ),
+        /* Katalogni kanaldan to'ldirish (_lib/katalog-import.php).
+           mb_posts.rasm — post rasmining manzili: narx va mahsulot nomi
+           ko'pincha rasmda yoziladi, matnda esa qisqa izoh bo'ladi.
+           kat_import — har bir postdan chiqarilgan mahsulot: egasi ko'rib,
+           tasdiqlaganidan keyingina saytga chiqadi. Rad etilgani qayta
+           taklif qilinmaydi. */
+        12 => array(
+            "ALTER TABLE mb_posts ADD COLUMN rasm TEXT NOT NULL DEFAULT ''",
+            "CREATE TABLE kat_import (
+                source TEXT NOT NULL,
+                post_id INTEGER NOT NULL,
+                url TEXT NOT NULL DEFAULT '',
+                name TEXT NOT NULL DEFAULT '',
+                category TEXT NOT NULL DEFAULT '',
+                price INTEGER,
+                months INTEGER NOT NULL DEFAULT 0,
+                note TEXT NOT NULL DEFAULT '',
+                rasm TEXT NOT NULL DEFAULT '',
+                holat TEXT NOT NULL DEFAULT 'yangi',
+                product_id TEXT NOT NULL DEFAULT '',
+                xato TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (source, post_id)
+            )",
+            "CREATE INDEX kat_import_holat ON kat_import(holat, created_at)",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {

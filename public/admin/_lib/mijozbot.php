@@ -180,14 +180,23 @@ function hs_mb_post_url($username, $postId)
     return $username !== '' ? 'https://t.me/' . $username . '/' . (int) $postId : '';
 }
 
-function hs_mb_catalog_add($source, $postId, $url, $text, $photo, $postedAt)
+function hs_mb_catalog_add($source, $postId, $url, $text, $photo, $postedAt, $rasm = '')
 {
     $text = trim(preg_replace("/[ \t]+/u", ' ', (string) $text));
     if ($text === '') {
         return false;
     }
-    hs_db()->prepare('INSERT OR REPLACE INTO mb_posts(source, post_id, url, text, photo, posted_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?)')
-        ->execute(array((string) $source, (int) $postId, (string) $url, mb_substr($text, 0, 2000), $photo ? 1 : 0, $postedAt, hs_now()));
+    /* Rasm manzili katalogni kanaldan to'ldirish uchun saqlanadi: mahsulot
+       nomi va narxi ko'pincha rasmga yozilgan bo'ladi. Webhook orqali kelgan
+       postda manzil bo'lmaydi (u yerda file_id keladi) — o'shanda avval
+       saqlangani o'chib ketmasin. */
+    if ($rasm === '') {
+        $eski = hs_db()->prepare('SELECT rasm FROM mb_posts WHERE source = ? AND post_id = ?');
+        $eski->execute(array((string) $source, (int) $postId));
+        $rasm = (string) $eski->fetchColumn();
+    }
+    hs_db()->prepare('INSERT OR REPLACE INTO mb_posts(source, post_id, url, text, photo, rasm, posted_at, updated_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)')
+        ->execute(array((string) $source, (int) $postId, (string) $url, mb_substr($text, 0, 2000), $photo ? 1 : 0, (string) $rasm, $postedAt, hs_now()));
     return true;
 }
 
@@ -252,7 +261,7 @@ function hs_mb_backfill($channel, $pages = 10)
             $min = min($min, $post['id']);
             // Faqat narxli postlar: tabrik, mijoz fikri kabi postlar javobga aralashmasin.
             if (hs_mb_is_product_text($post['text'])) {
-                if (hs_mb_catalog_add('@' . $channel, $post['id'], hs_mb_post_url($channel, $post['id']), $post['text'], $post['photo'], $post['at'])) {
+                if (hs_mb_catalog_add('@' . $channel, $post['id'], hs_mb_post_url($channel, $post['id']), $post['text'], $post['photo'], $post['at'], isset($post['rasm']) ? $post['rasm'] : '')) {
                     $saved++;
                 }
             }

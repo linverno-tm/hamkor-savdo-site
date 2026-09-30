@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/_lib/bootstrap.php';
 require_once __DIR__ . '/_lib/content.php';
+require_once __DIR__ . '/_lib/katalog-import.php';
 
 $user = hs_require_login(true);
 $CATS = array('texnika' => 'Texnika', 'tilla' => 'Tilla', 'mebel' => 'Mebel');
@@ -21,7 +22,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = hs_post('id');
     $problem = "Noma'lum amal.";
 
-    if ($action === 'saqlash') {
+    if ($action === 'kanal_oqish') {
+        list($n, $topildi, $xato) = hs_ki_scan(20);
+        hs_audit($user['login'], 'katalog: kanaldan o\'qildi', "{$n} ta post, {$topildi} ta mahsulot");
+        hs_flash($xato !== ''
+            ? "{$n} ta post o'qildi, keyin to'xtadi: {$xato}"
+            : ($n === 0
+                ? "Yangi post yo'q. Telegram bo'limida «Katalogni kanaldan yangilash» ni bosib ko'ring."
+                : "{$n} ta post o'qildi, {$topildi} tasidan mahsulot chiqdi. Pastda ko'rib chiqing."),
+            $xato !== '' ? 'err' : 'ok');
+        hs_redirect('/admin/katalog.php#kanaldan');
+    } elseif ($action === 'kanal_qabul' || $action === 'kanal_rad') {
+        $tanlangan = isset($_POST['tanlov']) && is_array($_POST['tanlov']) ? $_POST['tanlov'] : array();
+        if (!$tanlangan) {
+            hs_flash('Hech narsa belgilanmadi.', 'err');
+        } elseif ($action === 'kanal_rad') {
+            $n = hs_ki_rad($tanlangan);
+            hs_audit($user['login'], 'katalog: kanaldan rad etildi', "{$n} ta");
+            hs_flash("{$n} ta e'lon ro'yxatdan chiqarildi — qayta taklif qilinmaydi.");
+        } else {
+            list($n, $xato) = hs_ki_publish($user, $tanlangan);
+            hs_audit($user['login'], 'katalog: kanaldan qo\'shildi', "{$n} ta");
+            hs_flash($xato !== '' ? 'Qo\'shilmadi: ' . $xato : "{$n} ta mahsulot katalogga qo'shildi. Sayt 3-4 daqiqada yangilanadi.",
+                $xato !== '' ? 'err' : 'ok');
+        }
+        hs_redirect('/admin/katalog.php#kanaldan');
+    } elseif ($action === 'saqlash') {
         $isNew = $id === '';
         $id = $isNew ? 'm' . date('ymdHis') : $id;
         $extra = array();
@@ -115,6 +141,61 @@ if (!$c['products']) {
         echo '<form class="inline-form" method="post" action="/admin/katalog.php" data-confirm="Mahsulot o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="ochirish"><input type="hidden" name="id" value="' . h($p['id']) . '"><input type="hidden" name="rasm" value="' . h($p['image']) . '"><button class="btn danger small" type="submit">O\'chirish</button></form></td></tr>';
     }
     echo '</tbody></table></div>';
+}
+echo '</section>';
+
+/* ---- kanaldan to'ldirish ----
+   Mahsulotlarni qo'lda kiritish uchun minglab post bor. Kanaldagi postlar
+   esa allaqachon bazada (mijozlar boti yig'adi) — AI ularni o'qib, tayyor
+   kartochka qiladi. Egasi faqat ko'rib, tasdiqlaydi: narx ochiq saytga
+   chiqadi va mijoz uni haq deb biladi, shuning uchun oxirgi so'z odamda. */
+$ki = hs_ki_sanoq();
+$kutmoqda = hs_ki_kutayotganlar();
+echo '<section class="card" id="kanaldan"><div class="part-head"><span class="part-ico">' . hs_icon('box') . '</span><div>'
+    . '<h2>Kanaldan to\'ldirish</h2><p class="muted">@' . h(hs_mb_setting('channel'))
+    . ' kanalidagi postlardan mahsulot kartochkasi tayyorlanadi — nomi, narxi va rasmi bilan</p></div></div>';
+
+echo '<ul class="checklist">';
+$ico = function ($ok) {
+    return '<span class="state ' . ($ok ? 'on' : 'off') . '">' . hs_icon($ok ? 'check' : 'clock') . '</span>';
+};
+echo '<li>' . $ico((int) $ki['rasmli'] > 0) . '<div><b>Kanalda ' . (int) $ki['rasmli'] . ' ta rasmli post</b><small>'
+    . (int) $ki['korilgan'] . ' tasi ko\'rib chiqilgan. Postlar Telegram bo\'limidagi «Katalogni kanaldan yangilash» bilan yig\'iladi.</small></div></li>';
+echo '<li>' . $ico((int) $ki['qabul'] > 0) . '<div><b>' . (int) $ki['qabul'] . ' ta mahsulot saytga chiqarilgan</b><small>'
+    . (int) $ki['rad'] . ' ta rad etilgan, ' . (int) $ki['emas'] . ' tasi mahsulot emas (aksiya, tabrik).</small></div></li>';
+$aiBor = hs_mb_provider() === 'gemini' ? hs_mb_gemini_key() !== '' : hs_mb_key() !== '';
+echo '<li>' . $ico($aiBor) . '<div><b>' . ($aiBor ? 'AI: ' . (hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') : 'AI kaliti yo\'q') . '</b><small>'
+    . ($aiBor ? 'Nom va narx rasmdan o\'qiladi. Bitta post taxminan 0,06 sent.'
+        : '<a href="/admin/telegram.php?bolim=ai">Kalitni kiriting</a> — kalitsiz o\'qib bo\'lmaydi.') . '</small></div></li>';
+echo '</ul>';
+
+echo '<form method="post" action="/admin/katalog.php" class="actions">' . hs_csrf_field()
+    . '<input type="hidden" name="amal" value="kanal_oqish">'
+    . '<button class="btn outline small" type="submit"' . ($aiBor ? '' : ' disabled') . '>Kanaldan o\'qish (20 ta post)</button></form>';
+
+if (!$kutmoqda) {
+    echo '<p class="muted">Ko\'rib chiqishni kutayotgan mahsulot yo\'q.</p>';
+} else {
+    echo '<form method="post" action="/admin/katalog.php">' . hs_csrf_field();
+    echo '<h3>Ko\'rib chiqing — ' . count($kutmoqda) . ' ta</h3>';
+    echo '<p class="hint">Narx va nom AI tomonidan rasmdan o\'qilgan, xato bo\'lishi mumkin. Rasmga bosilsa asl post ochiladi. '
+        . 'Tasdiqlangani saytga chiqadi, rad etilgani qayta taklif qilinmaydi.</p>';
+    echo '<div class="table-wrap"><table><thead><tr><th><input type="checkbox" data-hammasi aria-label="Hammasini belgilash"></th>'
+        . '<th>Rasm</th><th>Nomi</th><th>Bo\'lim</th><th class="right">Oyiga</th><th>Izoh</th></tr></thead><tbody>';
+    foreach ($kutmoqda as $r) {
+        $kalit = h($r['source'] . '|' . $r['post_id']);
+        echo '<tr><td><input type="checkbox" name="tanlov[]" value="' . $kalit . '" checked></td>'
+            . '<td><a href="' . h($r['url']) . '" target="_blank" rel="noopener noreferrer">'
+            . '<img class="list-thumb" src="/admin/rasm-koz.php?src=' . h(rawurlencode($r['rasm'])) . '" alt="" loading="lazy"></a></td>'
+            . '<td>' . h($r['name']) . '</td>'
+            . '<td>' . h(isset($CATS[$r['category']]) ? $CATS[$r['category']] : $r['category']) . '</td>'
+            . '<td class="right nowrap">' . ($r['price'] === null ? '—' : h(number_format((int) $r['price'], 0, '', ' ')))
+            . ((int) $r['months'] > 0 && $r['price'] !== null ? '<small class="muted"> × ' . (int) $r['months'] . ' oy</small>' : '') . '</td>'
+            . '<td><small>' . h($r['note']) . '</small></td></tr>';
+    }
+    echo '</tbody></table></div>';
+    echo '<div class="actions"><button class="btn" type="submit" name="amal" value="kanal_qabul">Belgilanganlarni katalogga qo\'shish</button>'
+        . '<button class="btn outline small" type="submit" name="amal" value="kanal_rad">Belgilanganlarni rad etish</button></div></form>';
 }
 echo '</section>';
 
