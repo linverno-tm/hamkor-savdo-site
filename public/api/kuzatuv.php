@@ -10,9 +10,10 @@
  * noto'g'ri kalit bilan kelgan so'rov hech narsa qilmaydi. Kalit sarlavhada
  * yuboriladi — manzil qatorida emas, aks holda u server jurnaliga tushardi.
  *
- * Ikki amal:
+ * Amallar:
  *   {"amal":"royxat"}            -> qaysi guruhlarni o'qish kerak
  *   {"amal":"yuklash","postlar":[...]} -> yangi xabarlar
+ *   {"amal":"kunlik_pdf"}        -> bugungi PDF ni hozir guruhga
  */
 require __DIR__ . '/../admin/_lib/bootstrap.php';
 require_once __DIR__ . '/../admin/_lib/kuzatuv.php';
@@ -50,7 +51,20 @@ if (!is_array($in)) {
 
 $amal = isset($in['amal']) ? (string) $in['amal'] : '';
 if ($amal === 'royxat') {
-    hs_rq_javob(array('ok' => true, 'guruhlar' => hs_rq_group_list()));
+    hs_rq_javob(array('ok' => true, 'guruhlar' => hs_rq_group_list(), 'rasm' => hs_rq_gd_bor()));
+}
+if ($amal === 'kunlik_pdf') {
+    // Bugungi PDF ni hozir yuborish (kun oxirini kutmasdan) — qo'lda sinash uchun.
+    @set_time_limit(0);
+    $q = hs_rq_qulf(true);
+    try {
+        $ok = hs_rq_kunlik_pdf(true);
+    } finally {
+        if ($q) {
+            hs_rq_qulf_ochish($q);
+        }
+    }
+    hs_rq_javob(array('ok' => $ok));
 }
 if ($amal === 'yuklash') {
     $postlar = isset($in['postlar']) && is_array($in['postlar']) ? $in['postlar'] : array();

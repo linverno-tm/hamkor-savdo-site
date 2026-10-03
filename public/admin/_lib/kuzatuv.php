@@ -24,6 +24,7 @@
  */
 
 require_once __DIR__ . '/mijozbot.php';
+require_once __DIR__ . '/kuzatuv-rasm.php';
 
 /** Kuniga shuncha postdan ortig'i AI ga yuborilmaydi (bepul tarif chegarasi). */
 define('HS_RQ_AI_LIMIT', 40);
@@ -40,6 +41,9 @@ function hs_rq_setting($key)
         'narx_rejim' => 'darhol',
         'alerts' => '1',
         'alert_discount' => '30',
+        // Kunlik PDF (do'konlar kesimida) — shu soatdan keyin bir marta.
+        'pdf_on' => '1',
+        'pdf_hour' => '21',
     );
     return (string) hs_setting('rq_' . $key, isset($defaults[$key]) ? $defaults[$key] : '');
 }
@@ -904,9 +908,17 @@ function hs_rq_narxlar($force = false)
     if (!$rows) {
         return 0;
     }
-    /* Har mahsulot uch qator va uzun havola edi — 34 ta narx ekranga sig'mas va
-       o'qilmas edi. Endi do'kon -> turkum -> narx oralig'i, "ming/mln" da.
-       Har bir mahsulot alohida (havolasi bilan) — hisobot sahifasida. */
+    if (hs_rq_gd_bor()) {
+        /* Egasi so'radi: havola emas — rasm. Har mahsulot jadvalda, do'kon va
+           turkum bo'yicha, ochmasdan ko'rinadi (kuzatuv-rasm.php). */
+        list($ok, $err) = hs_rq_narx_rasm_yubor($rows);
+        if (!$ok) {
+            error_log('HAMKOR SAVDO: narxlar rasmi yuborilmadi: ' . $err);
+            return 0;
+        }
+        return hs_rq_yuborildi_belgila($rows);
+    }
+    /* GD yo'q — matnda: do'kon -> turkum -> narx oralig'i, "ming/mln" da. */
     $oylar = array();
     $dokonlar = array();
     foreach ($rows as $p) {
@@ -929,7 +941,6 @@ function hs_rq_narxlar($force = false)
         }
         $bolimlar[] = '🏪 ' . hs_rq_channel_title($kanal) . ' — ' . $jami . " ta\n" . implode("\n", $qatorlar);
     }
-    $bolimlar[] = "📊 Har bir mahsulot alohida, havolasi bilan:\n" . hs_rq_hisobot_url();
     $sarlavha = '💰 ' . ($kunlik ? 'Raqobatchilar narxlari — ' . date('d.m.Y') : 'Yangi narxlar') . ' · ' . count($rows) . ' ta'
         . "\nOylik to'lov" . ($birOy ? ", hammasi {$birOy} oyga" : '');
     $xabarlar = hs_rq_bolakla($bolimlar, $sarlavha);
@@ -939,6 +950,11 @@ function hs_rq_narxlar($force = false)
             return 0;
         }
     }
+    return hs_rq_yuborildi_belgila($rows);
+}
+
+function hs_rq_yuborildi_belgila($rows)
+{
     $b = hs_db()->prepare('UPDATE rq_posts SET digested = 1 WHERE channel = ? AND post_id = ?');
     foreach ($rows as $p) {
         $b->execute(array($p['channel'], $p['post_id']));
@@ -1113,6 +1129,7 @@ function hs_rq_tasks_ichi()
         $done += $n;
     }
     hs_rq_tahlil_va_yuborish();
+    hs_rq_kunlik_pdf();
     // Tahlil qilinmay qolgan guruh rasmlari (xato bo'lsa) 2 kundan ortiq yotmasin.
     foreach (glob(hs_rq_rasm_dir() . '/*.img') ?: array() as $f) {
         if (filemtime($f) < time() - 2 * 86400) {
