@@ -276,7 +276,11 @@ function hs_mb_backfill($channel, $pages = 10)
 }
 
 /** t.me/s sahifasidan postlar: [id, text, photo, at]. */
-function hs_mb_parse_channel_page($html, $channel)
+/**
+ * $rasmli — kuzatuv uchun: yozuvsiz, lekin rasmli postlar ham qaytsin (narx
+ * rasmdagi yorliqda bo'ladi). Mijozlar boti katalogiga ular kerak emas.
+ */
+function hs_mb_parse_channel_page($html, $channel, $rasmli = false)
 {
     $out = array();
     $parts = preg_split('/<div class="tgme_widget_message_wrap/', $html);
@@ -295,7 +299,7 @@ function hs_mb_parse_channel_page($html, $channel)
         if (preg_match('#<time datetime="([^"]+)"#', $part, $d) && ($ts = strtotime($d[1]))) {
             $at = date('Y-m-d H:i:s', $ts);
         }
-        if ($text === '') {
+        if ($text === '' && !$rasmli) {
             continue;
         }
         $photo = strpos($part, 'tgme_widget_message_photo') !== false;
@@ -307,6 +311,9 @@ function hs_mb_parse_channel_page($html, $channel)
         $rasm = '';
         if (preg_match("#tgme_widget_message_(?:photo_wrap|video_thumb)[^>]*background-image:url\('([^']+)'\)#", $part, $r)) {
             $rasm = html_entity_decode($r[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        if ($text === '' && ($rasm === '' || !$photo)) {
+            continue;
         }
         $out[] = array('id' => (int) $m[1], 'text' => $text, 'photo' => $photo,
             'media' => $video ? 'video' : ($photo ? 'foto' : ''), 'rasm' => $rasm, 'at' => $at);

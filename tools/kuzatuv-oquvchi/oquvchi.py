@@ -66,7 +66,7 @@ def sozlamani_oqi():
 
 def holatni_oqi():
     """Har guruhda qaysi xabargacha ko'rilgani. Panel faqat YUBORILGAN
-    xabarlarni biladi; yozuvsiz rasm yoki mijoz xabari yuborilmaydi, shuning
+    xabarlarni biladi; yozuvsiz video yoki mijoz xabari yuborilmaydi, shuning
     uchun o'qilgan joyni shu yerda ham saqlaymiz — aks holda dastur o'sha
     xabarlarni har safar qaytadan o'qib, bir joyda aylanib qolardi."""
     try:
@@ -140,12 +140,18 @@ async def rasm_ol(client, m):
     """
     try:
         if getattr(m, "photo", None):
+            # Uzun tomoni 1280 px gacha: narx yorlig'idagi mayda qatorlar
+            # ("Mahsulot narxi 3 129 000") undan kichikda o'qilmay qoladi.
             olcham = None
             for s in getattr(m.photo, "sizes", []) or []:
                 w = getattr(s, "w", 0) or 0
-                if 0 < w <= 1000 and "Stripped" not in type(s).__name__:
+                h = getattr(s, "h", 0) or 0
+                if 0 < max(w, h) <= 1280 and "Stripped" not in type(s).__name__:
                     olcham = s  # o'lchamlar kichikdan kattaga tartiblangan
-            b = await client.download_media(m, file=bytes, thumb=olcham if olcham is not None else -1)
+            # O'lcham TURI bilan ("y", "x") — obyekt bilan emas: Telethon
+            # PhotoSizeProgressive obyektini tanimaydi va jimgina None qaytaradi
+            # (ISHONCH rasmlarining aynan 1280 px o'lchami shunday).
+            b = await client.download_media(m, file=bytes, thumb=olcham.type if olcham is not None else -1)
         elif getattr(m, "video", None):
             b = await client.download_media(m, file=bytes, thumb=-1)  # videoning muqovasi
         else:
@@ -183,16 +189,27 @@ async def guruhni_oqi(client, guruh, holat, eng_kop, qayta=0):
             # Teskarisi (yangidan eskiga + limit) bo'lsa, kechasi limitdan ko'p
             # xabar yozilganda o'rtadagilari sakrab o'tib ketardi.
             xabarlar = client.iter_messages(manba, limit=eng_kop, min_id=oxirgi, reverse=True)
-        async for m in xabarlar:
+        royxat = [m async for m in xabarlar]
+        # Albomda yozuv faqat bitta rasmda turadi — qolganlariga ham o'sha yozuv.
+        albom_yozuvi = {}
+        for m in royxat:
+            if m.grouped_id and (m.message or "").strip():
+                albom_yozuvi.setdefault(m.grouped_id, m.message.strip())
+        for m in royxat:
             eng_katta = max(eng_katta, m.id)
-            matn = (m.message or "").strip()
-            if not matn or not dokonnikimi(m, admin_ids):
+            if not dokonnikimi(m, admin_ids):
                 continue
+            matn = (m.message or "").strip() or albom_yozuvi.get(m.grouped_id, "")
             media = ""
             if getattr(m, "video", None):
                 media = "video"
             elif getattr(m, "photo", None):
                 media = "foto"
+            # Yozuvsiz RASM ham kerak: do'kon mijozga narxni ko'pincha narx
+            # yorlig'ining rasmi bilan, hech narsa yozmasdan javob beradi
+            # (ISHONCH guruhlari shunday). Yozuvsiz video va bo'sh xabar — yo'q.
+            if not matn and media != "foto":
+                continue
             post = {
                 "source": nom,
                 "post_id": m.id,
@@ -204,6 +221,8 @@ async def guruhni_oqi(client, guruh, holat, eng_kop, qayta=0):
                 rasm = await rasm_ol(client, m)
                 if rasm:
                     post["rasm"] = rasm
+            if not matn and "rasm" not in post:
+                continue  # rasmi olinmagan yozuvsiz rasm — tahlil qiladigan narsa yo'q
             chiqdi.append(post)
     except FloodWaitError as e:
         print(f"  @{nom}: Telegram {e.seconds} soniya kutishni so'radi")

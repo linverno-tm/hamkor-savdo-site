@@ -296,7 +296,7 @@ function hs_rq_fetch($ch)
         $st->execute(array(hs_now(), "sahifa ochilmadi (HTTP {$code})", $ch['id']));
         return array(0, "@{$username}: sahifa ochilmadi (HTTP {$code})");
     }
-    $posts = hs_mb_parse_channel_page($html, $username);
+    $posts = hs_mb_parse_channel_page($html, $username, true);
     $saved = 0;
     $max = $last;
     $ins = hs_db()->prepare('INSERT OR IGNORE INTO rq_posts (channel, post_id, url, text, media, rasm, posted_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
@@ -373,6 +373,12 @@ function hs_rq_system_prompt()
         . "- model: mahsulot brendi va nomi, rasmda yoki matnda qanday yozilgan bo'lsa (masalan \"AVALON changyutkich\"). Yo'q bo'lsa bo'sh.\n"
         . "- turkum: mahsulot turi — o'zbekcha, kichik harf, birlikda, 1-3 so'z: changyutkich, muzlatgich, kir yuvish mashinasi, "
         . "konditsioner, televizor, gaz plita, duxovka, shkaf, divan, skuter, telefon va h.k. Brend va model bu yerga yozilmaydi. Aniqlab bo'lmasa bo'sh.\n"
+        . "- Rasm do'kondagi NARX YORLIG'I bo'lishi mumkin (matn yo'q, faqat rasm). Yorliqda tepada mahsulot nomi "
+        . "(\"Смартфон Xiaomi Redmi Note 17 8/256 GB Black\"), o'rtada katta raqam — oylik to'lov (\"12 oyga 385 900 so'mdan boshlanadi\" "
+        . "-> price 385900, months 12), pastda jadval: \"Mahsulot narxi 3 129 000\" -> price_total 3129000; \"9 oyga\", \"6 oyga\", \"3 oyga\" "
+        . "qatorlari kerak emas. model — yorliqdagi nom, \"Смартфон\" so'zisiz va rangi bilan (\"Xiaomi Redmi Note 17 8/256 GB Black\"); "
+        . "brand — \"Xiaomi\"; kind — 'mahsulot'. Kadrda bir nechta yorliq bo'lsa — eng oldingi, eng aniq ko'ringan, markazdagisini o'qi; "
+        . "orqadagi xira yorliqlarni aralashtirma.\n"
         . "- Bir e'londa bir nechta mahsulot bo'lsa — eng ko'zga tashlanadiganini yoz.\n"
         . "- kind: bitta mahsulot narxi — 'mahsulot'; chegirma yoki aksiya — 'aksiya'; yangi do'kon yoki filial — 'do'kon yangiligi'; "
         . "hazil rolik, tabrik, umumiy reklama — 'boshqa'.\n"
@@ -392,7 +398,9 @@ function hs_rq_ai($post)
 {
     $text = "Kanal: @" . $post['channel'] . "\nSana: " . $post['posted_at']
         . "\nMedia: " . ($post['media'] !== '' ? $post['media'] : "yo'q")
-        . "\n\nE'lon matni:\n\"\"\"" . mb_substr(hs_mb_scrub($post['text']), 0, 2000) . "\"\"\"";
+        . "\n\n" . (trim($post['text']) !== ''
+            ? "E'lon matni:\n\"\"\"" . mb_substr(hs_mb_scrub($post['text']), 0, 2000) . "\"\"\""
+            : "E'lon matni yo'q — faqat rasm.");
     $img = hs_rq_rasm_olish($post);
     if ($img) {
         $text .= "\n\nRasm ilova qilingan — narxni undan o'qi.";
@@ -632,7 +640,8 @@ function hs_rq_sarlavha($p)
         return hs_rq_bosh_harf($p['summary']);
     }
     $q = preg_split('/\R/u', trim($p['text']));
-    return hs_rq_bosh_harf(mb_substr(trim($q[0]), 0, 70));
+    $s = hs_rq_bosh_harf(mb_substr(trim($q[0]), 0, 70));
+    return $s !== '' ? $s : 'Rasmdagi mahsulot';
 }
 
 /**
@@ -976,11 +985,17 @@ function hs_rq_ingest($posts)
         $src = isset($p['source']) ? preg_replace('/[^A-Za-z0-9_]/', '', (string) $p['source']) : '';
         $id = isset($p['post_id']) ? (int) $p['post_id'] : 0;
         $text = isset($p['text']) ? trim((string) $p['text']) : '';
-        if ($src === '' || $id <= 0 || $text === '') {
+        if ($src === '' || $id <= 0 || ($text === '' && empty($p['rasm']))) {
             $skip++;
             continue;
         }
         $rasm = !empty($p['rasm']) ? hs_rq_rasm_saqla($src, $id, $p['rasm']) : '';
+        /* Yozuvsiz rasm — do'kon narxni narx yorlig'ining rasmi bilan yuboradi
+           (ISHONCH guruhlari shunday). Rasm saqlanmagan bo'lsa, unda hech narsa yo'q. */
+        if ($text === '' && $rasm === '') {
+            $skip++;
+            continue;
+        }
         $ts = isset($p['posted_at']) ? strtotime((string) $p['posted_at']) : 0;
         $media = isset($p['media']) && in_array($p['media'], array('foto', 'video'), true) ? $p['media'] : '';
         $ins->execute(array($src, $id, 'https://t.me/' . $src . '/' . $id,
@@ -1025,6 +1040,15 @@ function hs_rq_tasks()
     if (time() - (int) hs_setting('rq_last_fetch', '0') >= 1800) {
         list($n) = hs_rq_fetch_all();
         $done += $n;
+    }
+    /* AI xatosi (kunlik limit, tarmoq) vaqtinchalik bo'ladi, lekin xatoli post
+       analyze() da qaytadan olinmaydi — qo'lda "qayta urinish" bosilmaguncha
+       narxi hech qachon chiqmasdi. Soatda bir marta so'nggi 2 kundagilari
+       qaytadan navbatga qo'yiladi (rasmi 2 kundan keyin baribir o'chadi). */
+    if (time() - (int) hs_setting('rq_retry_last', '0') >= 3600) {
+        $st = hs_db()->prepare("UPDATE rq_posts SET ai_error = '' WHERE analyzed = 0 AND ai_error <> '' AND posted_at > ?");
+        $st->execute(array(date('Y-m-d H:i:s', time() - 2 * 86400)));
+        hs_set_setting('rq_retry_last', (string) time());
     }
     hs_rq_analyze(10);
     hs_rq_alerts();
