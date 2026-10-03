@@ -2,12 +2,13 @@
 /**
  * Raqobatchilar narxlari — rasm va PDF.
  *
- * Egasi so'radi: guruhga havola emas, rasm kelsin — ochmasdan ko'rinsin.
- *   - Yangi narxlar: do'kon -> turkum -> mahsulot jadvali, bitta yoki bir
- *     nechta rasm (sendPhoto / sendMediaGroup).
- *   - Kun oxirida PDF: 1-sahifa — do'konlar kesimida (har turkumda har
- *     do'konning oylik to'lov oralig'i), keyin har do'kon alohida, hamma
- *     narxi bilan.
+ * Egasi so'radi: guruhga havola emas, PDF kelsin — va hamma tovar emas, faqat
+ * narxi yangi yoki o'zgargani, o'sha do'kon bo'yicha alohida:
+ *   - Narxli post kelganda: har do'kon — o'z PDF i, faqat yangi / arzonlagan /
+ *     qimmatlagan mahsulotlar, eski narxi bilan (hs_rq_ozgarish_pdf_yubor).
+ *     O'zgarish yo'q — hech narsa yuborilmaydi.
+ *   - Umumiy PDF (do'konlar kesimida + har do'kon to'liq) — faqat so'ralganda
+ *     (api/kuzatuv.php "kunlik_pdf") yoki rq_pdf_on = 1 bo'lsa kun oxirida.
  *
  * Chizish — GD (hostingda bor), shrift — DejaVu Sans (lotin va kirill;
  * litsenziyasi shrift/DejaVu-LICENSE.txt). PDF — kutubxonasiz: har sahifa
@@ -25,6 +26,8 @@ const HS_RQ_RANG = array(
     'p50' => array(0xf4, 0xef, 0xf9),
     'oq' => array(0xff, 0xff, 0xff),
     'fon' => array(0xfa, 0xf9, 0xfc),
+    'yashil' => array(0x16, 0x7a, 0x3a),
+    'qizil' => array(0xc0, 0x29, 0x29),
 );
 
 /** PDF sahifasi: A4, 150 dpi. */
@@ -136,6 +139,11 @@ function hs_rq_jadval_malumot($rows)
             'oylik' => (int) $p['price'],
             'oy' => (int) $p['months'],
             'toliq' => (int) $p['price_total'],
+            // hs_rq_ozgarishlar() qo'yadi: 'yangi' | 'arzon' | 'qimmat' | 'ozgardi'
+            'holat' => isset($p['_holat']) ? $p['_holat'] : '',
+            'eski_oylik' => isset($p['_eski_oylik']) ? (int) $p['_eski_oylik'] : 0,
+            'eski_toliq' => isset($p['_eski_toliq']) ? (int) $p['_eski_toliq'] : 0,
+            'eski_oy' => isset($p['_eski_oy']) ? (int) $p['_eski_oy'] : 0,
         );
     }
     $narx = function ($q) {
@@ -192,9 +200,10 @@ function hs_rq_jadval_rasmlar($dokonlar, $sarlavha, $izoh, $en, $balandlik = nul
                 'oraliq' => $oyliklar ? 'oyiga ' . hs_rq_oraliq($oyliklar) : ''));
             foreach ($qs as $i => $q) {
                 $q['qatorlar'] = hs_rq_qatorla($q['nom'], 15, false, $nomEni, 2);
+                $q['belgi'] = hs_rq_ozgarish_belgisi($q);
                 $q['juft'] = $i % 2 === 1;
-                // kamida 64: oylik ostidagi "× 12 oy" sig'sin
-                $bloklar[] = array('qator', max(64, 26 + 28 * count($q['qatorlar'])), $q);
+                // kamida 64: oylik ostidagi "× 12 oy" sig'sin; belgi — nom ostida alohida qator
+                $bloklar[] = array('qator', max(64, 26 + 28 * count($q['qatorlar']) + ($q['belgi'] ? 26 : 0)), $q);
             }
         }
     }
@@ -272,6 +281,9 @@ function hs_rq_jadval_rasmlar($dokonlar, $sarlavha, $izoh, $en, $balandlik = nul
                 }
                 foreach ($d['qatorlar'] as $k => $q) {
                     hs_rq_yoz($img, $chet, $y + 11 + 28 * $k, $q, 15, 'ink');
+                }
+                if ($d['belgi']) {
+                    hs_rq_yoz($img, $chet, $y + 14 + 28 * count($d['qatorlar']), $d['belgi'][0], 12, $d['belgi'][1], true);
                 }
                 if ($d['oylik'] > 0) {
                     hs_rq_yoz($img, $ustunOylik, $y + 9, hs_rq_raqam($d['oylik']), 17, 'ink', true, true);
@@ -469,37 +481,6 @@ function hs_rq_tg_fayl($method, $params, $fayllar)
     return array(true, '');
 }
 
-/** Rasmlarni guruhga: bitta — sendPhoto, ko'p — 10 tadan albom. Izoh birinchisida. */
-function hs_rq_rasmlarni_yubor($jpeglar, $izoh)
-{
-    $izoh = mb_substr($izoh, 0, 1000);
-    if (count($jpeglar) === 1) {
-        return hs_rq_tg_fayl('sendPhoto', array('caption' => $izoh), array('photo' => array($jpeglar[0], 'narxlar.jpg', 'image/jpeg')));
-    }
-    foreach (array_chunk($jpeglar, 10) as $g => $qism) {
-        $media = array();
-        $fayllar = array();
-        foreach ($qism as $i => $j) {
-            $m = array('type' => 'photo', 'media' => 'attach://r' . $i);
-            if ($g === 0 && $i === 0) {
-                $m['caption'] = $izoh;
-            }
-            $media[] = $m;
-            $fayllar['r' . $i] = array($j, 'narxlar-' . ($g * 10 + $i + 1) . '.jpg', 'image/jpeg');
-        }
-        if (count($qism) === 1) {
-            list($ok, $err) = hs_rq_tg_fayl('sendPhoto', $g === 0 ? array('caption' => $izoh) : array(),
-                array('photo' => $fayllar['r0']));
-        } else {
-            list($ok, $err) = hs_rq_tg_fayl('sendMediaGroup', array('media' => json_encode($media, JSON_UNESCAPED_UNICODE)), $fayllar);
-        }
-        if (!$ok) {
-            return array(false, $err);
-        }
-    }
-    return array(true, '');
-}
-
 /** Rasm izohi: kim qancha — "🏪 ISHONCH - Andijon — 5 ta". */
 function hs_rq_izoh($bosh, $dokonlar)
 {
@@ -510,17 +491,149 @@ function hs_rq_izoh($bosh, $dokonlar)
     return $s;
 }
 
-/** Yangi narxlar — rasm(lar) bilan. Qaytadi: [ok, xato]. */
-function hs_rq_narx_rasm_yubor($rows)
+/* ============================ faqat o'zgargan narxlar ============================ */
+
+/**
+ * Mahsulotni do'kon ichida tanish uchun kalit: nomi, kichik harfda, "Смартфон"
+ * kabi tur so'zlarisiz va tinish belgilarisiz. "Xiaomi Redmi 17 8/256 GB Black"
+ * bilan "Смартфон Xiaomi Redmi 17 8/256 GB Black" — bitta mahsulot.
+ */
+function hs_rq_mahsulot_kalit($p)
 {
-    $dokonlar = hs_rq_jadval_malumot($rows);
-    if (!$dokonlar) {
-        return array(true, ''); // hammasi takror — yuboradigan narsa yo'q
+    if (trim((string) $p['model']) === '') {
+        return '';
     }
-    $soni = hs_rq_jadval_soni($dokonlar);
-    $izoh = hs_rq_dokonlar_soni_matn($dokonlar, $soni);
-    $jpeglar = array_map('hs_rq_jpeg', hs_rq_jadval_rasmlar($dokonlar, 'Yangi narxlar', $izoh, HS_RQ_FOTO_W));
-    return hs_rq_rasmlarni_yubor($jpeglar, hs_rq_izoh('💰 Yangi narxlar · ' . $soni . ' ta', $dokonlar));
+    $s = ' ' . mb_strtolower((string) $p['model']) . ' ';
+    $s = str_replace(array(' смартфон ', ' smartfon ', ' smartphone ', ' телефон '), ' ', $s);
+    return trim(preg_replace('/[^\p{L}\p{N}\/]+/u', ' ', $s));
+}
+
+/**
+ * Yuborilmagan postlardan faqat YANGI yoki NARXI O'ZGARGAN mahsulotlar.
+ *
+ * Egasi so'radi: hamma tovarni qayta yuborma — qaysi do'konda nima o'zgargan
+ * bo'lsa, faqat o'sha. Har mahsulot shu do'kondagi oxirgi yuborilgan narxi bilan
+ * solishtiriladi (60 kun ichida). Narxi bir xil — tushib qoladi; nomi o'qilmagan
+ * (model bo'sh) post solishtirib bo'lmaydi — yangi deb olinadi.
+ * Qaytadi: postlar, ustiga _holat, _eski_oylik, _eski_toliq, _eski_oy.
+ */
+function hs_rq_ozgarishlar($rows)
+{
+    $tarix = hs_db()->prepare('SELECT * FROM rq_posts WHERE channel = ? AND analyzed = 1 AND digested = 1
+        AND (price > 0 OR price_total > 0) AND posted_at > ? ORDER BY posted_at');
+    $oldin = array();
+    $out = array();
+    usort($rows, function ($a, $b) {
+        return strcmp($a['posted_at'], $b['posted_at']);
+    });
+    foreach ($rows as $p) {
+        if ((int) $p['price'] <= 0 && (int) $p['price_total'] <= 0) {
+            continue;
+        }
+        $kanal = $p['channel'];
+        if (!isset($oldin[$kanal])) {
+            $oldin[$kanal] = array();
+            $tarix->execute(array($kanal, date('Y-m-d H:i:s', time() - 60 * 86400)));
+            foreach ($tarix->fetchAll() as $t) {
+                $k = hs_rq_mahsulot_kalit($t);
+                if ($k !== '') {
+                    $oldin[$kanal][$k] = $t; // eng oxirgisi qoladi
+                }
+            }
+        }
+        $k = hs_rq_mahsulot_kalit($p);
+        $e = $k !== '' && isset($oldin[$kanal][$k]) ? $oldin[$kanal][$k] : null;
+        if ($e && (int) $e['price'] === (int) $p['price'] && (int) $e['price_total'] === (int) $p['price_total']
+            && (int) $e['months'] === (int) $p['months']) {
+            continue; // o'zgarmagan
+        }
+        if ($e) {
+            $yangi = (int) $p['price'] > 0 && (int) $e['price'] > 0 ? (int) $p['price'] : (int) $p['price_total'];
+            $eski = (int) $p['price'] > 0 && (int) $e['price'] > 0 ? (int) $e['price'] : (int) $e['price_total'];
+            $p['_holat'] = $yangi > 0 && $eski > 0 && $yangi !== $eski ? ($yangi < $eski ? 'arzon' : 'qimmat') : 'ozgardi';
+            $p['_eski_oylik'] = (int) $e['price'];
+            $p['_eski_toliq'] = (int) $e['price_total'];
+            $p['_eski_oy'] = (int) $e['months'];
+        } else {
+            $p['_holat'] = 'yangi';
+        }
+        if ($k !== '') {
+            $oldin[$kanal][$k] = $p; // shu partiyadagi takrori ham tushib qolsin
+        }
+        $out[] = $p;
+    }
+    return $out;
+}
+
+/** Jadvaldagi belgi: [matn, rang] yoki null. */
+function hs_rq_ozgarish_belgisi($q)
+{
+    $oylikdan = $q['oylik'] > 0 && $q['eski_oylik'] > 0;
+    $eski = $oylikdan ? $q['eski_oylik'] : $q['eski_toliq'];
+    $yangi = $oylikdan ? $q['oylik'] : $q['toliq'];
+    $qayerda = $oylikdan ? 'oylik' : 'narxi';
+    switch ($q['holat']) {
+        case 'yangi':
+            return array('YANGI', 'p');
+        case 'arzon':
+            return array('▼ arzonladi: ' . $qayerda . ' ' . hs_rq_raqam($eski) . ' → ' . hs_rq_raqam($yangi)
+                . ' (−' . hs_rq_raqam($eski - $yangi) . ')', 'yashil');
+        case 'qimmat':
+            return array('▲ qimmatladi: ' . $qayerda . ' ' . hs_rq_raqam($eski) . ' → ' . hs_rq_raqam($yangi)
+                . ' (+' . hs_rq_raqam($yangi - $eski) . ')', 'qizil');
+        case 'ozgardi':
+            return array("O'ZGARDI: avval " . ($q['eski_oylik'] > 0 ? hs_rq_raqam($q['eski_oylik']) . ($q['eski_oy'] ? ' × ' . $q['eski_oy'] . ' oy' : '') : '')
+                . ($q['eski_toliq'] > 0 ? ', narxi ' . hs_rq_raqam($q['eski_toliq']) : ''), 'ink2');
+    }
+    return null;
+}
+
+/**
+ * Yangi yoki o'zgargan narxlar — har do'kon ALOHIDA PDF bo'lib guruhga.
+ * O'zgarish bo'lmasa hech narsa yuborilmaydi. Qaytadi: [ok, xato].
+ */
+function hs_rq_ozgarish_pdf_yubor($rows)
+{
+    $dokonlar = hs_rq_jadval_malumot(hs_rq_ozgarishlar($rows));
+    foreach ($dokonlar as $kanal => $turkumlar) {
+        $bitta = array($kanal => $turkumlar);
+        $hisob = array('yangi' => 0, 'arzon' => 0, 'qimmat' => 0, 'ozgardi' => 0);
+        foreach ($turkumlar as $qs) {
+            foreach ($qs as $q) {
+                $hisob[$q['holat']] = (isset($hisob[$q['holat']]) ? $hisob[$q['holat']] : 0) + 1;
+            }
+        }
+        $qism = array();
+        if ($hisob['yangi']) {
+            $qism[] = $hisob['yangi'] . ' ta yangi';
+        }
+        if ($hisob['arzon']) {
+            $qism[] = $hisob['arzon'] . ' ta arzonladi';
+        }
+        if ($hisob['qimmat']) {
+            $qism[] = $hisob['qimmat'] . ' ta qimmatladi';
+        }
+        if ($hisob['ozgardi']) {
+            $qism[] = $hisob['ozgardi'] . " ta sharti o'zgardi";
+        }
+        $nom = hs_rq_channel_title($kanal);
+        $jpeglar = array();
+        foreach (hs_rq_jadval_rasmlar($bitta, $nom, date('d.m.Y H:i') . ' · ' . implode(' · ', $qism), HS_RQ_A4_W, HS_RQ_A4_H) as $img) {
+            $jpeglar[] = hs_rq_jpeg($img, 85);
+        }
+        $izoh = '📄 ' . $nom . "\n" . ($hisob['arzon'] ? '🔻 ' : ($hisob['qimmat'] ? '🔺 ' : '🆕 ')) . implode(' · ', $qism);
+        $fayl = 'narx-' . preg_replace('/[^a-z0-9_]/', '', strtolower($kanal)) . '-' . date('Y-m-d-Hi') . '.pdf';
+        list($ok, $err) = hs_rq_tg_fayl('sendDocument', array('caption' => mb_substr($izoh, 0, 1000)),
+            array('document' => array(hs_rq_pdf($jpeglar), $fayl, 'application/pdf')));
+        if (!$ok) {
+            return array(false, $err);
+        }
+        // Keyingi do'kon xato bersa, bu do'kon qayta yuborilmasin.
+        hs_rq_yuborildi_belgila(array_filter($rows, function ($p) use ($kanal) {
+            return $p['channel'] === $kanal;
+        }));
+    }
+    return array(true, '');
 }
 
 function hs_rq_dokonlar_soni_matn($dokonlar, $soni)

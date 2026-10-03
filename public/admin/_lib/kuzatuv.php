@@ -41,8 +41,9 @@ function hs_rq_setting($key)
         'narx_rejim' => 'darhol',
         'alerts' => '1',
         'alert_discount' => '30',
-        // Kunlik PDF (do'konlar kesimida) — shu soatdan keyin bir marta.
-        'pdf_on' => '1',
+        // Kunlik umumiy PDF (do'konlar kesimida) — o'chiq: egasi soatga emas,
+        // o'zgarish bo'lganda faqat o'sha do'konni xohladi (hs_rq_ozgarish_pdf_yubor).
+        'pdf_on' => '0',
         'pdf_hour' => '21',
     );
     return (string) hs_setting('rq_' . $key, isset($defaults[$key]) ? $defaults[$key] : '');
@@ -909,11 +910,13 @@ function hs_rq_narxlar($force = false)
         return 0;
     }
     if (hs_rq_gd_bor()) {
-        /* Egasi so'radi: havola emas — rasm. Har mahsulot jadvalda, do'kon va
-           turkum bo'yicha, ochmasdan ko'rinadi (kuzatuv-rasm.php). */
-        list($ok, $err) = hs_rq_narx_rasm_yubor($rows);
+        /* Egasi so'radi: havola emas, hamma tovar ham emas — faqat yangi yoki
+           narxi o'zgarganlari, har do'kon alohida PDF (kuzatuv-rasm.php).
+           O'zgarmaganlari jimgina "yuborilgan" bo'ladi va keyingi taqqoslash
+           uchun tarixga qo'shiladi. */
+        list($ok, $err) = hs_rq_ozgarish_pdf_yubor($rows);
         if (!$ok) {
-            error_log('HAMKOR SAVDO: narxlar rasmi yuborilmadi: ' . $err);
+            error_log('HAMKOR SAVDO: narxlar PDF yuborilmadi: ' . $err);
             return 0;
         }
         return hs_rq_yuborildi_belgila($rows);
