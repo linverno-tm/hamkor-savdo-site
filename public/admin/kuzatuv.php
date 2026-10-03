@@ -236,9 +236,9 @@ echo '<form method="post">' . hs_csrf_field() . '<input type="hidden" name="amal
 echo '<div><label for="on">Kuzatuv</label><select id="on" name="on">'
     . '<option value="0"' . (hs_rq_setting('on') !== '1' ? ' selected' : '') . ">O'chirilgan</option>"
     . '<option value="1"' . (hs_rq_setting('on') === '1' ? ' selected' : '') . '>Yoqilgan</option>'
-    . '</select><p class="hint">Yoqilganda har yarim soatda yangi e\'lonlar yig\'iladi.</p></div>';
+    . '</select><p class="hint">Yoqilganda har 15 daqiqada yangi e\'lonlar yig\'iladi.</p></div>';
 echo '<div><label for="narx_rejim">Narxlar qachon kelsin</label><select id="narx_rejim" name="narx_rejim">'
-    . '<option value="darhol"' . (hs_rq_setting('narx_rejim') !== 'kunlik' ? ' selected' : '') . ">Darhol — yangilari yarim soatda bir marta, bitta xabarda</option>"
+    . '<option value="darhol"' . (hs_rq_setting('narx_rejim') !== 'kunlik' ? ' selected' : '') . ">Darhol — yangilari 10 daqiqada bir marta, bitta xabarda</option>"
     . '<option value="kunlik"' . (hs_rq_setting('narx_rejim') === 'kunlik' ? ' selected' : '') . '>Kuniga bir marta — pastdagi soatda</option>'
     . "</select><p class=\"hint\">Faqat narxi bor e'lonlar keladi. Narxsiz e'lonlar (rolik, umumiy reklama) faqat shu sahifada turadi.</p></div>";
 echo '<div><label for="digest_hour">Kuniga bir marta bo&#39;lsa — soat</label><input id="digest_hour" type="number" name="digest_hour" min="0" max="23" value="' . h(hs_rq_setting('digest_hour')) . '">'
