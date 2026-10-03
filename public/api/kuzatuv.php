@@ -58,6 +58,27 @@ if ($amal === 'yuklash') {
         $postlar = array_slice($postlar, 0, 200);
     }
     list($n, $skip) = hs_rq_ingest($postlar);
-    hs_rq_javob(array('ok' => true, 'yozildi' => $n, 'otkazildi' => $skip));
+    if (!$n) {
+        hs_rq_javob(array('ok' => true, 'yozildi' => 0, 'otkazildi' => $skip));
+    }
+    /* Real vaqt: cron'ni (5 daqiqa) kutmasdan shu zahoti tahlil qilib guruhga
+       yozamiz. O'quvchi AI ni kutib turmasin — javob oldin yopiladi. */
+    $javob = json_encode(array('ok' => true, 'yozildi' => $n, 'otkazildi' => $skip), JSON_UNESCAPED_UNICODE);
+    ignore_user_abort(true);
+    header('Connection: close');
+    header('Content-Length: ' . strlen($javob));
+    echo $javob;
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } elseif (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+    } else {
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        flush();
+    }
+    hs_rq_darhol();
+    exit;
 }
 hs_rq_javob(array('ok' => false, 'xato' => 'amal'), 400);

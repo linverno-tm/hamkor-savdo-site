@@ -248,7 +248,7 @@ def bolaklar(postlar, chegara=1_500_000, eng_kop=20):
         yield bolak
 
 
-async def bir_aylanish(client, cfg, holat, qayta=0):
+async def bir_aylanish(client, cfg, holat, qayta=0, jim=False):
     try:
         javob = saytga(cfg, {"amal": "royxat"})
     except urllib.error.HTTPError as e:
@@ -266,7 +266,7 @@ async def bir_aylanish(client, cfg, holat, qayta=0):
         yangi = await guruhni_oqi(client, g, holat, cfg["eng_kop"], qayta)
         if yangi:
             rasmli = sum(1 for p in yangi if p.get("rasm"))
-            print(f"  @{g['username']}: {len(yangi)} ta do'kon posti, {rasmli} tasi rasmi bilan")
+            print(time.strftime("[%H:%M:%S] ") + f"@{g['username']}: {len(yangi)} ta do'kon posti, {rasmli} tasi rasmi bilan")
         hammasi.extend(yangi)
     if hammasi:
         yozildi = otkazildi = 0
@@ -279,9 +279,10 @@ async def bir_aylanish(client, cfg, holat, qayta=0):
                 return
             yozildi += natija.get("yozildi", 0)
             otkazildi += natija.get("otkazildi", 0)
-        print(f"Panelga yuborildi: {yozildi} ta yangi, {otkazildi} ta o'tkazib yuborildi.")
+        print(time.strftime("[%H:%M:%S] ") + f"Panelga yuborildi: {yozildi} ta yangi, {otkazildi} ta o'tkazib yuborildi.")
     else:
-        print("Yangi do'kon posti yo'q.")
+        if not jim:
+            print("Yangi do'kon posti yo'q.")
     if not qayta:
         holatni_yoz(holat)
 
@@ -305,6 +306,60 @@ def qulf_ol():
         return True
     except FileExistsError:
         return False
+
+
+ZAXIRA_SONIYA = 60  # Telegram xabari kelmasa ham shuncha soniyada bir tekshiradi
+
+
+async def doimiy(client, cfg):
+    """Real vaqt: guruhga yangi xabar tushishi bilan o'qib, saytga yuboradi.
+
+    Telegram yangi xabarni o'zi xabar qiladi (NewMessage) — biz uni faqat
+    "uyg'onish" belgisi sifatida ishlatamiz, o'qishning o'zi bir_aylanish da
+    (oxirgi ko'rilgan joydan, tartib bilan). Xabar kelmay qolsa ham (aloqa
+    uzilishi) har daqiqada bir o'zimiz tekshiramiz — hech narsa tushib qolmaydi.
+    """
+    from telethon import events, utils
+
+    holat = holatni_oqi()
+    uygon = asyncio.Event()
+    kuzatilgan = set()
+
+    async def royxatni_yangila():
+        try:
+            guruhlar = saytga(cfg, {"amal": "royxat"}).get("guruhlar") or []
+        except Exception as e:
+            print(f"Panel ro'yxati olinmadi: {e}", flush=True)
+            return
+        ids = set()
+        for g in guruhlar:
+            try:
+                ids.add(utils.get_peer_id(await client.get_input_entity(g["username"])))
+            except Exception as e:
+                print(f"  @{g['username']}: ochilmadi — {e}", flush=True)
+        kuzatilgan.clear()
+        kuzatilgan.update(ids)
+
+    @client.on(events.NewMessage())
+    async def yangi_xabar(event):
+        if event.chat_id in kuzatilgan:
+            uygon.set()
+
+    await royxatni_yangila()
+    royxat_vaqti = time.time()
+    print(time.strftime("[%Y-%m-%d %H:%M] ") + f"real vaqt rejimi: {len(kuzatilgan)} ta guruh kuzatilyapti", flush=True)
+    while True:
+        await bir_aylanish(client, cfg, holat, jim=True)
+        try:
+            await asyncio.wait_for(uygon.wait(), timeout=ZAXIRA_SONIYA)
+            # Albom rasmlari ketma-ket bir necha soniyada tushadi — hammasi bitta yuborishda ketsin.
+            await asyncio.sleep(3)
+        except asyncio.TimeoutError:
+            pass
+        uygon.clear()
+        if time.time() - royxat_vaqti > 600:  # panelda guruh qo'shilgan/o'chirilgan bo'lishi mumkin
+            await royxatni_yangila()
+            royxat_vaqti = time.time()
 
 
 async def asosiy():
@@ -340,6 +395,18 @@ async def asosiy():
                 os.remove(QULF)
             except OSError:
                 pass
+        return
+
+    if "--doimiy" in sys.argv:
+        # Serverda xizmat (systemd) sifatida: hech narsa so'ramaydi, to'xtovsiz ishlaydi.
+        await client.connect()
+        if not await client.is_user_authorized():
+            print("Seans yo'q yoki bekor qilingan. Avval: python qr-kirish.py", flush=True)
+            sys.exit(2)
+        try:
+            await doimiy(client, cfg)
+        finally:
+            await client.disconnect()
         return
 
     # Qo'lda ishga tushirilganda: kirilmagan bo'lsa kod so'raydi (kompyuter

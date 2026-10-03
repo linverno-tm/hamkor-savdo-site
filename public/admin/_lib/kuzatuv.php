@@ -10,8 +10,8 @@
  *   2. Har postni AI tahlil qiladi — MATNI VA RASMI bilan. Raqobatchilar narxni
  *      ko'pincha faqat rasmga yozadi ("12 OYGA 209 000 so'mdan"), matnda esa
  *      "changyutkich" degan so'z xolos. Ko'rinmagan narx o'ylab topilmaydi.
- *   3. ALOHIDA botning ALOHIDA guruhiga yuboradi: narxlarni to'plab (10 daqiqada
- *      bir marta yoki kuniga bir marta) va jiddiy o'zgarishni darhol. Narxsiz
+ *   3. ALOHIDA botning ALOHIDA guruhiga yuboradi: narxlarni o'qilishi bilan
+ *      (yoki kuniga bir marta) va jiddiy o'zgarishni darhol. Narxsiz
  *      e'lon (hazil rolik, "12 oy muddatga" degan umumiy gap) Telegram'ga
  *      yuborilmaydi — egasi so'radi: "menga qiziqmas unaqa e'lonlari".
  *
@@ -36,7 +36,7 @@ function hs_rq_setting($key)
         'chat_id' => '',
         'chat_title' => '',
         'digest_hour' => '9',
-        // darhol — yangi narxlar 10 daqiqada bir marta bitta xabarda; kunlik — digest_hour da.
+        // darhol — narx o'qilishi bilan; kunlik — digest_hour da.
         'narx_rejim' => 'darhol',
         'alerts' => '1',
         'alert_discount' => '30',
@@ -876,7 +876,7 @@ function hs_rq_bolakla($bolimlar, $sarlavha, $chegara = 3800)
  * Narxlar xabari. Egasiga raqobatchining NARXI kerak — shuning uchun:
  *  - narxsiz e'lonlar (hazil rolik, "12 oy muddatga" degan umumiy gap)
  *    Telegram'ga umuman yuborilmaydi, faqat panelda turadi;
- *  - narxlilari to'planib keladi: "darhol" rejimida 10 daqiqada bir marta
+ *  - narxlilari to'planib keladi: "darhol" rejimida o'qilishi bilan
  *    (yangilari bo'lsa), "kunlik" rejimida belgilangan soatda;
  *  - faqat so'nggi 3 kundagilari — yangi manba qo'shilganda uning bir
  *    haftalik tarixi birdaniga guruhni to'ldirmasin.
@@ -895,9 +895,7 @@ function hs_rq_narxlar($force = false)
         if ($kunlik && ((int) date('G') < (int) hs_rq_setting('digest_hour') || hs_setting('rq_digest_last', '') === date('Y-m-d'))) {
             return 0;
         }
-        if (!$kunlik && time() - (int) hs_setting('rq_narx_last', '0') < 600) {
-            return 0;
-        }
+        // "darhol" rejimida kutish yo'q: narx o'qilishi bilan guruhga.
     }
     $rows = hs_db()->query('SELECT * FROM rq_posts WHERE digested = 0 AND analyzed = 1 ORDER BY channel, posted_at LIMIT 200')->fetchAll();
     if ($kunlik) {
@@ -1029,18 +1027,29 @@ function hs_rq_group_list()
     return $out;
 }
 
-/** Cron: yig'ish → tahlil → jiddiylarini darhol → narxlar. */
-function hs_rq_tasks()
+/**
+ * Bitta qulf ostida: cron (hs_rq_tasks) va o'quvchidan kelgan postni darhol
+ * tahlil qilish (hs_rq_darhol) bir vaqtda ishlasa, bitta narx guruhga ikki
+ * marta ketardi. $kut — bo'sh bo'lguncha kutish (darhol yo'li), aks holda o'tkazish.
+ */
+function hs_rq_qulf($kut)
 {
-    if (!hs_rq_on() || !hs_rq_channels(true)) {
-        return 0;
+    $f = @fopen(hs_data_dir() . '/kuzatuv.lock', 'c');
+    if (!$f || !flock($f, $kut ? LOCK_EX : LOCK_EX | LOCK_NB)) {
+        return null;
     }
-    $done = 0;
-    // Sahifani tez-tez so'ramaymiz: 15 daqiqada bir marta yetarli.
-    if (time() - (int) hs_setting('rq_last_fetch', '0') >= 900) {
-        list($n) = hs_rq_fetch_all();
-        $done += $n;
-    }
+    return $f;
+}
+
+function hs_rq_qulf_ochish($f)
+{
+    flock($f, LOCK_UN);
+    fclose($f);
+}
+
+/** Tahlil → jiddiylarini darhol → narxlar. Navbatdagi hamma post, cheklovsiz. */
+function hs_rq_tahlil_va_yuborish()
+{
     /* AI xatosi (kunlik limit, tarmoq) vaqtinchalik bo'ladi, lekin xatoli post
        analyze() da qaytadan olinmaydi — qo'lda "qayta urinish" bosilmaguncha
        narxi hech qachon chiqmasdi. 15 daqiqada bir marta so'nggi 2 kundagilari
@@ -1050,9 +1059,60 @@ function hs_rq_tasks()
         $st->execute(array(date('Y-m-d H:i:s', time() - 2 * 86400)));
         hs_set_setting('rq_retry_last', (string) time());
     }
-    hs_rq_analyze(30);
+    // 50 tadan, navbat tugaguncha yoki AI xato berguncha.
+    while (hs_rq_analyze(50) === 50) {
+    }
     hs_rq_alerts();
     hs_rq_narxlar();
+}
+
+/**
+ * O'quvchi yangi post yuborganda — cron'ni kutmasdan, shu zahoti.
+ * Javob o'quvchiga oldin qaytariladi (hs_rq_javob_yop), bu ish undan keyin.
+ */
+function hs_rq_darhol()
+{
+    if (!hs_rq_on()) {
+        return;
+    }
+    @set_time_limit(0);
+    $q = hs_rq_qulf(true);
+    if (!$q) {
+        return;
+    }
+    try {
+        hs_rq_tahlil_va_yuborish();
+    } finally {
+        hs_rq_qulf_ochish($q);
+    }
+}
+
+/** Cron: yig'ish → tahlil → jiddiylarini darhol → narxlar. */
+function hs_rq_tasks()
+{
+    if (!hs_rq_on() || !hs_rq_channels(true)) {
+        return 0;
+    }
+    $q = hs_rq_qulf(false);
+    if (!$q) {
+        return 0; // o'quvchidan kelgan postlar hozir tahlil qilinyapti
+    }
+    try {
+        return hs_rq_tasks_ichi();
+    } finally {
+        hs_rq_qulf_ochish($q);
+    }
+}
+
+function hs_rq_tasks_ichi()
+{
+    $done = 0;
+    // Ochiq kanallar sahifasi — har cron'da (5 daqiqa).
+    if (time() - (int) hs_setting('rq_last_fetch', '0') >= 240) {
+        list($n) = hs_rq_fetch_all();
+        $done += $n;
+    }
+    hs_rq_tahlil_va_yuborish();
     // Tahlil qilinmay qolgan guruh rasmlari (xato bo'lsa) 2 kundan ortiq yotmasin.
     foreach (glob(hs_rq_rasm_dir() . '/*.img') ?: array() as $f) {
         if (filemtime($f) < time() - 2 * 86400) {
