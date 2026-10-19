@@ -23,7 +23,7 @@ if ($mbGroup && $info['me']) {
         hs_cache_set('mb:botstatus:' . $mbGroup['chat_id'], $mbAdmin, 300);
     }
 }
-$mbKey = hs_mb_key();
+$mbKey = hs_mb_key() !== '' ? hs_mb_key() : hs_mb_pc_sir();
 $mbCount = hs_mb_catalog_count();
 $mbStats = hs_db()->query("SELECT COUNT(*) AS jami, SUM(status = 'javob') AS javob, SUM(status = 'kuzatish') AS kuzatish, SUM(needs_operator = 1) AS operator, SUM(answered_by <> '') AS xodim, SUM(status = 'xodimda') AS xodimda, SUM(lead_id IS NOT NULL) AS ariza
     FROM mb_questions WHERE created_at > '" . date('Y-m-d H:i:s', time() - 7 * 86400) . "' AND status <> 'tashlandi'")->fetch();
@@ -43,7 +43,7 @@ echo '<li>' . $okIco($mbCount > 0) . '<div><b>Katalog: ' . $mbCount . ' ta post<
     . ' va guruhdagi xodimlarning narxli postlari.' . (hs_setting('mb_backfill_at', '') !== '' ? ' Oxirgi yig\'ish: ' . h(date('d.m H:i', strtotime(hs_setting('mb_backfill_at')))) . '.' : '') . '</small></div></li>';
 $gemini = hs_mb_provider() === 'gemini';
 $aiKey = $gemini ? hs_mb_gemini_key() : $mbKey;
-$aiNom = $gemini ? 'Gemini' : 'Claude';
+$aiNom = hs_mb_ai_nomi();
 $aiModel = $gemini ? hs_mb_gemini_model() : hs_mb_setting('model');
 echo '<li>' . $okIco($aiKey !== '') . '<div><b>' . ($aiKey !== '' ? 'AI: ' . h($aiNom) . ' · ' . h($aiModel) : 'AI kaliti kiritilmagan') . '</b><small>'
     . ($aiKey !== '' ? 'Savollarni lotin/kirill, xato yozuvda ham tushunadi. ' : "Kalitsiz bot oddiy so'z qidiruvi bilan ishlaydi va har savolni operatorga yuboradi. ")

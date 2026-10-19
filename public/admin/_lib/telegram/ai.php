@@ -8,10 +8,10 @@ if (!defined('HS_ADMIN')) {
 /* Bitta kalit ikki joyda ishlatiladi: mijozlar boti (guruhdagi savollar) va
    Raqobatchilar bo'limi (raqobatchi e'lonlarini tahlil qilish). Ilgari u
    mijozlar boti sozlamalari ichida yashiringan edi va topib bo'lmasdi. */
-$mbKey = hs_mb_key();
+$mbKey = hs_mb_key() !== '' ? hs_mb_key() : hs_mb_pc_sir();
 $gemini = hs_mb_provider() === 'gemini';
 $aiKey = $gemini ? hs_mb_gemini_key() : $mbKey;
-$aiNom = $gemini ? 'Gemini' : 'Claude';
+$aiNom = hs_mb_ai_nomi();
 $aiModel = $gemini ? hs_mb_gemini_model() : hs_mb_setting('model');
 echo '<section class="card"><div class="part-head"><span class="part-ico">' . hs_icon('settings') . '</span><div><h2>AI kaliti</h2>'
     . "<p class=\"muted\">Ikkala bot shu kalitdan foydalanadi: <a href=\"/admin/telegram.php?bolim=mijozlar\">Mijozlar boti</a> va <a href=\"/admin/kuzatuv.php\">Raqobatchilar</a></p></div></div>";
@@ -24,8 +24,8 @@ echo '</ul>';
 
 echo '<div class="grid grid-2"><div>';
 echo '<form method="post" action="/admin/telegram.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit">'
-    . '<label for="mb_key">API kaliti' . ($aiKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-… , AIza… yoki AQ.…">'
-    . '<p class="hint">Qaysi xizmatniki ekani kalitning o\'zidan aniqlanadi: sk-ant-… — Claude, AIza… yoki AQ.… — Google AI Studio.</p>'
+    . '<label for="mb_key">API kaliti' . ($aiKey !== '' ? ' (almashtirish)' : '') . '</label><input id="mb_key" type="password" name="mb_key" required maxlength="260" autocomplete="off" spellcheck="false" placeholder="sk-ant-… , AIza… , AQ.… yoki kompyuter-…">'
+    . '<p class="hint">Qaysi xizmatniki ekani kalitning o\'zidan aniqlanadi: sk-ant-… — Claude, AIza… yoki AQ.… — Google AI Studio, kompyuter-… — egasining kompyuteridagi Claude (uning hisobi limiti bilan; kompyuter yoniq bo\'lganda).</p>'
     . '<p class="hint">Faqat serverdagi bazada saqlanadi, sahifada qayta ko\'rsatilmaydi.</p><div class="actions"><button class="btn outline small" type="submit">Kalitni saqlash</button></div></form>';
 if ($aiKey !== '') {
     echo '<form method="post" action="/admin/telegram.php" class="actions" data-confirm="' . h($aiNom) . ' kaliti o\'chirilsinmi?">' . hs_csrf_field() . '<input type="hidden" name="amal" value="mb_kalit_ochir"><button class="btn danger small" type="submit">Kalitni o\'chirish</button></form>';

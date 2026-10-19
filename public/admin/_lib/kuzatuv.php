@@ -463,7 +463,7 @@ function hs_rq_ai_gemini($text, $img = null)
 function hs_rq_ai_claude($text, $img = null)
 {
     $key = hs_mb_key();
-    if ($key === '') {
+    if (!hs_mb_claude_ready()) {
         return array(null, 'Claude kaliti kiritilmagan.');
     }
     $model = hs_mb_setting('model');
@@ -481,7 +481,7 @@ function hs_rq_ai_claude($text, $img = null)
         $body['fallbacks'] = 'default';
         $headers[] = 'anthropic-beta: server-side-fallback-2026-07-01';
     }
-    list($code, $resp) = hs_http('POST', HS_MB_API, $headers, json_encode($body, JSON_UNESCAPED_UNICODE), 60);
+    list($code, $resp) = hs_mb_claude_http($headers, $body, 60);
     $j = json_decode((string) $resp, true);
     if ($code !== 200 || !is_array($j)) {
         $msg = is_array($j) && isset($j['error']['message']) ? (string) $j['error']['message'] : "javob yo'q";

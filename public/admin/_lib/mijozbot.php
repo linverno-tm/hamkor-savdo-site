@@ -53,6 +53,54 @@ function hs_mb_key()
     return trim((string) hs_setting('mb_claude_key', ''));
 }
 
+/*
+ * Kompyuter shlyuzi (egasi 19.10.2026: «hamma botlarimiz shu account limitlarini ishlatsin»): Claude so'rovi
+ * egasining kompyuteridagi Claude'ga boradi (uning Claude hisobi limiti bilan, API kalitsiz):
+ * https://hamkorcrm.uz/ai-shlyuz/ → SSH tunnel → D:\Time Pay\ai_ishchi.py → `claude`. So'rov va javob shakli —
+ * Anthropic Messages API bilan bir xil. Sir panelda AI kaliti maydoniga «kompyuter-…» ko'rinishida qo'yiladi.
+ * Kompyuter o'chiq bo'lsa: Claude API kaliti ham bo'lsa — o'shanga, bo'lmasa xato (bot so'z qidiruviga o'tadi).
+ */
+define('HS_MB_PC_API', 'https://hamkorcrm.uz/ai-shlyuz/v1/messages');
+
+function hs_mb_pc_sir()
+{
+    return trim((string) hs_setting('mb_pc_sir', ''));
+}
+
+/** Claude yo'li ishlay oladimi: API kaliti yoki kompyuter shlyuzi bor. */
+function hs_mb_claude_ready()
+{
+    return hs_mb_key() !== '' || hs_mb_pc_sir() !== '';
+}
+
+/** Panelda ko'rinadigan nom: Gemini, Claude (kompyuter) yoki Claude. */
+function hs_mb_ai_nomi()
+{
+    if (hs_mb_provider() === 'gemini') {
+        return 'Gemini';
+    }
+    return hs_mb_pc_sir() !== '' ? 'Claude (kompyuter)' : 'Claude';
+}
+
+/** Claude so'rovi: avval kompyuter shlyuzi (bo'lsa), keyin Claude API. Qaytaradi: [HTTP kod, javob matni]. */
+function hs_mb_claude_http($headers, $body, $timeout = 60)
+{
+    $json = json_encode($body, JSON_UNESCAPED_UNICODE);
+    $sir = hs_mb_pc_sir();
+    if ($sir !== '') {
+        list($code, $resp) = hs_http('POST', HS_MB_PC_API, array('Content-Type: application/json', 'X-Sir: ' . $sir), $json, 150);
+        if ($code === 200 || hs_mb_key() === '') {
+            if ($code !== 200 && !is_array(json_decode((string) $resp, true))) {
+                $resp = json_encode(array('error' => array('message' => $code === 0
+                    ? "kompyuter shlyuziga ulanib bo'lmadi"
+                    : "kompyuter o'chiq yoki ulanmagan")), JSON_UNESCAPED_UNICODE);
+            }
+            return array($code, $resp);
+        }
+    }
+    return hs_http('POST', HS_MB_API, $headers, $json, $timeout);
+}
+
 function hs_mb_bot_username()
 {
     $u = hs_cache_get('mb:botname');
@@ -454,7 +502,7 @@ function hs_mb_schema()
 function hs_mb_ask_claude($text, $context, $rows)
 {
     $key = hs_mb_key();
-    if ($key === '') {
+    if (!hs_mb_claude_ready()) {
         return array(null, 'Claude kaliti kiritilmagan.');
     }
     $model = hs_mb_setting('model');
@@ -491,7 +539,7 @@ function hs_mb_ask_claude($text, $context, $rows)
         @file_put_contents(hs_data_dir() . '/claude.log', json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
         return array(is_array($fake) ? $fake : null, is_array($fake) ? '' : 'fake yo\'q');
     }
-    list($code, $resp) = hs_http('POST', HS_MB_API, $headers, json_encode($body, JSON_UNESCAPED_UNICODE), 60);
+    list($code, $resp) = hs_mb_claude_http($headers, $body, 60);
     $j = json_decode((string) $resp, true);
     if ($code !== 200 || !is_array($j)) {
         $msg = is_array($j) && isset($j['error']['message']) ? (string) $j['error']['message'] : 'javob yo\'q';

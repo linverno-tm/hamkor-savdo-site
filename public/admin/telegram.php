@@ -64,7 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $key = trim(hs_post('mb_key'));
         // Qaysi xizmatniki ekani kalitning o'zidan ko'rinadi: Anthropic "sk-ant-",
         // Google AI Studio "AIza" bilan boshlanadi. Shu sababli bitta maydon yetadi.
-        if (preg_match('/^sk-ant-[A-Za-z0-9_\-]{20,200}$/', $key)) {
+        if (preg_match('/^kompyuter-[A-Za-z0-9_\-]{30,120}$/', $key)) {
+            // Egasining kompyuteridagi Claude (uning hisobi limiti bilan) — D:\Time Pay\sozlamalar.txt dagi SHLYUZ_SIR.
+            hs_set_setting('mb_pc_sir', $key);
+            hs_set_setting('mb_provider', 'claude');
+            hs_audit($user['login'], 'AI: kompyuter shlyuzi ulandi', '…' . substr($key, -4));
+            hs_flash("Kompyuter shlyuzi saqlandi: Claude so'rovlari endi egasining kompyuteriga boradi. Kompyuter o'chiq bo'lsa, "
+                . (hs_mb_key() !== '' ? 'Claude API kaliti ishlatiladi.' : "bot oddiy so'z qidiruviga o'tadi."));
+        } elseif (preg_match('/^sk-ant-[A-Za-z0-9_\-]{20,200}$/', $key)) {
             hs_set_setting('mb_claude_key', $key);
             hs_audit($user['login'], 'mijozlar guruhi: Claude kaliti saqlandi', '…' . substr($key, -4));
             // Faol xizmatning kaliti yo'q bo'lsa — shu kalitning xizmatiga o'tamiz, aks holda
@@ -78,17 +85,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (preg_match('/^(AIza[A-Za-z0-9_\-]{20,100}|AQ\.[A-Za-z0-9_.\-]{20,150})$/', $key)) {
             hs_set_setting('mb_gemini_key', $key);
             hs_audit($user['login'], 'mijozlar guruhi: Gemini kaliti saqlandi', '…' . substr($key, -4));
-            if (hs_mb_provider() === 'claude' && hs_mb_key() === '') {
+            if (hs_mb_provider() === 'claude' && !hs_mb_claude_ready()) {
                 hs_set_setting('mb_provider', 'gemini');
             }
             hs_flash('Gemini kaliti saqlandi' . (hs_mb_provider() === 'gemini' ? ' va ishlatilyapti' : " — hozir Claude ishlatilyapti, almashtirish pastda") . '.');
         } else {
-            hs_flash("Kalit formati noto'g'ri. Claude kaliti sk-ant-… , Google AI Studio kaliti AIza… yoki AQ.… bilan boshlanadi.", 'err');
+            hs_flash("Kalit formati noto'g'ri. Claude kaliti sk-ant-… , Google AI Studio kaliti AIza… yoki AQ.… , kompyuter shlyuzi kompyuter-… bilan boshlanadi.", 'err');
         }
     } elseif ($action === 'mb_kalit_ochir') {
-        $qaysi = hs_mb_provider() === 'gemini' ? 'mb_gemini_key' : 'mb_claude_key';
+        $qaysi = hs_mb_provider() === 'gemini' ? 'mb_gemini_key' : (hs_mb_pc_sir() !== '' ? 'mb_pc_sir' : 'mb_claude_key');
         hs_db()->prepare('DELETE FROM settings WHERE key = ?')->execute(array($qaysi));
-        hs_audit($user['login'], "mijozlar guruhi: " . (hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') . " kaliti o'chirildi");
+        hs_audit($user['login'], "mijozlar guruhi: " . hs_mb_ai_nomi() . " kaliti o'chirildi");
         hs_flash("Kalit o'chirildi. Bot endi oddiy so'z qidiruvi bilan ishlaydi va savollarni operatorga yuboradi.");
     } elseif ($action === 'mb_katalog') {
         list($n, $err) = hs_mb_backfill(hs_mb_setting('channel'), 15);
@@ -102,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rows = hs_mb_catalog_rows();
             list($d, $err) = hs_mb_ask_ai($savol, '', $rows);
             if ($d === null) {
-                hs_flash((hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') . ' ishlamadi: ' . $err, 'err');
+                hs_flash(hs_mb_ai_nomi() . ' ishlamadi: ' . $err, 'err');
             } else {
                 $byN = array();
                 foreach ($rows as $r) {
@@ -241,11 +248,11 @@ $branches = hs_branch_names();
 hs_page_start('Telegram', $user);
 
 /* Tab yonidagi qisqa holat — Telegram'ga so'rov yubormasdan, bazadan. */
-$aiBor = hs_mb_provider() === 'gemini' ? hs_mb_gemini_key() !== '' : hs_mb_key() !== '';
+$aiBor = hs_mb_provider() === 'gemini' ? hs_mb_gemini_key() !== '' : hs_mb_claude_ready();
 $belgi = array(
     'arizalar' => $active ? $active . ' ta chat' : 'hech kimga',
     'mijozlar' => hs_mb_setting('on') !== '1' ? "o'chiq" : (hs_mb_setting('mode') === 'faol' ? 'faol' : 'kuzatish'),
-    'ai' => $aiBor ? (hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') : "kalit yo'q",
+    'ai' => $aiBor ? hs_mb_ai_nomi() : "kalit yo'q",
     'eslatma' => (int) hs_setting('tasks_last_cron', '0') > time() - 20 * 60 ? 'ishlayapti' : "cron yo'q",
 );
 $ogoh = array('arizalar' => !$active, 'mijozlar' => false, 'ai' => !$aiBor, 'eslatma' => (int) hs_setting('tasks_last_cron', '0') <= time() - 20 * 60);

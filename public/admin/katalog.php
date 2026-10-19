@@ -163,8 +163,8 @@ echo '<li>' . $ico((int) $ki['rasmli'] > 0) . '<div><b>Kanalda ' . (int) $ki['ra
     . (int) $ki['korilgan'] . ' tasi ko\'rib chiqilgan. Postlar Telegram bo\'limidagi «Katalogni kanaldan yangilash» bilan yig\'iladi.</small></div></li>';
 echo '<li>' . $ico((int) $ki['qabul'] > 0) . '<div><b>' . (int) $ki['qabul'] . ' ta mahsulot saytga chiqarilgan</b><small>'
     . (int) $ki['rad'] . ' ta rad etilgan, ' . (int) $ki['emas'] . ' tasi mahsulot emas (aksiya, tabrik).</small></div></li>';
-$aiBor = hs_mb_provider() === 'gemini' ? hs_mb_gemini_key() !== '' : hs_mb_key() !== '';
-echo '<li>' . $ico($aiBor) . '<div><b>' . ($aiBor ? 'AI: ' . (hs_mb_provider() === 'gemini' ? 'Gemini' : 'Claude') : 'AI kaliti yo\'q') . '</b><small>'
+$aiBor = hs_mb_provider() === 'gemini' ? hs_mb_gemini_key() !== '' : hs_mb_claude_ready();
+echo '<li>' . $ico($aiBor) . '<div><b>' . ($aiBor ? 'AI: ' . hs_mb_ai_nomi() : 'AI kaliti yo\'q') . '</b><small>'
     . ($aiBor ? 'Nom va narx rasmdan o\'qiladi. Bitta post taxminan 0,06 sent.'
         : '<a href="/admin/telegram.php?bolim=ai">Kalitni kiriting</a> — kalitsiz o\'qib bo\'lmaydi.') . '</small></div></li>';
 echo '</ul>';
