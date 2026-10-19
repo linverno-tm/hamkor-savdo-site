@@ -202,6 +202,12 @@ if (strlen($digits) === 9) {
 
 /* Oddiy tezlik cheklovi: bitta IP ketma-ket ariza yubormasin. */
 $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'nomalum';
+/* Cloudflare tunneli orqali kelgan so'rov: haqiqiy IP faqat bizning serverdan (hamkor-cf)
+   kelganda olinadi, aks holda hamma mijoz bitta IP bo'lib qoladi. admin/_lib/bootstrap.php > hs_client_ip */
+if ($ip === '185.196.215.214' && isset($_SERVER['HTTP_CF_CONNECTING_IP'])
+    && filter_var(trim($_SERVER['HTTP_CF_CONNECTING_IP']), FILTER_VALIDATE_IP)) {
+    $ip = trim($_SERVER['HTTP_CF_CONNECTING_IP']);
+}
 $stamp = sys_get_temp_dir() . '/hs_lead_' . md5($ip);
 if (is_file($stamp) && (time() - (int) filemtime($stamp)) < $THROTTLE_SECONDS) {
     hs_fail(429, "Arizangiz allaqachon yuborilgan. Biroz kuting yoki qo'ng'iroq qiling.");

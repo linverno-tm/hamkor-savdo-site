@@ -106,10 +106,27 @@ function h($s)
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 }
 
+/* Sayt Cloudflare tunneli orqali bizning serverdan (hamkor-cf) keladi. Mijozning haqiqiy IP si
+   faqat shu serverdan kelgan so'rovda CF-Connecting-IP dan olinadi: boshqa joydan kelgan
+   so'rovda bu sarlavhani istalgan odam soxtalashtira oladi. */
+const HS_TUNNEL_IP = '185.196.215.214';
+
+function hs_client_ip()
+{
+    $remote = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    if ($remote === HS_TUNNEL_IP && isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        $cf = trim((string) $_SERVER['HTTP_CF_CONNECTING_IP']);
+        if (filter_var($cf, FILTER_VALIDATE_IP)) {
+            return $cf;
+        }
+    }
+    return $remote;
+}
+
 function hs_ip()
 {
-    // Faqat REMOTE_ADDR: X-Forwarded-For ni istalgan odam soxtalashtira oladi.
-    return isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+    $ip = hs_client_ip();
+    return $ip !== '' ? $ip : '0.0.0.0';
 }
 
 function hs_user_agent()
