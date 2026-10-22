@@ -373,8 +373,8 @@
     font-size: 0.8rem;
   }
 }
-/* Eng tor telefon (320px): oraliqlar va logo kichrayadi. */
-@media (max-width: 359.98px) {
+/* Tor telefon (320–379px): oraliqlar va logo kichrayadi. */
+@media (max-width: 379.98px) {
   .hdr-bar:has(.ru-hdr-actions) {
     gap: 0.5rem;
   }
@@ -382,6 +382,13 @@
     gap: 0.35rem;
   }
   .hdr-bar:has(.ru-hdr-actions) > a:first-child > svg {
-    height: 1.5rem;
+    height: 1.35rem;
+  }
+  .ru-hdr-actions .hdr-chip {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  .ru-hdr-call {
+    padding: 0 0.2rem;
   }
 }
