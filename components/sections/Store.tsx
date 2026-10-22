@@ -4,6 +4,9 @@ import { branchCover, branchPhotos } from "@/lib/photos";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
 
+/** Yoydagi suratlar soni — toq son, o'rtadagisi to'g'ri qarab turadi. */
+const ARC_N = 9;
+
 /**
  * "Haqiqiy do'kon qanday?"
  *
@@ -23,6 +26,16 @@ export function Store() {
     return { branch: b, cover, count: photos.length };
   });
 
+  /* 3D yoy uchun savdo zallarining suratlari — har filialdan navbat bilan,
+     jami ARC_N ta (filial sahifalaridagi suratlarning o'zi). */
+  const zallar = branches.map((b) => branchPhotos(b.id, b.city).filter((p) => p.kind === "zal"));
+  const arc: { src: string; alt: string }[] = [];
+  for (let i = 0; arc.length < ARC_N && i < 20; i++) {
+    for (const list of zallar) {
+      if (list[i] && arc.length < ARC_N) arc.push({ src: list[i].srcSmall, alt: list[i].alt });
+    }
+  }
+
   return (
     <section id="dokon" aria-labelledby="store-title" className="sec store">
       <div className="wrap">
@@ -33,6 +46,22 @@ export function Store() {
           lead="Onlayn rasm emas, haqiqiy do'kon. Keling, mahsulotni qo'lingizga olib ko'ring, narxini solishtiring, savol bering — jamoamiz yordam beradi."
         />
       </div>
+
+      {/* Savdo zallari 3D yoy bo'ylab (ichkariga egilgan, o'rtadagi surat
+          to'g'ri qaraydi), aylantirilganda sekin buriladi — sof CSS
+          (app/home-sections.css > .arc). Bezak: har surat filial
+          sahifasidagi galereyada ham bor. */}
+      {arc.length >= 5 ? (
+        <div className="arc" aria-hidden="true">
+          <div className="arc-ring">
+            {arc.map((p, i) => (
+              <span key={p.src} className="arc-card" style={{ ["--a" as string]: i - (arc.length - 1) / 2 }}>
+                <img src={p.src} alt="" width={480} height={360} loading="lazy" decoding="async" />
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <ul data-m="" data-m-stagger className="store-rail">
         {cards.map(({ branch, cover, count }) => (

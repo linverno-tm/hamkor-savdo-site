@@ -1869,3 +1869,75 @@ html:not(.m-js) .step-dot {
   height: 100%;
   width: 100%;
 }
+
+/* ---------------- 3D yoy: savdo zallari (Store) ---------------- */
+
+/* Kuzatuvchi yoyning ichida turibdi: kartalar markazdan R masofada,
+   har biri --a * qadam burchakda va markazga qaragan. O'rtadagisi
+   to'g'ri, chetdagilar yonga burilib, oldinga chiqadi. */
+.arc {
+  --card-w: clamp(10rem, 16vw, 14rem);
+  --step: 25deg;
+  --r: clamp(18rem, 30vw, 30rem);
+  position: relative;
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+  height: calc(var(--card-w) * 1.25);
+  overflow: hidden;
+  perspective: 1100px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.arc-ring {
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  width: var(--card-w);
+  aspect-ratio: 4 / 3;
+  margin-left: calc(var(--card-w) / -2);
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--r) * 0.72)) rotateY(var(--spin, 0deg));
+}
+.arc-card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  backface-visibility: hidden;
+  transform: rotateY(calc(var(--a) * var(--step))) translateZ(calc(var(--r) * -1));
+  box-shadow: 0 30px 50px -30px rgba(26, 17, 48, 0.6);
+}
+.arc-card img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+/* Aylantirishga ergashib yoy sekin buriladi (qo'llamasa — tinch). */
+@property --spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .arc-ring {
+      animation: arc-spin linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    @keyframes arc-spin {
+      from {
+        --spin: 14deg;
+      }
+      to {
+        --spin: -14deg;
+      }
+    }
+  }
+}
+@media (max-width: 639.98px) {
+  .arc {
+    --card-w: 7.5rem;
+    --step: 26deg;
+    --r: 12rem;
+  }
+}

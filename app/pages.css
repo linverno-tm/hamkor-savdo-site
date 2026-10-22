@@ -500,3 +500,131 @@
 [data-theme="dark"] .open-st[data-state="soon"] {
   color: var(--yellow);
 }
+
+/* ---------------- yo'nalish sahifasi: ulkan kontur so'z ---------------- */
+
+/* Avtomobil saytlaridagi kabi: sahna orqasida yo'nalish nomi juda katta,
+   faqat konturi bilan; sekin chapga suzadi. */
+.tp-giant {
+  position: absolute;
+  left: 0;
+  bottom: -0.12em;
+  z-index: 0;
+  white-space: nowrap;
+  font-size: clamp(7rem, 22vw, 20rem);
+  line-height: 0.8;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  user-select: none;
+}
+.tp-hero > .wrap {
+  z-index: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tp-giant {
+    animation: giant-drift 28s ease-in-out infinite alternate;
+  }
+}
+@keyframes giant-drift {
+  from {
+    transform: translateX(2%);
+  }
+  to {
+    transform: translateX(-12%);
+  }
+}
+
+/* Skuter: surat yon tomondan kirib keladi (harakat — mavzuning o'zi). */
+@media (prefers-reduced-motion: no-preference) {
+  .m-js .tp-hero--skuter .tp-photo.in-7 {
+    animation: ride-in 1100ms var(--ease) 500ms both;
+  }
+}
+@keyframes ride-in {
+  from {
+    opacity: 0;
+    transform: translateX(18%) rotate(2deg);
+  }
+}
+
+/* ---------------- tilla: zargarlik uslubi ---------------- */
+
+.jewel {
+  position: relative;
+  max-width: 26rem;
+  justify-self: center;
+  width: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(170deg, #e9d84a 0%, #dfd01f 45%, #b9a90f 100%);
+  padding: 1.25rem 1.25rem 0;
+  box-shadow: 0 50px 90px -45px rgba(12, 4, 24, 0.85);
+}
+.jewel-photo {
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  aspect-ratio: 4 / 5;
+}
+.jewel-photo img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  transition: transform 1600ms var(--ease);
+}
+.jewel:hover .jewel-photo img {
+  transform: scale(1.05);
+}
+.jewel-card {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  margin: 0 -1.25rem;
+  background: #fff;
+  color: #1a1130;
+}
+.jewel-card > span:first-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1rem 1.25rem;
+}
+.jewel-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.jewel-note {
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  color: #55506b;
+}
+.jewel-arrow {
+  display: flex;
+  width: 4.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  background: #1a1130;
+  color: #fff;
+  font-size: 1.3rem;
+  transition:
+    background-color var(--dur-2) var(--ease),
+    color var(--dur-2) var(--ease);
+}
+.jewel-card:hover .jewel-arrow {
+  background: var(--purple);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .jewel-card:hover .jewel-arrow {
+    animation: nudge-x 700ms var(--ease);
+  }
+}
+@keyframes nudge-x {
+  50% {
+    padding-left: 0.6rem;
+  }
+}

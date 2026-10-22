@@ -131,12 +131,17 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
       {lang === "ru" ? <RuHeader uzHref={`${topic.path}/`} /> : <Header />}
       <main id="asosiy" tabIndex={-1}>
         {/* ---- asosiy qism: binafsha sahna, o'ngda yo'nalish surati ---- */}
-        <section className="tp-hero on-purple text-white">
+        <section className={`tp-hero tp-hero--${topic.id} on-purple text-white`}>
           <div className="hero-bg" aria-hidden="true">
             <span className="hero-orb hero-orb-1" />
             <span className="hero-orb hero-orb-2" />
             <span className="hero-grid" />
           </div>
+          {/* Orqada yo'nalish nomi ulkan kontur harflarda — sekin suzadi
+              (app/pages.css > .tp-giant). Bezak, matn yuqorida bor. */}
+          <span className="tp-giant numeral" aria-hidden="true">
+            {t.kicker}
+          </span>
           <div className="wrap relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
             <div>
               <nav aria-label={lang === "ru" ? "Навигация" : "Qayerdaman"} className="tp-crumbs in-1">
@@ -167,7 +172,33 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                 </a>
               </div>
             </div>
-            {topic.photo ? (
+            {topic.photo && topic.id === "tilla" ? (
+              /* Tilla — zargarlik do'konlari uslubida: iliq fondagi baland
+                 surat va pastida "mahsulot kartasi" kvadrat strelka bilan. */
+              <div className="jewel in-7">
+                <div className="jewel-photo">
+                  <img
+                    src={topic.photo.src}
+                    width={900}
+                    height={675}
+                    alt={topic.photo.alt[lang]}
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                </div>
+                <a href="#ariza" className="jewel-card">
+                  <span>
+                    <span className="jewel-name">{t.kicker}</span>
+                    <span className="jewel-note">
+                      {site.facts.installmentMonthsMax} {lang === "ru" ? "месяцев рассрочки" : "oygacha muddatli to'lov"}
+                    </span>
+                  </span>
+                  <span className="jewel-arrow" aria-hidden="true">
+                    &rarr;
+                  </span>
+                </a>
+              </div>
+            ) : topic.photo ? (
               <div className="tp-photo in-7">
                 <img
                   src={topic.photo.src}
