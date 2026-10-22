@@ -181,7 +181,7 @@ export function LeadForm({
                   id="lead-branch"
                   name="branch"
                   defaultValue={branchId ?? ""}
-                  className="field mt-2"
+                  className="field pick mt-2"
                 >
                   <option value="">{t.any}</option>
                   {branches.map((b) => (

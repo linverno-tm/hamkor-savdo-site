@@ -1370,3 +1370,133 @@ html:not(.m-js) .step-dot {
     }
   }
 }
+
+/* ---------------- filial tanlash ro'yxati (select) ---------------- */
+
+/* Brauzerning o'z <select>i, lekin ochiladigan ro'yxat sayt uslubida
+   (`appearance: base-select`, Chrome/Edge 135+, Android Chrome).
+   Qo'llamaydigan brauzerda (Safari, Firefox) — odatiy tizim ro'yxati;
+   forma ikkala holatda ham bir xil ishlaydi, JavaScript kerak emas. */
+@supports (appearance: base-select) {
+  .pick,
+  .pick::picker(select) {
+    appearance: base-select;
+  }
+  .pick {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    cursor: pointer;
+    text-align: left;
+  }
+  .pick::picker-icon {
+    content: "";
+    width: 0.6rem;
+    height: 0.6rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-25%) rotate(45deg);
+    transition: transform var(--dur-2) var(--ease);
+    opacity: 0.7;
+  }
+  .pick:open::picker-icon {
+    transform: translateY(25%) rotate(-135deg);
+  }
+  .pick:open {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--purple) 14%, transparent);
+  }
+  .hero-field.pick:open {
+    border-color: var(--yellow);
+    box-shadow: 0 0 0 4px rgba(223, 208, 31, 0.2);
+  }
+
+  .pick::picker(select) {
+    margin-top: 0.5rem;
+    min-width: anchor-size(width);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--ground);
+    padding: 0.4rem;
+    color: var(--ink);
+    box-shadow: 0 30px 60px -24px rgba(47, 24, 72, 0.45);
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity 220ms var(--ease),
+      translate 260ms var(--ease),
+      display 260ms allow-discrete,
+      overlay 260ms allow-discrete;
+  }
+  .pick::picker(select):popover-open {
+    opacity: 1;
+    translate: 0 0;
+  }
+  @starting-style {
+    .pick::picker(select):popover-open {
+      opacity: 0;
+      translate: 0 -8px;
+    }
+  }
+
+  .pick option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-1) var(--ease),
+      color var(--dur-1) var(--ease);
+  }
+  .pick option:hover,
+  .pick option:focus-visible {
+    background: var(--ground-2);
+    color: var(--purple);
+    outline: none;
+  }
+  .pick option:checked {
+    background: var(--purple-50);
+    color: var(--purple);
+    font-weight: 600;
+  }
+  /* Tanlangan band oldidagi belgi — sariq doirachada. */
+  .pick option::checkmark {
+    order: -1;
+    content: "";
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    border: 2px solid var(--line);
+  }
+  .pick option:checked::checkmark {
+    content: "✓";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: var(--yellow);
+    background: var(--yellow);
+    color: #1a1130;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  /* Hero formasi binafsha ustida, lekin ochiladigan ro'yxat oq bo'ladi —
+     undagi matn to'q qolsin. */
+  .hero-field.pick option {
+    color: #1a1130;
+  }
+  [data-theme="dark"] .pick option:checked,
+  [data-theme="dark"] .pick option:hover {
+    color: var(--purple-ink);
+  }
+  [data-theme="dark"] .hero-field.pick option {
+    color: var(--ink);
+  }
+}

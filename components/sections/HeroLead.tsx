@@ -94,7 +94,7 @@ export function HeroLead() {
             id="hero-branch"
             name="branch"
             defaultValue=""
-            className="hero-field mt-1.5"
+            className="hero-field pick mt-1.5"
           >
             {/* Ro'yxatdagi matn oq fonli ochiluvchi oynada ko'rinadi, shuning
                 uchun rangi ataylab to'q — merosga o'tgan oq rang u yerda
