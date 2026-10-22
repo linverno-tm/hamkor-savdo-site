@@ -457,12 +457,14 @@ function hs_mb_system_prompt()
         . "ishonching komil bo'lmasa — bo'sh qoldir. Yangi postlarni afzal ko'r. Muddati o'tgan aksiya postini (masalan \"23–28-iyun\" "
         . "va bugungi sana undan keyin) tanlama.\n"
         . "3. reply: mijozga qisqa javob (1–3 gap, 350 belgidan oshmasin), mijoz yozgan yozuvda (lotin yoki kirill). "
-        . "Faqat DO'KON FAKTLARI va KATALOGda yozilganini ayt; narx, muddat, aniq model yoki brend borligini O'YLAB TOPMA. "
-        . "So'ralgan mahsulot TURI rasmiy yo'nalishlarga kirsa (masalan skuter, kir mashina, muzlatgich, divan, uzuk) — "
-        . "avval ishonch bilan \"Ha, bizda <tur> bor\" de. Keyin: mos post bo'lsa — \"quyidagi postlarni ko'ring\"; bo'lmasa — "
-        . "\"aniq modellar va narxini operator yozib beradi\" yoki filialga kelib ko'rish mumkinligini ayt. "
-        . "Muayyan model/brend (masalan \"S21 Ultra\", \"LG 9 kg\") so'ralsa va katalogda yo'q bo'lsa — borligini tasdiqlama, "
-        . "operator aniqlab berishini ayt. Yo'nalishlarga kirmaydigan narsa so'ralsa — operator aniqlashini ayt. "
+        . "ASOSIY QOIDA — faqat dalil bilan gapir. Har bir da'vo DO'KON FAKTLARI yoki KATALOGdagi aniq postga tayansin. "
+        . "Narx, muddat, chegirma, aksiya, yetkazish vaqti, sovg'a, kafolat, omborda borligi, aniq model yoki brendni O'YLAB TOPMA va "
+        . "VA'DA BERMA: \"albatta\", \"tez orada\", \"hozir\", \"bepul\", \"eng arzon\", \"kafolatlaymiz\" kabi so'zlarni faqat faktlarda yozilgan bo'lsa ishlat. "
+        . "\"Ha, bizda bor\" deyish uchun KATALOGda so'ralgan narsaga aniq mos post bo'lishi SHART (o'sha postni post_ids ga qo'y). "
+        . "Mos post bo'lmasa — bor ham, yo'q ham dema: \"aniq bor-yo'qligi va narxini operator aniqlab yozadi\" de (needs_operator=true). "
+        . "Mahsulot turi rasmiy yo'nalishga kirsa ham (masalan kir mashina, muzlatgich), post bo'lmasa \"bor\" dema — bu omborda borligini isbotlamaydi. "
+        . "Muayyan model/brend (masalan \"S21 Ultra\", \"LG 9 kg\") so'ralsa va katalogda xuddi shu model bo'lmasa — o'xshashini \"o'sha\" deb ko'rsatma. "
+        . "Postdagi narx yoki aksiya muddati o'tgan bo'lsa, uni hozirgi narx deb aytma. Ishonching komil bo'lmasa — qisqa qilib operatorga yo'naltir. "
         . "Havola, telefon raqami yoki emoji qo'shma — tizim o'zi qo'shadi.\n"
         . "4. needs_operator: aniq narx/mavjudlik/limit/buyurtma kabi javobni faqat xodim bera oladigan bo'lsa yoki mos post topilmasa — true.\n"
         . "5. kind: mahsulot | shartlar | filial | yetkazish | ish | boshqa.\n\n"
@@ -1044,8 +1046,9 @@ function hs_mb_process_question($qid)
         }
         $ids = hs_mb_keyword_search($q['text'] . ' ' . $q['context'], $rows);
         $type = hs_mb_known_type($q['text']);
-        $reply = $type !== '' ? 'Ha, bizda ' . $type . ' bor! ' : 'Savolingiz uchun rahmat! ';
-        $reply .= $ids ? "Mos bo'lishi mumkin bo'lgan postlar quyida, aniq model va narxini operator yozib beradi." : 'Aniq model va narxini operator tez orada yozib beradi.';
+        // AI siz dalil yo'q: "bor" deyilmaydi — faqat topilgan postlar va operator.
+        $reply = 'Savolingiz uchun rahmat! ';
+        $reply .= $ids ? "Mos bo'lishi mumkin bo'lgan postlar quyida; aniq bor-yo'qligi va narxini operator aniqlab yozadi." : "Aniq bor-yo'qligi va narxini operator aniqlab yozadi.";
         $d = array('is_question' => true, 'kind' => $type !== '' ? 'mahsulot' : 'boshqa', 'post_ids' => $ids, 'needs_operator' => true, 'reply' => $reply);
     }
     if (empty($d['is_question'])) {
@@ -1061,7 +1064,7 @@ function hs_mb_process_question($qid)
     $needs = !empty($d['needs_operator']) || !$posts;
     $reply = trim(mb_substr((string) $d['reply'], 0, 400));
     if ($reply === '') {
-        $reply = $posts ? "Quyidagi postlarni ko'ring:" : 'Operator tez orada javob beradi.';
+        $reply = $posts ? "Quyidagi postlarni ko'ring:" : 'Operator aniqlab javob beradi.';
     }
     $lines = array($reply);
     if ($posts) {
