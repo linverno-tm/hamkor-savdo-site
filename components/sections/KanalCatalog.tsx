@@ -18,7 +18,10 @@ const shortDate = (d: string) => d.split("-").reverse().slice(0, 2).join(".");
  */
 export function KanalCatalog() {
   const items = kanalItems();
-  if (items.length === 0) return null;
+  /* Kamida 3 ta taklif bo'lmasa bo'lim chiqmaydi: bitta-ikkita karta
+     yonida bo'm-bo'sh joy qolib, sayt tashlab qo'yilgandek ko'rinadi
+     (egasi 22.10). */
+  if (items.length < 3) return null;
 
   return (
     <section id="takliflar" aria-labelledby="kanal-title" className="sec kanal">
