@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "./home.css";
+@import "./home-hero.css";
+@import "./home-base.css";
+@import "./home-sections.css";
 
 /* ==================================================================
    HAMKOR SAVDO — design tokens, straight from the brand guidebook.
@@ -285,41 +289,6 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
 /* ---------------- header ---------------- */
 
 /* Sahifa siljigach (Reveal.tsx `data-scrolled` qo'yadi) — yengil soya. */
-.site-header {
-  transition: box-shadow var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease);
-}
-.site-header[data-scrolled] {
-  border-color: transparent;
-  box-shadow: 0 10px 30px -18px rgba(47, 24, 72, 0.35);
-}
-.nav-link {
-  white-space: nowrap;
-  border-radius: 12px;
-  padding: 0.55rem 0.8rem;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--ink-2);
-  transition: color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
-}
-.nav-link:hover,
-.nav-drop:focus-within > .nav-link {
-  color: var(--purple);
-  background: var(--ground-2);
-}
-/* "Katalog" ro'yxati: yashirin, lekin HTML'da — Tab bilan ichiga kirilsa ochiladi. */
-.nav-drop-panel {
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, 6px);
-  transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
-}
-.nav-drop:hover > .nav-drop-panel,
-.nav-drop:focus-within > .nav-drop-panel {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translate(-50%, 0);
-}
-
 /* ---------------- mobile menu (no JavaScript required) ---------------- */
 
 .mobile-menu > summary {
@@ -338,9 +307,6 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
 .mobile-menu[open] > summary {
   position: relative;
   z-index: 60;
-  border-color: transparent;
-  background: var(--purple);
-  color: #fff;
 }
 
 /* A fixed-position child can escape the disclosure's own hiding in some
@@ -401,13 +367,6 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
 }
 
 /* Xaritada tanlangan filial (BranchMap `data-active` qo'yadi). */
-.branch-item:hover {
-  border-color: var(--purple-100);
-}
-.branch-item[data-active] {
-  border-color: var(--purple);
-  box-shadow: 0 0 0 1px var(--purple);
-}
 
 /* Filiallar xaritasi (BranchMap). Fon xiralashtiriladi — brend belgilari
    ajralib tursin va xarita sayt ranglariga mos kelsin. */
@@ -490,9 +449,6 @@ html[lang="uz-Cyrl"] .lang-to-cyrl {
   box-shadow: 0 40px 80px -40px rgba(47, 24, 72, 0.7);
 }
 /* Footer: to'q binafsha, pastga qarab yanada to'qlashadi. */
-.site-footer {
-  background: linear-gradient(180deg, #2a1745 0%, #1a0f2c 100%);
-}
 
 /* FAQ akkordeoni silliq ochiladi (qo'llaydigan brauzerlarda; qolganida — darhol). */
 .faq-item::details-content {
@@ -1323,9 +1279,7 @@ footer a:not(.btn) {
 [data-theme="dark"] .bg-white.text-purple {
   --purple: #5a3089;
 }
-[data-theme="dark"] .kicker,
-[data-theme="dark"] .nav-link:hover,
-[data-theme="dark"] .nav-drop:focus-within > .nav-link {
+[data-theme="dark"] .kicker {
   color: var(--purple-ink);
 }
 /* Binafsha panellar (forma, muddatli to'lov...) qorong'i fonda "yonib"
@@ -1358,9 +1312,7 @@ footer a:not(.btn) {
 [data-theme="dark"] .cat-card:hover {
   box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.8);
 }
-[data-theme="dark"] .site-header[data-scrolled] {
-  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.9);
-}
+
 
 [data-theme="dark"] .hero-glow {
   background:

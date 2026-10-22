@@ -5,6 +5,7 @@ import { branches } from "@/data/branches";
 import { site } from "@/data/site";
 import { telefonInput } from "@/lib/telefon";
 import { useLeadSubmit } from "@/lib/lead";
+import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
  * "Ariza qoldirish" — the low-friction path for visitors who will not phone.
@@ -88,31 +89,31 @@ export function LeadForm({
   const t = TEXT[lang];
 
   return (
-    <section id="ariza" aria-labelledby="lead-title" className="bg-ground py-12 sm:py-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          <div>
-            <p className="kicker">{t.kicker}</p>
-            <h2 id="lead-title" className="display mt-3 text-4xl sm:text-5xl">
-              {t.title}
+    <section id="ariza" aria-labelledby="lead-title" className="lead on-purple text-white">
+      <div className="lead-bg" aria-hidden="true">
+        <span className="lead-orb lead-orb-1" />
+        <span className="lead-orb lead-orb-2" />
+      </div>
+      <div className="wrap relative">
+        <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <div data-m className="sh sh-dark">
+            <p className="eyebrow">{t.kicker}</p>
+            <h2 id="lead-title" className="sh-title">
+              <SplitWords text={t.title} />
             </h2>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-2">{lead ?? t.lead}</p>
-            <p className="mt-6 text-sm text-ink-3">
-              {t.orCall}{" "}
-              <a
-                href={`tel:${site.phone}`}
-                className="font-semibold text-purple underline-offset-4 hover:underline"
-              >
-                {site.phoneDisplay}
-              </a>
-            </p>
+            <p className="sh-lead">{lead ?? t.lead}</p>
+            <p className="lead-or">{t.orCall}</p>
+            <a href={`tel:${site.phone}`} className="lead-phone numeral">
+              {site.phoneDisplay}
+            </a>
           </div>
 
           <form
             action="/api/lead.php"
             method="post"
             onSubmit={onSubmit}
-            className="card p-7 sm:p-9"
+            data-m="up"
+            className="lead-card p-7 text-ink sm:p-9"
           >
             {/* Honeypot — hidden from people, irresistible to bots. */}
             <div aria-hidden="true" className="pointer-events-none absolute left-[-9999px] top-0 h-0 w-0 overflow-hidden">
@@ -137,7 +138,7 @@ export function LeadForm({
                   maxLength={80}
                   autoComplete="name"
                   /* ym-disable-keys: Webvisor yozilgan matnni Yandex'ga yubormaydi. */
-                  className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
+                  className="field ym-disable-keys mt-2"
                   placeholder={t.namePh}
                 />
               </div>
@@ -164,7 +165,7 @@ export function LeadForm({
                   pattern="[+]?[0-9()\-\s]{9,24}"
                   title={t.phoneTitle}
                   aria-describedby="lead-phone-help"
-                  className="ym-disable-keys mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
+                  className="field ym-disable-keys mt-2"
                   placeholder="+998 90 123 45 67"
                 />
                 <p id="lead-phone-help" className="mt-2 text-xs text-ink-3">
@@ -180,7 +181,7 @@ export function LeadForm({
                   id="lead-branch"
                   name="branch"
                   defaultValue={branchId ?? ""}
-                  className="mt-2 h-12 w-full rounded-xl border border-line bg-ground px-4 text-ink outline-none transition-colors focus:border-purple"
+                  className="field mt-2"
                 >
                   <option value="">{t.any}</option>
                   {branches.map((b) => (
@@ -206,7 +207,7 @@ export function LeadForm({
                   name="note"
                   rows={3}
                   maxLength={500}
-                  className="ym-disable-keys mt-2 w-full rounded-xl border border-line bg-ground p-4 text-ink outline-none transition-colors focus:border-purple"
+                  className="field field-area ym-disable-keys mt-2"
                   placeholder={t.notePh}
                 />
               </div>
@@ -219,7 +220,7 @@ export function LeadForm({
               <div className="sm:col-span-2">
                 <label
                   htmlFor="lead-special"
-                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-ground p-4"
+                  className="lead-check flex cursor-pointer items-start gap-3 p-4"
                 >
                   <input
                     id="lead-special"
@@ -241,7 +242,7 @@ export function LeadForm({
               <button
                 type="submit"
                 disabled={status.kind === "sending"}
-                className="btn btn-primary disabled:opacity-60"
+                className="btn btn-primary btn-glow-p disabled:opacity-60"
               >
                 {status.kind === "sending" ? t.sending : t.submit}
               </button>

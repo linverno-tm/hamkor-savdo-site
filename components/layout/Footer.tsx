@@ -6,7 +6,7 @@ import { content } from "@/lib/content";
 import { Logo } from "@/components/ui/Logo";
 
 const linkClass = "text-white/70 transition-colors hover:text-white";
-const headClass = "text-xs font-semibold uppercase tracking-[0.18em] text-yellow";
+const headClass = "text-sm font-semibold text-yellow";
 
 /** Ijtimoiy tarmoq belgilari — oddiy SVG, tashqi kutubxonasiz. */
 function SocialIcon({ name }: { name: "instagram" | "telegram" }) {
@@ -27,7 +27,8 @@ function SocialIcon({ name }: { name: "instagram" | "telegram" }) {
 
 /**
  * To'q binafsha footer: tepada "savolingiz bormi" qatori katta telefon bilan,
- * ostida katalog, kompaniya, filiallar (manzil va ish vaqti bilan) va aloqa.
+ * ostida katalog, kompaniya, filiallar (manzil va ish vaqti bilan) va aloqa,
+ * eng pastda butun kenglikdagi logotip (app/home-sections.css > .ftr-giant).
  */
 export function Footer() {
   const socials = [
@@ -37,20 +38,16 @@ export function Footer() {
 
   return (
     <footer className="site-footer relative overflow-hidden text-white">
-      <Logo
-        variant="mark"
-        className="pointer-events-none absolute -right-16 top-10 h-96 w-auto text-white/[0.03]"
-      />
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         {/* Savol qatori */}
         <div className="flex flex-col items-start justify-between gap-6 border-b border-white/10 py-12 md:flex-row md:items-center">
           <div>
-            <p className="display text-3xl sm:text-4xl">Savolingiz bormi?</p>
+            <p className="ftr-ask">Savolingiz bormi?</p>
             <p className="mt-2 text-white/70">Qo&apos;ng&apos;iroq qiling — mutaxassisimiz hammasini tushuntiradi.</p>
           </div>
           <a
             href={`tel:${site.phone}`}
-            className="numeral inline-flex items-center gap-3 rounded-[16px] bg-yellow px-6 py-4 text-3xl tracking-[0.04em] text-ink transition-transform hover:-translate-y-0.5 sm:text-4xl"
+            className="ftr-phone numeral"
           >
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
@@ -131,6 +128,11 @@ export function Footer() {
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Katta logotip — sahifaning "imzosi", pastdan ko'tarilib chiqadi. */}
+        <div className="ftr-giant" aria-hidden="true">
+          <Logo className="ftr-giant-logo" />
         </div>
 
         <div className="flex flex-col gap-3 border-t border-white/10 py-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">

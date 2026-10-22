@@ -31,7 +31,7 @@ export function HeroLead() {
       method="post"
       onSubmit={onSubmit}
       aria-labelledby="hero-lead-title"
-      className="on-purple relative rounded-[24px] bg-purple p-6 text-white shadow-[0_30px_60px_-30px_rgba(47,24,72,0.6)] sm:p-8"
+      className="on-purple hero-form relative p-6 text-white sm:p-8"
     >
       <div aria-hidden="true" className="pointer-events-none absolute left-[-9999px] top-0 h-0 w-0 overflow-hidden">
         <label htmlFor="hero-website">Saytingiz</label>
@@ -40,7 +40,7 @@ export function HeroLead() {
       <input type="hidden" name="page" value="/" />
       <input type="hidden" name="src" defaultValue="" />
 
-      <p id="hero-lead-title" className="display text-2xl leading-tight sm:text-[1.75rem]">
+      <p id="hero-lead-title" className="hero-form-title">
         Ariza qoldiring
       </p>
       <p className="mt-2 text-sm leading-relaxed text-on-purple-2">
@@ -61,7 +61,7 @@ export function HeroLead() {
             minLength={2}
             maxLength={80}
             autoComplete="name"
-            className="ym-disable-keys mt-1.5 h-12 w-full rounded-[12px] border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors placeholder:text-on-purple-2 focus:border-yellow"
+            className="hero-field ym-disable-keys mt-1.5"
             placeholder="Anvar"
           />
         </div>
@@ -81,7 +81,7 @@ export function HeroLead() {
             autoComplete="tel"
             pattern="[+]?[0-9()\-\s]{9,24}"
             title="Telefon raqamini kiriting, masalan: +998 90 123 45 67"
-            className="ym-disable-keys mt-1.5 h-12 w-full rounded-[12px] border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors placeholder:text-on-purple-2 focus:border-yellow"
+            className="hero-field ym-disable-keys mt-1.5"
             placeholder="+998 90 123 45 67"
           />
         </div>
@@ -94,7 +94,7 @@ export function HeroLead() {
             id="hero-branch"
             name="branch"
             defaultValue=""
-            className="mt-1.5 h-12 w-full rounded-[12px] border border-white/25 bg-white/10 px-4 text-white outline-none transition-colors focus:border-yellow"
+            className="hero-field mt-1.5"
           >
             {/* Ro'yxatdagi matn oq fonli ochiluvchi oynada ko'rinadi, shuning
                 uchun rangi ataylab to'q — merosga o'tgan oq rang u yerda
@@ -114,7 +114,7 @@ export function HeroLead() {
       <button
         type="submit"
         disabled={status.kind === "sending"}
-        className="btn btn-yellow btn-lift mt-5 w-full disabled:opacity-60"
+        className="btn btn-yellow btn-glow mt-5 w-full disabled:opacity-60"
       >
         {status.kind === "sending" ? "Yuborilmoqda…" : "Arizani yuborish"}
       </button>

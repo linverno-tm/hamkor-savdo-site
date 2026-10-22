@@ -5,6 +5,7 @@ import { SITE_URL, absolute } from "@/lib/seo";
 import { Reveal } from "@/components/ui/Reveal";
 import { MetrikaPageview } from "@/components/ui/MetrikaPageview";
 import { YM_ID } from "@/lib/metrika";
+import { MOTION_SCRIPT } from "@/lib/motion";
 import "./globals.css";
 
 /**
@@ -194,6 +195,7 @@ export default function RootLayout({
         <script data-keep dangerouslySetInnerHTML={{ __html: LANG_DETECT_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: SOURCE_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: METRIKA_SCRIPT }} />
+        <script data-keep dangerouslySetInnerHTML={{ __html: MOTION_SCRIPT }} />
       </head>
       <body>
         <noscript>

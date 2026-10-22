@@ -1,6 +1,8 @@
 import { site } from "@/data/site";
 import { branches } from "@/data/branches";
-import { content, Rich } from "@/lib/content";
+import { content } from "@/lib/content";
+import { ScrubText } from "@/components/ui/ScrubText";
+import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
  * Filiallarning tashqi ko'rinishi — "tarmoq" so'zini ko'rsatib beradi (egasi
@@ -18,67 +20,59 @@ const ABOUT_PHOTOS = [
 });
 
 /**
- * Scene 02 — "Ular nima qiladi?"
+ * "Ular nima qiladi?"
  *
- * Matn admin paneldan (`content.json > texts.aboutParagraphs`). Kompaniya
- * tarixi (`companyStory`) egasi yozmaguncha bo'sh va ko'rinmaydi.
+ * Kompyuterda: chapda sarlavha va filial suratlari (o'zi almashinadi,
+ * kirishda "darcha" bo'lib ochiladi) joyida turadi; o'ngda matn —
+ * aylantirilgan sari so'zma-so'z yorishadi (ScrubText). Matn admin
+ * paneldan (`content.json > texts.aboutParagraphs`). Kompaniya tarixi
+ * (`companyStory`) egasi yozmaguncha bo'sh va ko'rinmaydi.
  */
 export function About() {
   return (
-    <section
-      id="biz-haqimizda"
-      aria-labelledby="about-title"
-      className="relative bg-ground py-12 sm:py-24"
-    >
-      <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
-        <div data-reveal>
-          <p className="kicker">Biz haqimizda</p>
-          <h2 id="about-title" className="display mt-3 text-4xl sm:text-5xl">
-            Bizga xaridor emas, <br className="hidden sm:block" />
-            <span className="text-purple">HAMKOR</span> bo&apos;ling!
-          </h2>
-
-          {/* Sarlavha ostidagi bo'sh ustunni to'ldiradi va matndagi "tarmoq"
-              so'zini ko'rsatib beradi. To'rtta haqiqiy surat, ikki filialdan,
-              uch yo'nalishning barchasini ko'rsatib, navbat bilan almashinadi —
-              hech qanday JavaScript yoki animatsiya kutubxonasiz, faqat CSS
-              (marquee va media-slot bilan bir xil yondashuv). */}
-          <div className="photo-cycle mt-8 aspect-[4/3] w-full overflow-hidden rounded-[28px]">
-            {ABOUT_PHOTOS.map((p) => (
-              <figure key={p.src}>
-                <img
-                  src={`${p.src}-960.webp`}
-                  srcSet={`${p.src}-480.webp 480w, ${p.src}-960.webp 960w`}
-                  sizes="(max-width: 1024px) 100vw, 560px"
-                  width={960}
-                  height={720}
-                  alt={p.alt}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <figcaption className="absolute inset-x-0 bottom-0 p-5 pt-14 text-sm font-semibold text-white [background:linear-gradient(to_top,rgba(26,17,48,0.8),transparent)] sm:text-base">
-                  {p.label}
-                </figcaption>
-              </figure>
-            ))}
+    <section id="biz-haqimizda" aria-labelledby="about-title" className="sec about">
+      <div className="wrap about-grid">
+        <div className="about-side">
+          <div className="about-sticky">
+            <div data-m>
+              <p className="eyebrow">Biz haqimizda</p>
+              <h2 id="about-title" className="sh-title">
+                <SplitWords text="Bizga xaridor emas, **HAMKOR** bo'ling!" />
+              </h2>
+            </div>
+            <div data-m="wipe" className="photo-cycle about-photo">
+              {ABOUT_PHOTOS.map((p) => (
+                <figure key={p.src}>
+                  <img
+                    src={`${p.src}-960.webp`}
+                    srcSet={`${p.src}-480.webp 480w, ${p.src}-960.webp 960w`}
+                    sizes="(max-width: 1024px) 100vw, 560px"
+                    width={960}
+                    height={720}
+                    alt={p.alt}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption className="about-cap">{p.label}</figcaption>
+                </figure>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div data-reveal className="space-y-6 text-lg leading-relaxed text-ink-2">
+        <div className="about-text">
           {content.texts.aboutParagraphs.map((p, i) => (
-            <p key={i}>
-              <Rich text={p} />
+            <p key={i} className="scrub">
+              <ScrubText text={p} />
             </p>
           ))}
-
           {site.unpublished.companyStory ? (
-            <p>
-              <Rich text={site.unpublished.companyStory} />
+            <p className="scrub">
+              <ScrubText text={site.unpublished.companyStory} />
             </p>
           ) : null}
-
-          <div className="flex flex-wrap gap-3 pt-2">
+          <div data-m="up" className="flex flex-wrap gap-3 pt-4">
             <a href="#yonalishlar" className="btn btn-primary">
               Yo&apos;nalishlarni ko&apos;rish
             </a>

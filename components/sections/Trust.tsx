@@ -1,67 +1,85 @@
 import { site } from "@/data/site";
 import { branches } from "@/data/branches";
+import { CountUp } from "@/components/ui/CountUp";
+import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
  * "Nega Hamkor?" — hero'dan keyingi ishonch qatori.
  *
  * To'rtta raqam, hammasi tasdiqlangan: mahsulot soni va muddat admin
  * sozlamasidan, filial soni ro'yxatdan sanaladi, baho — Yandex Xaritadagi
- * haqiqiy karta (data/site.ts > reviews). O'ylab topilgan "1000+ mamnun
- * mijoz" o'rniga shu: uni har kim o'zi tekshira oladi.
+ * haqiqiy karta (data/site.ts > reviews).
+ *
+ * Ko'rinish: turli o'lchamdagi to'rt plitka (bento). Eng kattasi —
+ * mahsulot soni, binafsha; muddat — sariq. Raqamlar ekranga kirganda
+ * noldan sanaladi (`data-count`, lib/motion.ts), server esa yakuniy
+ * qiymatni yozadi.
  */
 export function Trust() {
   const { reviews } = site;
   const rating = reviews.rating.toFixed(1).replace(".", ",");
   const cities = Array.from(new Set(branches.map((b) => b.city))).join(", ");
-  const stats = [
-    { value: site.facts.productCount, label: "Mahsulot", note: "Texnika, tilla, mebel va skuterlar" },
-    { value: `${site.facts.installmentMonthsMax} oy`, label: "Muddatli to'lov", note: "Pasport va plastik karta bilan" },
-    { value: `${site.facts.branchCount} ta`, label: "Filial", note: cities },
-  ];
 
   return (
-    <section id="nega-hamkor" aria-labelledby="trust-title" className="bg-ground-2 py-12 sm:py-20">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div data-reveal className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <section id="nega-hamkor" aria-labelledby="trust-title" className="sec trust">
+      <div className="wrap">
+        <div data-m className="trust-head">
           <div>
-            <p className="kicker">Ishonch</p>
-            <h2 id="trust-title" className="display mt-3 text-4xl sm:text-5xl">
-              Nega Hamkor?
+            <p className="eyebrow">Ishonch</p>
+            <h2 id="trust-title" className="sh-title">
+              <SplitWords text="Nega Hamkor?" />
             </h2>
           </div>
-          <p className="max-w-md leading-relaxed text-ink-2">
+          <p className="trust-intro">
             Andijon viloyatidagi do&apos;konlar tarmog&apos;i — hammasi bir joyda, qulay shartlarda.
           </p>
         </div>
 
-        <ul data-reveal className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-          {stats.map((s) => (
-            <li key={s.label} className="card p-6 sm:p-7">
-              <p className="numeral text-5xl leading-none text-purple sm:text-6xl">{s.value}</p>
-              <p className="mt-4 font-semibold text-ink">{s.label}</p>
-              <p className="mt-1 text-sm text-ink-3">{s.note}</p>
-            </li>
-          ))}
-          <li>
-            <a
-              href={reviews.readUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="card card-hover group block h-full p-6 sm:p-7"
-            >
-              <p className="numeral flex items-baseline gap-2 text-5xl leading-none text-purple sm:text-6xl">
+        <ul data-m="" data-m-stagger className="bento">
+          <li className="tile tile-purple tile-big">
+            <p className="tile-num">
+              <CountUp value={site.facts.productCount} />
+            </p>
+            <div>
+              <p className="tile-label">Mahsulot</p>
+              <p className="tile-note">Texnika, tilla, mebel va skuterlar</p>
+            </div>
+          </li>
+          <li className="tile tile-yellow">
+            <p className="tile-num">
+              <CountUp value={`${site.facts.installmentMonthsMax} oy`} />
+            </p>
+            <div>
+              <p className="tile-label">Muddatli to&apos;lov</p>
+              <p className="tile-note">Pasport va plastik karta bilan</p>
+            </div>
+          </li>
+          <li className="tile">
+            <p className="tile-num">
+              <CountUp value={`${site.facts.branchCount} ta`} />
+            </p>
+            <div>
+              <p className="tile-label">Filial</p>
+              <p className="tile-note">{cities}</p>
+            </div>
+          </li>
+          <li className="tile-link-wrap">
+            <a href={reviews.readUrl} target="_blank" rel="noopener noreferrer" className="tile tile-link group">
+              <p className="tile-num">
                 {rating}
-                <span className="text-3xl text-yellow" aria-hidden="true">
+                <span className="tile-star" aria-hidden="true">
                   ★
                 </span>
               </p>
-              <p className="mt-4 font-semibold text-ink">Mijozlar bahosi</p>
-              <p className="mt-1 text-sm text-ink-3">
-                {reviews.source}da {reviews.count} ta baho{" "}
-                <span className="nudge text-purple" aria-hidden="true">
-                  &rarr;
-                </span>
-              </p>
+              <div>
+                <p className="tile-label">Mijozlar bahosi</p>
+                <p className="tile-note">
+                  {reviews.source}da {reviews.count} ta baho{" "}
+                  <span className="nudge" aria-hidden="true">
+                    &rarr;
+                  </span>
+                </p>
+              </div>
             </a>
           </li>
         </ul>

@@ -46,38 +46,41 @@ const CATEGORIES = [
   },
 ];
 
-/** Hero ichidagi to'liq kenglikdagi qator (`id="yonalishlar"` — hero CTA shu yerga olib boradi). */
+/**
+ * Hero ostidagi to'rtta yo'nalish (`id="yonalishlar"` — hero CTA shu yerga).
+ *
+ * Kompyuterda: kartalar yelpig'ich bo'lib binafsha sahna chetidan
+ * chiqadi va sahifa aylantirilganda tekislanadi (app/home.css > .cats,
+ * `animation-timeline: view()`). Telefonda: gorizontal suriladigan qator,
+ * keyingi karta chetdan ko'rinib turadi — "yana bor" ishorasi.
+ *
+ * Kursor kelganda: surat sekin kattalashadi, matn ko'tariladi, sariq o'q
+ * aylanib chiqadi.
+ */
 export function CategoryCards() {
   return (
     <nav id="yonalishlar" aria-label="Mahsulot kategoriyalari" className="scroll-mt-24">
-      <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        {CATEGORIES.map((c) => (
-          <li key={c.href}>
-            <Link
-              href={c.href}
-              className="cat-card group relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-ground-2 lg:aspect-[5/6]"
-            >
+      <ul className="cats">
+        {CATEGORIES.map((c, i) => (
+          <li key={c.href} className="cats-item" style={{ ["--i" as string]: i }}>
+            <Link href={c.href} className="cat group">
               <img
                 src={`/yonalishlar/${c.photo}-900.webp`}
                 srcSet={`/yonalishlar/${c.photo}-480.webp 480w, /yonalishlar/${c.photo}-900.webp 900w`}
-                sizes="(max-width: 1024px) 50vw, 300px"
+                sizes="(max-width: 1024px) 70vw, 300px"
                 width={900}
                 height={675}
                 alt={c.alt}
                 decoding="async"
-                className={`cat-card-img h-full w-full object-cover ${c.pos}`}
+                className={`cat-img ${c.pos}`}
               />
-              <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 pt-20 text-white [background:linear-gradient(to_top,rgba(26,17,48,0.92),rgba(26,17,48,0.45)_55%,transparent)] sm:p-6 sm:pt-28">
-                <span>
-                  <span className="display block text-xl sm:text-3xl">{c.title}</span>
-                  <span className="mt-1.5 hidden text-sm leading-snug text-white/80 sm:block">{c.text}</span>
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="cat-card-arrow hidden h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-yellow text-lg text-ink sm:flex"
-                >
-                  &rarr;
-                </span>
+              <span className="cat-shade" aria-hidden="true" />
+              <span className="cat-body">
+                <span className="cat-title">{c.title}</span>
+                <span className="cat-text">{c.text}</span>
+              </span>
+              <span aria-hidden="true" className="cat-arrow">
+                &rarr;
               </span>
             </Link>
           </li>

@@ -1,0 +1,203 @@
+/* ==================================================================
+   Umumiy qismlar: bo'lim boshi, ekranga kirish harakatlari, tugmalar.
+   ================================================================== */
+
+/* ---------------- ekranga kirish (`data-m`, lib/motion.ts) ---------------- */
+
+/* Odatiy: pastdan ko'tarilib, ko'rinib chiqadi. */
+@media (prefers-reduced-motion: no-preference) {
+  .m-js [data-m="up"]:not(.m-in),
+  .m-js [data-m-stagger]:not(.m-in) > * {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  .m-js [data-m="up"],
+  .m-js [data-m-stagger] > * {
+    transition:
+      opacity 800ms var(--ease),
+      transform 1000ms var(--ease);
+    transition-delay: calc(var(--i, 0) * 110ms + var(--d, 0ms));
+  }
+  .m-js [data-m-stagger] > :nth-child(1) {
+    --i: 0;
+  }
+  .m-js [data-m-stagger] > :nth-child(2) {
+    --i: 1;
+  }
+  .m-js [data-m-stagger] > :nth-child(3) {
+    --i: 2;
+  }
+  .m-js [data-m-stagger] > :nth-child(4) {
+    --i: 3;
+  }
+  .m-js [data-m-stagger] > :nth-child(5) {
+    --i: 4;
+  }
+  .m-js [data-m-stagger] > :nth-child(6) {
+    --i: 5;
+  }
+  .m-js [data-m-stagger] > :nth-child(7) {
+    --i: 6;
+  }
+  .m-js [data-m-stagger] > :nth-child(8) {
+    --i: 7;
+  }
+  .m-js [data-m-stagger] > :nth-child(9) {
+    --i: 8;
+  }
+  .m-js [data-m-stagger] > :nth-child(10) {
+    --i: 9;
+  }
+  .m-js [data-m-stagger] > :nth-child(11) {
+    --i: 10;
+  }
+  .m-js [data-m-stagger] > :nth-child(12) {
+    --i: 11;
+  }
+  /* Kattalashib chiqadi. */
+  .m-js [data-m="zoom"]:not(.m-in) {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  .m-js [data-m="zoom"] {
+    transition:
+      opacity 900ms var(--ease),
+      transform 1100ms var(--ease);
+  }
+  /* "Darcha" ochilgandek (surat). */
+  .m-js [data-m="wipe"]:not(.m-in) {
+    clip-path: inset(18% 12% 18% 12% round 40px);
+    transform: scale(1.04);
+  }
+  .m-js [data-m="wipe"] {
+    transition:
+      clip-path 1300ms var(--ease),
+      transform 1500ms var(--ease);
+  }
+}
+
+/* ---------------- sarlavha so'zlari ---------------- */
+
+.sw {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+.sw > span {
+  display: inline-block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .m-js [data-m] .sw > span {
+    transform: translateY(105%);
+    transition: transform 900ms var(--ease);
+    transition-delay: calc(120ms + var(--wi, 0) * 55ms);
+  }
+  .m-js [data-m].m-in .sw > span {
+    transform: none;
+  }
+}
+.sw-accent {
+  color: var(--purple);
+}
+
+/* ---------------- bo'lim boshi ---------------- */
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--purple);
+}
+.eyebrow::before {
+  content: "";
+  width: 2rem;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--yellow);
+  transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .m-js [data-m] .eyebrow::before {
+    transform: scaleX(0);
+    transition: transform 800ms var(--ease) 100ms;
+  }
+  .m-js [data-m].m-in .eyebrow::before {
+    transform: none;
+  }
+}
+.sh-title {
+  margin-top: 0.9rem;
+  max-width: 20ch;
+  font-size: clamp(2.1rem, 4.6vw, 3.9rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+.sh-lead {
+  margin-top: 1.4rem;
+  max-width: 40rem;
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .m-js [data-m]:not(.m-in) .sh-lead {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  .m-js [data-m] .sh-lead {
+    transition:
+      opacity 800ms var(--ease) 450ms,
+      transform 900ms var(--ease) 450ms;
+  }
+}
+.sh-center {
+  text-align: center;
+}
+.sh-center .sh-title,
+.sh-center .sh-lead {
+  margin-inline: auto;
+}
+.sh-dark .eyebrow {
+  color: var(--yellow);
+}
+.sh-dark .sh-title {
+  color: #fff;
+}
+.sh-dark .sh-lead {
+  color: var(--on-purple-2);
+}
+[data-theme="dark"] .eyebrow,
+[data-theme="dark"] .sw-accent {
+  color: var(--purple-ink);
+}
+[data-theme="dark"] .sh-dark .eyebrow {
+  color: var(--yellow);
+}
+
+/* ---------------- bo'lim oralig'i ---------------- */
+
+.sec {
+  padding-block: clamp(4.5rem, 10vw, 8.5rem);
+}
+.wrap {
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: 1.25rem;
+}
+@media (min-width: 640px) {
+  .wrap {
+    padding-inline: 2rem;
+  }
+}
+
+/* Bosilganda tugma biroz ichiga botadi. */
+.btn:active,
+.press:active {
+  transform: scale(0.97);
+}

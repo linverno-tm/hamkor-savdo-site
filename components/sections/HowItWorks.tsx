@@ -1,21 +1,23 @@
 import { site } from "@/data/site";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
-/** "3 qadamda xarid qiling" — minimal belgi va bir jumladan. */
+/**
+ * "3 qadamda xarid qiling" — haqiqiy ketma-ketlik, shuning uchun raqamli.
+ *
+ * Qadamlar orasidagi yo'l aylantirishga ergashib chiziladi (app/home.css >
+ * .steps-track, `animation-timeline: view()`), har bir qadam belgisi
+ * o'z navbatida "yonadi". Brauzer qo'llamasa — yo'l to'liq chizilgan.
+ */
 const STEPS = [
   {
     title: "Mahsulotni tanlang",
     text: "Filialda ko'rib tanlang yoki saytdagi kategoriyalardan kerakligini toping.",
-    icon: (
-      <path d="M4 7h16l-1.5 10.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5L4 7Zm4 0a4 4 0 0 1 8 0" />
-    ),
+    icon: <path d="M4 7h16l-1.5 10.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5L4 7Zm4 0a4 4 0 0 1 8 0" />,
   },
   {
     title: "Ariza qoldiring",
     text: "Ism va raqamingizni qoldiring yoki qo'ng'iroq qiling — o'zimiz bog'lanamiz.",
-    icon: (
-      <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />
-    ),
+    icon: <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />,
   },
   {
     title: "Xaridingizni rasmiylashtiring",
@@ -26,37 +28,31 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="qanday-ishlaydi" aria-labelledby="how-title" className="bg-ground-2 py-12 sm:py-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+    <section id="qanday-ishlaydi" aria-labelledby="how-title" className="sec how">
+      <div className="wrap">
         <SectionHeading id="how-title" align="center" kicker="Oson va tez" title="3 qadamda xarid qiling" />
-        <ol data-reveal className="mt-12 grid gap-5 md:grid-cols-3">
-          {STEPS.map((s, i) => (
-            <li key={s.title} className="card relative p-7">
-              <div className="flex items-center justify-between">
-                <span className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-purple-50 text-purple">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
+
+        <div className="steps">
+          <span className="steps-track" aria-hidden="true">
+            <span className="steps-fill" />
+          </span>
+          <ol data-m="" data-m-stagger className="steps-list">
+            {STEPS.map((s, i) => (
+              <li key={s.title} className="step">
+                <span className="step-dot" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     {s.icon}
                   </svg>
                 </span>
-                <span className="numeral text-4xl text-purple-100" aria-hidden="true">
+                <span className="step-n numeral" aria-hidden="true">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-              </div>
-              <h3 className="display mt-6 text-xl">{s.title}</h3>
-              <p className="mt-2 leading-relaxed text-ink-2">{s.text}</p>
-            </li>
-          ))}
-        </ol>
+                <h3 className="step-title">{s.title}</h3>
+                <p className="step-text">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );

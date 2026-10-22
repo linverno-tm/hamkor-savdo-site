@@ -1,0 +1,373 @@
+/* ==================================================================
+   HAMKOR SAVDO — 2026-10 qayta yozilgan ko'rinish.
+
+   Brend: binafsha #5a3089 (sahna), sariq #dfd01f (harakatga chaqiruv),
+   Outfit (TT Commons o'rnida) + Bebas Neue (raqamlar). Ranglar va
+   o'zgaruvchilar globals.css > :root da.
+
+   Harakat qoidalari:
+   - Kirish animatsiyalari faqat `.m-js` bo'lsa (lib/motion.ts) —
+     JavaScript'siz va "kamroq harakat" sozlamasida sahifa to'liq ko'rinadi.
+   - Aylantirishga bog'liq harakat `animation-timeline` bilan, faqat
+     brauzer qo'llasa (@supports). Qo'llamasa — tinch, oxirgi holat.
+   - Faqat transform/opacity/clip-path — kompozitorda chiziladi.
+   ================================================================== */
+
+/* ---------------- yuqori menyu ---------------- */
+
+.hdr {
+  padding: 0.75rem 0.75rem 0;
+  pointer-events: none;
+  transition: padding var(--dur-2) var(--ease);
+}
+.hdr-bar {
+  pointer-events: auto;
+  height: 4rem;
+  padding: 0 0.6rem 0 1.25rem;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: color-mix(in srgb, var(--ground) 86%, transparent);
+  backdrop-filter: saturate(1.6) blur(18px);
+  -webkit-backdrop-filter: saturate(1.6) blur(18px);
+  box-shadow: 0 10px 40px -24px rgba(47, 24, 72, 0.45);
+  transition:
+    height var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease),
+    background-color var(--dur-2) var(--ease);
+}
+.hdr[data-scrolled] {
+  padding-top: 0.5rem;
+}
+.hdr[data-scrolled] .hdr-bar {
+  height: 3.6rem;
+  background: color-mix(in srgb, var(--ground) 94%, transparent);
+  box-shadow: 0 18px 50px -24px rgba(47, 24, 72, 0.55);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .m-js .hdr-bar {
+    animation: hdr-in 900ms var(--ease) 100ms both;
+  }
+}
+@keyframes hdr-in {
+  from {
+    opacity: 0;
+    transform: translateY(-120%);
+  }
+}
+
+.nav-link {
+  position: relative;
+  white-space: nowrap;
+  border-radius: 12px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: color var(--dur-1) var(--ease);
+}
+/* Ostidan sariq chiziq o'sib chiqadi. */
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: 0.3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--yellow);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease);
+}
+.nav-link:hover,
+.nav-drop:focus-within > .nav-link {
+  color: var(--ink);
+}
+.nav-link:hover::after,
+.nav-drop:hover > .nav-link::after,
+.nav-drop:focus-within > .nav-link::after {
+  transform: none;
+}
+.nav-drop-panel {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px) scale(0.97);
+  transform-origin: top center;
+  transition:
+    opacity var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+.nav-drop:hover > .nav-drop-panel,
+.nav-drop:focus-within > .nav-drop-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+.nav-drop-list {
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--ground);
+  box-shadow: 0 30px 60px -30px rgba(47, 24, 72, 0.5);
+}
+.nav-drop-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition:
+    background-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease);
+}
+.nav-drop-item span {
+  color: var(--purple);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity var(--dur-1) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+.nav-drop-item:hover,
+.nav-drop-item:focus-visible {
+  background: var(--ground-2);
+  color: var(--ink);
+}
+.nav-drop-item:hover span,
+.nav-drop-item:focus-visible span {
+  opacity: 1;
+  transform: none;
+}
+
+.hdr-chip {
+  white-space: nowrap;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition:
+    border-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease);
+}
+.hdr-chip:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+
+.hdr-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.75rem;
+  padding: 0 1.1rem 0 0.4rem;
+  border-radius: 14px;
+  background: var(--purple);
+  color: #fff;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--dur-1) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+.hdr-call:hover {
+  background: var(--purple-dark);
+  transform: translateY(-1px);
+}
+.hdr-call-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  background: var(--yellow);
+  color: #1a1130;
+}
+/* Telefon belgisi "jiringlaydi" — har 6 soniyada bir marta. */
+@media (prefers-reduced-motion: no-preference) {
+  .hdr-call-icon svg {
+    animation: ring 6s ease-in-out 2s infinite;
+  }
+  .hdr-call-icon::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    animation: ring-wave 6s ease-out 2s infinite;
+  }
+}
+@keyframes ring {
+  0%,
+  12%,
+  100% {
+    transform: rotate(0);
+  }
+  2%,
+  6%,
+  10% {
+    transform: rotate(-14deg);
+  }
+  4%,
+  8% {
+    transform: rotate(14deg);
+  }
+}
+@keyframes ring-wave {
+  0% {
+    box-shadow: 0 0 0 0 rgba(223, 208, 31, 0.6);
+  }
+  15%,
+  100% {
+    box-shadow: 0 0 0 12px rgba(223, 208, 31, 0);
+  }
+}
+
+/* Telefon menyusi tugmasi: ikki chiziq -> X */
+.hdr-burger {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: var(--purple);
+  color: #fff;
+}
+.hdr-burger-lines {
+  position: relative;
+  width: 1.1rem;
+  height: 0.7rem;
+}
+.hdr-burger-lines span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition:
+    transform var(--dur-2) var(--ease),
+    top var(--dur-2) var(--ease);
+}
+.hdr-burger-lines span:first-child {
+  top: 0;
+}
+.hdr-burger-lines span:last-child {
+  top: calc(100% - 2px);
+}
+.mobile-menu[open] .hdr-burger-lines span {
+  top: calc(50% - 1px);
+}
+.mobile-menu[open] .hdr-burger-lines span:first-child {
+  transform: rotate(45deg);
+}
+.mobile-menu[open] .hdr-burger-lines span:last-child {
+  transform: rotate(-45deg);
+}
+.mobile-menu[open] > summary.hdr-burger {
+  background: var(--yellow);
+  color: #1a1130;
+}
+
+.mobile-menu-panel {
+  background:
+    radial-gradient(80% 50% at 100% 0%, rgba(154, 114, 207, 0.45), transparent 60%),
+    linear-gradient(170deg, #5a3089, #2f1848);
+}
+.mm-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--on-purple-2);
+}
+.mm-cat {
+  display: flex;
+  min-height: 3.25rem;
+  align-items: center;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0 1rem;
+  font-weight: 600;
+  transition: background-color var(--dur-1) var(--ease);
+}
+.mm-cat:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.mm-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 1rem 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  transition: color var(--dur-1) var(--ease);
+}
+.mm-link:hover {
+  color: var(--yellow);
+}
+/* Menyu ochilganda bandlar navbat bilan ko'tariladi. */
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-menu[open] .mobile-menu-panel {
+    animation: mm-fade 360ms var(--ease) both;
+  }
+  .mobile-menu[open] .mm-cats > li,
+  .mobile-menu[open] .mm-links > li,
+  .mobile-menu[open] .mm-actions > * {
+    animation: mm-rise 560ms var(--ease) both;
+  }
+  .mobile-menu[open] .mm-cats > li:nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .mobile-menu[open] .mm-cats > li:nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .mobile-menu[open] .mm-cats > li:nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .mobile-menu[open] .mm-links > li:nth-child(1) {
+    animation-delay: 160ms;
+  }
+  .mobile-menu[open] .mm-links > li:nth-child(2) {
+    animation-delay: 200ms;
+  }
+  .mobile-menu[open] .mm-links > li:nth-child(3) {
+    animation-delay: 240ms;
+  }
+  .mobile-menu[open] .mm-links > li:nth-child(4) {
+    animation-delay: 280ms;
+  }
+  .mobile-menu[open] .mm-actions > * {
+    animation-delay: 320ms;
+  }
+}
+@keyframes mm-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes mm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+[data-theme="dark"] .hdr-bar {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 50px -24px rgba(0, 0, 0, 0.9);
+}
+[data-theme="dark"] .nav-link:hover,
+[data-theme="dark"] .nav-drop:focus-within > .nav-link {
+  color: #fff;
+}
+[data-theme="dark"] .nav-drop-item span {
+  color: var(--purple-ink);
+}

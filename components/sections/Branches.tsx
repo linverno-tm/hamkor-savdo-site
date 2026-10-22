@@ -10,6 +10,7 @@ import { BranchMap, type MapBranch } from "@/components/sections/BranchMap";
  * Ro'yxatdagi har bir manzil, telefon va havola oddiy matn va haqiqiy havola:
  * JavaScript'siz ham to'liq ishlaydi. "Xaritada" havolasi JS bo'lsa xaritani
  * shu filialga uchiradi (BranchMap), bo'lmasa tashqi xaritani ochadi.
+ * Tanlangan filial kartasi binafsha bo'ladi (`data-active`, BranchMap).
  *
  * Ish vaqti har bir filialning `hours` maydonida (data/branches.ts).
  */
@@ -28,8 +29,8 @@ export function Branches() {
   }));
 
   return (
-    <section id="filiallar" aria-labelledby="branches-title" className="scroll-mt-20 bg-ground py-12 sm:py-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+    <section id="filiallar" aria-labelledby="branches-title" className="sec branches scroll-mt-20">
+      <div className="wrap">
         <SectionHeading
           id="branches-title"
           kicker="Filiallar"
@@ -37,25 +38,22 @@ export function Branches() {
           lead={`${site.facts.branchCount} ta filial — ${cityList({ counts: false })}da. Boshqa viloyatdamisiz? Filialga kelish shart emas — telefon orqali tanlab, ${site.deliveryArea} yetkazib beramiz.`}
         />
 
-        <div data-reveal className="mt-10 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-6">
-          <ul className="grid gap-3">
+        <div className="branches-grid">
+          <ul data-m="" data-m-stagger className="branch-list">
             {branches.map((b) => {
               const phone = b.phone ?? site.phone;
               const phoneLabel = b.phoneDisplay ?? site.phoneDisplay;
               return (
-                <li
-                  key={b.id}
-                  data-branch-item={b.id}
-                  className="branch-item rounded-[18px] border border-line bg-ground p-5 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="display text-xl text-ink">{b.city}</h3>
-                      <p className="mt-0.5 text-sm font-medium text-purple">{b.landmark}</p>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-ground-2 px-3 py-1 text-xs font-semibold text-ink-2">
-                      {b.hours}
+                <li key={b.id} data-branch-item={b.id} className="branch-item">
+                  <div className="branch-top">
+                    <span className="branch-idx numeral" aria-hidden="true">
+                      {b.index}
                     </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="branch-city">{b.city}</h3>
+                      <p className="branch-land">{b.landmark}</p>
+                    </div>
+                    <span className="branch-hours">{b.hours}</span>
                   </div>
 
                   {b.closed ? (
@@ -65,10 +63,10 @@ export function Branches() {
                     </p>
                   ) : null}
 
-                  <p className="mt-3 text-sm leading-relaxed text-ink-2">{b.address}</p>
+                  <p className="branch-addr">{b.address}</p>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold">
-                    <a href={`tel:${phone}`} className="text-purple underline-offset-4 hover:underline">
+                  <div className="branch-actions">
+                    <a href={`tel:${phone}`} className="branch-call">
                       {phoneLabel}
                     </a>
                     <a
@@ -76,14 +74,14 @@ export function Branches() {
                       target="_blank"
                       rel="noopener noreferrer"
                       data-map-focus={b.id}
-                      className="text-ink-2 underline-offset-4 hover:text-purple hover:underline"
+                      className="branch-link"
                     >
                       Xaritada
                     </a>
                     <Link
                       href={`/filiallar/${b.id}`}
                       aria-label={`${b.city} — ${b.landmark} filiali haqida batafsil`}
-                      className="text-ink-2 underline-offset-4 hover:text-purple hover:underline"
+                      className="branch-link"
                     >
                       Batafsil &rarr;
                     </Link>
@@ -93,7 +91,7 @@ export function Branches() {
             })}
           </ul>
 
-          <div className="lg:sticky lg:top-24 lg:self-start">
+          <div data-m="zoom" className="branch-map lg:sticky lg:top-24 lg:self-start">
             <BranchMap branches={mapBranches} apiKey={site.yandexMapsKey} />
           </div>
         </div>
