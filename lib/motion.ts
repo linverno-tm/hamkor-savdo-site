@@ -42,7 +42,7 @@ function init(){
     if(el.hasAttribute('data-count'))count(el);
     el.querySelectorAll('[data-count]').forEach(count);
     io.unobserve(el);
-  });},{rootMargin:'0px 0px -6% 0px',threshold:0.12});
+  });},{rootMargin:'0px 0px -12% 0px',threshold:0});
   els.forEach(function(el){io.observe(el);});
   setTimeout(function(){d.querySelectorAll('[data-m]:not(.m-in)').forEach(function(el){
     var r=el.getBoundingClientRect();if(r.top<innerHeight)el.classList.add('m-in');});},4000);

@@ -6,6 +6,7 @@ import { absolute } from "@/lib/seo";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
+import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
  * Ruscha bosh sahifa. Rus tilida qidiradigan odam ("рассрочка Андижан",
@@ -58,18 +59,30 @@ export default function RuHome() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <RuHeader uzHref="/" />
       <main id="asosiy" tabIndex={-1}>
-        <section className="pt-28 sm:pt-36">
-          <div className="mx-auto max-w-7xl px-5 pb-16 sm:px-8">
-            <p className="kicker">Андижанская область · {branches.length} магазина</p>
-            <h1 className="display mt-3 max-w-4xl text-4xl sm:text-5xl lg:text-6xl">
-              Бытовая техника, мебель и золото в рассрочку
+        <section className="tp-hero on-purple text-white" data-spot>
+          <div className="hero-bg" aria-hidden="true">
+            <span className="hero-orb hero-orb-1" />
+            <span className="hero-orb hero-orb-2" />
+            <span className="hero-orb hero-orb-3" />
+            <span className="hero-spot" />
+            <span className="hero-grid" />
+          </div>
+          <div className="wrap relative">
+            <p className="hero-pill in-1">
+              <span className="hero-pill-dot" aria-hidden="true" />
+              Андижанская область · {branches.length} магазина
+            </p>
+            <h1 className="tp-title !max-w-[20ch]">
+              <span className="hero-line">
+                <span className="in-2">Бытовая техника, мебель и золото в рассрочку</span>
+              </span>
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-2 sm:text-xl">
+            <p className="hero-lead in-4 !max-w-[42rem]">
               Более {site.facts.productCount.replace("+", "")} товаров в одном магазине. Рассрочка до {M} месяцев — нужны
               только паспорт и пластиковая карта. Бесплатная доставка и установка по Андижанской области.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#ariza" className="btn btn-primary">
+            <div className="in-5 mt-9 flex flex-wrap gap-3">
+              <a href="#ariza" className="btn btn-yellow btn-glow">
                 Оставить заявку
               </a>
               <a href={`tel:${site.phone}`} className="btn btn-outline">
@@ -79,26 +92,32 @@ export default function RuHome() {
           </div>
         </section>
 
-        <section aria-labelledby="ru-dirs" className="bg-ground-2 py-12 sm:py-20">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="ru-dirs" className="display text-3xl sm:text-4xl">
-              Что можно купить в рассрочку
-            </h2>
-            <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <section aria-labelledby="ru-dirs" className="sec">
+          <div className="wrap">
+            <div data-m>
+              <h2 id="ru-dirs" className="sh-title">
+                <SplitWords text="Что можно купить в рассрочку" />
+              </h2>
+            </div>
+            <ul data-m="" data-m-stagger className="tp-others">
               {topics.map((t) => (
                 <li key={t.id}>
-                  <a href={`${t.ruPath}/`} className="card card-hover flex h-full flex-col overflow-hidden">
+                  <a href={`${t.ruPath}/`} className="tp-other !min-h-[20rem]">
                     {t.photo ? (
-                      <img src={t.photo.src} width={900} height={675} alt={t.photo.alt.ru} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
+                      <img src={t.photo.src} width={900} height={675} alt={t.photo.alt.ru} loading="lazy" decoding="async" className="tp-other-img" />
                     ) : (
-                      <span className="on-purple flex aspect-[4/3] w-full flex-col justify-center bg-purple p-6 text-white">
-                        <span className="numeral text-6xl text-yellow">{M}</span>
-                        <span className="display text-xl">месяцев</span>
+                      <span className="absolute left-6 top-5 flex flex-col">
+                        <span className="numeral text-7xl leading-none text-yellow">{M}</span>
+                        <span className="text-xl font-extrabold">месяцев</span>
                       </span>
                     )}
-                    <span className="p-6">
-                      <span className="numeral block text-2xl text-purple">{t.ru.kicker}</span>
-                      <span className="mt-2 block text-sm leading-relaxed text-ink-2">{t.ru.lead}</span>
+                    <span className="tp-other-shade" aria-hidden="true" />
+                    <span className="tp-other-body">
+                      <span className="tp-other-kicker">{t.ru.kicker}</span>
+                      <span className="tp-other-h">{t.ru.lead}</span>
+                    </span>
+                    <span aria-hidden="true" className="tp-other-arrow">
+                      &rarr;
                     </span>
                   </a>
                 </li>
@@ -107,41 +126,54 @@ export default function RuHome() {
           </div>
         </section>
 
-        <section aria-labelledby="ru-branches" className="py-12 sm:py-20">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="ru-branches" className="display text-3xl sm:text-4xl">
-              Наши магазины
-            </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section aria-labelledby="ru-branches" className="sec bg-ground-2">
+          <div className="wrap">
+            <div data-m>
+              <h2 id="ru-branches" className="sh-title">
+                <SplitWords text="Наши магазины" />
+              </h2>
+            </div>
+            <ul data-m="" data-m-stagger className="tp-branches">
               {branches.map((b) => (
-                <li key={b.id} className="card p-6">
-                  <span className="numeral block text-2xl text-purple">{CITY_RU[b.city] ?? b.city}</span>
-                  <span className="mt-1 block text-sm text-ink-2">{b.landmark}</span>
-                  <span className="mt-3 block text-sm text-ink-3">Часы работы: {b.hours}</span>
-                  <a href={`tel:${b.phone ?? site.phone}`} className="mt-1 block text-sm font-semibold text-purple hover:underline">
-                    {b.phoneDisplay ?? site.phoneDisplay}
-                  </a>
+                <li key={b.id} className="branch-item">
+                  <div className="branch-top">
+                    <span className="branch-idx numeral" aria-hidden="true">
+                      {b.index}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="branch-city">{CITY_RU[b.city] ?? b.city}</p>
+                      <p className="branch-land">{b.landmark}</p>
+                    </div>
+                  </div>
+                  <p className="branch-addr">Часы работы: {b.hours}</p>
+                  <div className="branch-actions">
+                    <a href={`tel:${b.phone ?? site.phone}`} className="branch-call">
+                      {b.phoneDisplay ?? site.phoneDisplay}
+                    </a>
+                  </div>
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        <section aria-labelledby="ru-faq" className="bg-ground-2 py-12 sm:py-20">
-          <div className="mx-auto max-w-3xl px-5 sm:px-8">
-            <h2 id="ru-faq" className="display text-3xl sm:text-4xl">
-              Частые вопросы
-            </h2>
-            <div className="mt-8 divide-y divide-line border-y border-line">
+        <section aria-labelledby="ru-faq" className="sec faq">
+          <div className="wrap faq-grid">
+            <div className="faq-side">
+              <div data-m className="faq-sticky">
+                <h2 id="ru-faq" className="sh-title">
+                  <SplitWords text="Частые вопросы" />
+                </h2>
+              </div>
+            </div>
+            <div data-m="" data-m-stagger className="faq-list">
               {faq.map((f) => (
-                <details key={f.q} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-lg font-semibold text-ink">
-                    {f.q}
-                    <span aria-hidden="true" className="mt-1 text-2xl leading-none text-purple transition-transform group-open:rotate-45">
-                      +
-                    </span>
+                <details key={f.q} className="faq-item">
+                  <summary className="faq-q">
+                    <span>{f.q}</span>
+                    <span aria-hidden="true" className="faq-plus" />
                   </summary>
-                  <p className="mt-3 leading-relaxed text-ink-2">{f.a}</p>
+                  <p className="faq-a">{f.a}</p>
                 </details>
               ))}
             </div>

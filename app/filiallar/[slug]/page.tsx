@@ -12,6 +12,7 @@ import { ActionBar } from "@/components/layout/ActionBar";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { BranchGallery } from "@/components/sections/BranchGallery";
 import { Logo } from "@/components/ui/Logo";
+import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
  * One indexable page per branch.
@@ -136,40 +137,19 @@ export default async function BranchPage({
       />
       <Header />
       <main id="asosiy" tabIndex={-1}>
-        <section className="relative overflow-hidden pt-28 sm:pt-32">
-          {cover ? null : (
-            <Logo
-              variant="mark"
-              className="pointer-events-none absolute right-12 top-28 hidden h-72 w-auto text-purple-50 lg:block"
-            />
-          )}
-          {/* Filial surati — ekranning o'ng chetigacha yoyilgan, chapga (matnga)
-              va pastga qarab fonga singib ketadi. Kirishda oqarib-tiniqlashadi,
-              keyin sekin "nafas oladi"; ustidan yumshoq nur o'tadi. Hammasi
-              CSS (globals.css > .branch-hero-photo) — JS ham, WebGL ham yo'q.
-              Telefonda — matn tepasida to'liq kenglikdagi banner. */}
-          {cover ? (
-            <figure className="branch-hero-photo relative h-64 w-full sm:h-80 lg:absolute lg:inset-y-0 lg:right-0 lg:h-auto lg:w-[56%]">
-              <img
-                src={cover.src}
-                srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
-                sizes="(max-width: 1024px) 100vw, 56vw"
-                width={960}
-                height={720}
-                alt={cover.alt}
-                className="h-full w-full object-cover"
-                fetchPriority="high"
-                decoding="async"
-              />
-              <figcaption className="absolute bottom-6 right-5 z-10 rounded-full bg-ground/90 px-4 py-2 text-sm font-semibold text-ink backdrop-blur sm:right-8 lg:bottom-24">
-                {cover.label}
-              </figcaption>
-            </figure>
-          ) : null}
-          <div className="relative mx-auto max-w-7xl px-5 pb-16 sm:px-8">
-            <div className={cover ? "lg:w-[48%] lg:pb-10" : undefined}>
-              <nav aria-label="Qayerdaman" className="text-sm text-ink-3">
-                <Link href="/" className="hover:text-purple">
+        {/* Binafsha sahna: chapda katta shahar nomi va ma'lumotlar, o'ngda
+            filialning o'z surati (kirishda "darcha" bo'lib ochiladi). */}
+        <section className="tp-hero bp-hero on-purple text-white">
+          <div className="hero-bg" aria-hidden="true">
+            <span className="hero-orb hero-orb-1" />
+            <span className="hero-orb hero-orb-2" />
+            <span className="hero-grid" />
+            {cover ? null : <Logo variant="mark" className="hero-mark" />}
+          </div>
+          <div className="wrap relative grid items-center gap-10 lg:grid-cols-[1fr_1fr] lg:gap-14">
+            <div>
+              <nav aria-label="Qayerdaman" className="tp-crumbs in-1">
+                <Link href="/" className="hover:text-white">
                   Bosh sahifa
                 </Link>
                 <span className="mx-2" aria-hidden="true">
@@ -179,25 +159,32 @@ export default async function BranchPage({
                     "yuqoriga" bosgan odam shu sahifaning haqiqiy ota-sahifasiga
                     tushsin (JSON-LD dagi BreadcrumbList ham shunga ishora
                     qiladi). */}
-                <Link href="/filiallar" className="hover:text-purple">
+                <Link href="/filiallar" className="hover:text-white">
                   Filiallar
                 </Link>
                 <span className="mx-2" aria-hidden="true">
                   /
                 </span>
-                <span className="text-ink-2">{branch.city}</span>
+                <span className="text-white">{branch.city}</span>
               </nav>
 
-              <p className="kicker mt-8">Filial {branch.index}</p>
+              <p className="hero-pill in-1 mt-7">
+                <span className="hero-pill-dot" aria-hidden="true" />
+                Filial {branch.index}
+              </p>
               {/* Vizual katta shahar nomi bilan qoladi (brend uslubi), lekin
                   <h1> matni ikkala Shahrixon sahifasida bir xil bo'lmasin deb
                   mo'ljal ko'rinmas holda qo'shiladi — qidiruv tizimi va ekran
                   o'quvchisi uchun ikkalasi endi aniq farqlanadi. */}
-              <h1 className="display mt-3 text-5xl sm:text-6xl lg:text-7xl">
-                {branch.city}
-                <span className="sr-only"> — {branch.landmark}</span>
+              <h1 className="bp-city">
+                <span className="hero-line">
+                  <span className="in-2">
+                    {branch.city}
+                    <span className="sr-only"> — {branch.landmark}</span>
+                  </span>
+                </span>
               </h1>
-              <p className="mt-4 max-w-2xl text-xl text-ink-2">{branch.landmark}</p>
+              <p className="hero-lead in-4 !mt-3 !text-xl">{branch.landmark}</p>
 
               {branch.closed ? (
                 <p className="mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
@@ -206,45 +193,35 @@ export default async function BranchPage({
                 </p>
               ) : null}
 
-              <dl className="mt-10 grid max-w-3xl gap-6 sm:grid-cols-3">
+              <dl className="bp-facts in-5">
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                    Manzil
-                  </dt>
-                  <dd className="mt-2 text-ink-2">{branch.address}</dd>
+                  <dt>Manzil</dt>
+                  <dd>{branch.address}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                    Telefon
-                  </dt>
-                  <dd className="mt-2">
-                    <a href={`tel:${phone}`} className="font-semibold text-purple hover:underline">
+                  <dt>Telefon</dt>
+                  <dd>
+                    <a href={`tel:${phone}`} className="font-semibold text-yellow hover:underline">
                       {phoneLabel}
                     </a>
                     {branch.phone ? null : (
-                      <span className="mt-1 block text-xs text-ink-3">
-                        Bu filial uchun umumiy raqam
-                      </span>
+                      <span className="mt-1 block text-xs text-on-purple-2">Bu filial uchun umumiy raqam</span>
                     )}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                    Ish vaqti
-                  </dt>
-                  <dd className="mt-2 text-ink-2">{branch.hours}</dd>
+                  <dt>Ish vaqti</dt>
+                  <dd>{branch.hours}</dd>
                 </div>
                 {branch.instagram ? (
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-                      Instagram
-                    </dt>
-                    <dd className="mt-2">
+                    <dt>Instagram</dt>
+                    <dd>
                       <a
                         href={branch.instagramUrl!}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-semibold text-purple hover:underline"
+                        className="font-semibold text-yellow hover:underline"
                       >
                         @{branch.instagram}
                       </a>
@@ -253,13 +230,8 @@ export default async function BranchPage({
                 ) : null}
               </dl>
 
-              <div className="mt-10 flex flex-wrap gap-3">
-                <a
-                  href={mapsUrl(branch)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                >
+              <div className="in-6 mt-9 flex flex-wrap gap-3">
+                <a href={mapsUrl(branch)} target="_blank" rel="noopener noreferrer" className="btn btn-yellow btn-glow">
                   Xaritada ochish
                 </a>
                 <a href={`tel:${phone}`} className="btn btn-outline">
@@ -268,38 +240,60 @@ export default async function BranchPage({
               </div>
             </div>
 
+            {cover ? (
+              <figure className="tp-photo bp-photo in-7 relative">
+                <img
+                  src={cover.src}
+                  srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  width={960}
+                  height={720}
+                  alt={cover.alt}
+                  className="h-full w-full object-cover"
+                  fetchPriority="high"
+                  decoding="async"
+                />
+                <figcaption className="bp-cap">{cover.label}</figcaption>
+              </figure>
+            ) : null}
           </div>
         </section>
 
-        <section aria-labelledby="branch-cats" className="bg-ground-2 py-20">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="branch-cats" className="display text-3xl sm:text-4xl">
-              {branch.city} filialida nimalar bor?
-            </h2>
-            <div className="mt-10 grid gap-5 lg:grid-cols-3">
+        <section aria-labelledby="branch-cats" className="sec">
+          <div className="wrap">
+            <div data-m>
+              <h2 id="branch-cats" className="sh-title">
+                <SplitWords text={`${branch.city} filialida nimalar bor?`} />
+              </h2>
+            </div>
+            <div data-m="" data-m-stagger className="bp-cats">
               {categories.map((c) => (
-                <div key={c.id} className="card p-7">
-                  <h3 className="numeral text-4xl tracking-[0.04em] text-purple">{c.name}</h3>
-                  <p className="mt-2 font-semibold text-ink">{c.kicker}</p>
-                  <p className="mt-3 leading-relaxed text-ink-2">{c.description}</p>
+                <div key={c.id} className="tile">
+                  <h3 className="bp-cat-name numeral">{c.name}</h3>
+                  <div>
+                    <p className="tile-label">{c.kicker}</p>
+                    <p className="tile-note mt-2 leading-relaxed">{c.description}</p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="on-purple mt-6 rounded-[28px] bg-purple p-8 text-white sm:p-10">
-              <h3 className="display text-2xl sm:text-3xl">
-                {site.facts.installmentMonthsMax} oygacha muddatli to&apos;lov
-              </h3>
-              {/* "Bepul" hech qachon yolg'iz turmasin: u faqat
-                  `freeDeliveryArea` ichida amal qiladi. Aks holda boshqa
-                  viloyatdagi mijoz bepul yetkazishni kutadi va qo'ng'iroqda
-                  boshqacha javob eshitadi. */}
-              <p className="mt-3 max-w-2xl leading-relaxed text-on-purple-2">
-                Pasport va plastik kartaning o&apos;zi kifoya. {site.freeDeliveryArea}da
-                xaridingizni bepul yetkazib beramiz va bepul o&apos;rnatib beramiz —{" "}
-                {site.deliveryArea} ham yetkazamiz.
-              </p>
-              <Link href="/#muddatli-tolov" className="btn btn-yellow mt-7">
+            <div data-m="zoom" className="bp-inst on-purple text-white">
+              <div>
+                <h3 className="bp-inst-title">
+                  {site.facts.installmentMonthsMax} oygacha muddatli to&apos;lov
+                </h3>
+                {/* "Bepul" hech qachon yolg'iz turmasin: u faqat
+                    `freeDeliveryArea` ichida amal qiladi. Aks holda boshqa
+                    viloyatdagi mijoz bepul yetkazishni kutadi va qo'ng'iroqda
+                    boshqacha javob eshitadi. */}
+                <p className="mt-3 max-w-2xl leading-relaxed text-on-purple-2">
+                  Pasport va plastik kartaning o&apos;zi kifoya. {site.freeDeliveryArea}da
+                  xaridingizni bepul yetkazib beramiz va bepul o&apos;rnatib beramiz —{" "}
+                  {site.deliveryArea} ham yetkazamiz.
+                </p>
+              </div>
+              <Link href="/#muddatli-tolov" className="btn btn-yellow btn-glow shrink-0">
                 Qanday ishlaydi?
               </Link>
             </div>
@@ -310,20 +304,27 @@ export default async function BranchPage({
 
         <LeadForm branchId={branch.id} />
 
-        <section aria-labelledby="other-branches" className="bg-ground-2 py-20">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="other-branches" className="display text-3xl">
-              Boshqa filiallar
-            </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-3">
+        <section aria-labelledby="other-branches" className="sec">
+          <div className="wrap">
+            <div data-m>
+              <h2 id="other-branches" className="sh-title">
+                <SplitWords text="Boshqa filiallar" />
+              </h2>
+            </div>
+            <ul data-m="" data-m-stagger className="bp-others">
               {others.map((b) => (
                 <li key={b.id}>
-                  <Link
-                    href={`/filiallar/${b.id}`}
-                    className="card card-hover flex h-full flex-col p-6"
-                  >
-                    <span className="numeral text-2xl text-purple">{b.city}</span>
-                    <span className="mt-1 text-sm text-ink-2">{b.landmark}</span>
+                  <Link href={`/filiallar/${b.id}`} className="branch-item bp-other">
+                    <span className="branch-idx numeral" aria-hidden="true">
+                      {b.index}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="branch-city block">{b.city}</span>
+                      <span className="branch-land block">{b.landmark}</span>
+                    </span>
+                    <span aria-hidden="true" className="bp-other-arrow">
+                      &rarr;
+                    </span>
                   </Link>
                 </li>
               ))}

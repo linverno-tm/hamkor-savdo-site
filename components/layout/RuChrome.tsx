@@ -23,21 +23,21 @@ const ruNav = [
 
 export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-ground">
+    <header data-site-header className="hdr fixed inset-x-0 top-0 z-50">
       <a href="#asosiy" className="skip-link">
         Перейти к содержанию
       </a>
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+      <div className="hdr-bar mx-auto flex max-w-7xl items-center justify-between gap-4">
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/ru/" className="tap shrink-0 text-purple" aria-label="HAMKOR SAVDO — главная">
           <Logo className="h-8 w-auto sm:h-9" />
         </a>
-        <nav aria-label="Разделы" className="hidden items-center gap-5 xl:flex">
+        <nav aria-label="Разделы" className="hidden items-center gap-0.5 xl:flex">
           {ruNav.slice(1).map((item) => (
             <a
               key={item.href}
               href={item.href}
-              className="whitespace-nowrap text-[0.95rem] font-medium text-ink-2 transition-colors hover:text-purple"
+              className="nav-link"
             >
               {item.label}
             </a>
@@ -49,11 +49,21 @@ export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
           <a
             href={uzHref}
             hrefLang="uz"
-            className="tap whitespace-nowrap rounded-full border border-line px-3 py-1.5 text-sm font-medium text-ink-2 transition-colors hover:border-purple hover:text-purple"
+            className="hdr-chip tap"
           >
             O&apos;zbekcha
           </a>
-          <a href={`tel:${site.phone}`} className="btn btn-primary !min-h-11 whitespace-nowrap !px-5">
+          <a href={`tel:${site.phone}`} className="hdr-call">
+            <span className="hdr-call-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
             <span className="hidden sm:inline">{site.phoneDisplay}</span>
             <span className="sm:hidden">Позвонить</span>
           </a>

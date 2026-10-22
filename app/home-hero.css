@@ -260,30 +260,6 @@
   display: inline-block;
   color: var(--yellow);
 }
-/* "hamkor" ostiga chiziq tortiladi. */
-.hero-word::after {
-  content: "";
-  position: absolute;
-  left: 0.02em;
-  right: 0.02em;
-  bottom: 0.02em;
-  height: 0.09em;
-  border-radius: 1em;
-  background: currentColor;
-  opacity: 0.85;
-  transform-origin: left;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .m-js .hero-word::after {
-    animation: underline-draw 900ms var(--ease) 1200ms both;
-  }
-}
-@keyframes underline-draw {
-  from {
-    transform: scaleX(0);
-  }
-}
-
 .hero-lead {
   margin-top: 1.75rem;
   max-width: 34rem;

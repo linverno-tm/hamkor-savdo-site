@@ -3,6 +3,7 @@
 @import "./home-hero.css";
 @import "./home-base.css";
 @import "./home-sections.css";
+@import "./pages.css";
 
 /* ==================================================================
    HAMKOR SAVDO — design tokens, straight from the brand guidebook.
@@ -155,12 +156,22 @@ section[id] {
   font-variant-numeric: tabular-nums;
 }
 
+/* 2026-10: bo'lim belgisi yangi ko'rinishda (.eyebrow, app/home-base.css)
+   bilan bir xil — eski sahifalardagi `.kicker` ham shunday chiqadi. */
 .kicker {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--purple);
+}
+.kicker::before {
+  content: "";
+  width: 2rem;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--yellow);
 }
 .on-purple .kicker {
   color: var(--yellow);

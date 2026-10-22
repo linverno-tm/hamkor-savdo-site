@@ -10,6 +10,8 @@ import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
+import { SplitWords } from "@/components/ui/SplitWords";
+import { ScrubText } from "@/components/ui/ScrubText";
 
 /**
  * Yo'nalish sahifasi (/texnika/, /ru/tehnika/ ...). Matn `data/topics.ts` da.
@@ -127,24 +129,36 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, faqLd]) }} />
       {lang === "ru" ? <RuHeader uzHref={`${topic.path}/`} /> : <Header />}
       <main id="asosiy" tabIndex={-1}>
-        {/* ---- asosiy qism ---- */}
-        <section className="relative overflow-hidden pt-28 sm:pt-32">
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+        {/* ---- asosiy qism: binafsha sahna, o'ngda yo'nalish surati ---- */}
+        <section className="tp-hero on-purple text-white">
+          <div className="hero-bg" aria-hidden="true">
+            <span className="hero-orb hero-orb-1" />
+            <span className="hero-orb hero-orb-2" />
+            <span className="hero-grid" />
+          </div>
+          <div className="wrap relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
             <div>
-              <nav aria-label={lang === "ru" ? "Навигация" : "Qayerdaman"} className="text-sm text-ink-3">
-                <LangLink lang={lang} to={homeHref} className="hover:text-purple">
+              <nav aria-label={lang === "ru" ? "Навигация" : "Qayerdaman"} className="tp-crumbs in-1">
+                <LangLink lang={lang} to={homeHref} className="hover:text-white">
                   {ui.home}
                 </LangLink>
                 <span className="mx-2" aria-hidden="true">
                   /
                 </span>
-                <span className="text-ink-2">{t.kicker}</span>
+                <span className="text-white">{t.kicker}</span>
               </nav>
-              <p className="kicker mt-8">{t.kicker}</p>
-              <h1 className="display mt-3 text-4xl sm:text-5xl lg:text-6xl">{t.h1}</h1>
-              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-2 sm:text-xl">{t.lead}</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a href="#ariza" className="btn btn-primary">
+              <p className="hero-pill in-1 mt-7">
+                <span className="hero-pill-dot" aria-hidden="true" />
+                {t.kicker}
+              </p>
+              <h1 className="tp-title">
+                <span className="hero-line">
+                  <span className="in-2">{t.h1}</span>
+                </span>
+              </h1>
+              <p className="hero-lead in-4">{t.lead}</p>
+              <div className="in-5 mt-9 flex flex-wrap gap-3">
+                <a href="#ariza" className="btn btn-yellow btn-glow">
                   {ui.apply}
                 </a>
                 <a href={`tel:${site.phone}`} className="btn btn-outline">
@@ -153,7 +167,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
               </div>
             </div>
             {topic.photo ? (
-              <div className="photo overflow-hidden rounded-[28px]">
+              <div className="tp-photo in-7">
                 <img
                   src={topic.photo.src}
                   width={900}
@@ -165,9 +179,9 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                 />
               </div>
             ) : (
-              <div className="on-purple rounded-[28px] bg-purple p-10 text-white">
-                <p className="numeral text-7xl text-yellow">{site.facts.installmentMonthsMax}</p>
-                <p className="display mt-2 text-3xl">{lang === "ru" ? "месяцев рассрочки" : "oygacha muddatli to'lov"}</p>
+              <div className="tp-badge in-7">
+                <p className="tp-badge-num numeral">{site.facts.installmentMonthsMax}</p>
+                <p className="tp-badge-title">{lang === "ru" ? "месяцев рассрочки" : "oygacha muddatli to'lov"}</p>
                 <p className="mt-4 text-on-purple-2">{lang === "ru" ? "Паспорт + пластиковая карта" : "Pasport + plastik karta"}</p>
               </div>
             )}
@@ -175,42 +189,56 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         </section>
 
         {/* ---- asosiy afzalliklar ---- */}
-        <section aria-label={t.kicker} className="bg-ground-2 py-14">
-          <ul className="mx-auto grid max-w-7xl gap-5 px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
-            {t.points.map((p) => (
-              <li key={p.title} className="card p-6">
-                <p className="display text-2xl text-purple">{p.title}</p>
-                <p className="mt-2 leading-relaxed text-ink-2">{p.text}</p>
+        <section aria-label={t.kicker} className="tp-points">
+          <ul data-m="" data-m-stagger className="wrap tp-points-grid">
+            {t.points.map((p, i) => (
+              <li key={p.title} className={`tile ${i === 0 ? "tile-yellow" : ""}`}>
+                <span className="tp-point-n numeral" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <p className="tp-point-title">{p.title}</p>
+                  <p className="tile-note mt-2 leading-relaxed">{p.text}</p>
+                </div>
               </li>
             ))}
           </ul>
         </section>
 
-        {/* ---- matn ---- */}
-        <section aria-labelledby="topic-more" className="py-12 sm:py-20">
-          <div className="mx-auto max-w-3xl px-5 sm:px-8">
-            <h2 id="topic-more" className="display text-3xl sm:text-4xl">
-              {ui.more}
-            </h2>
-            {t.body.map((para, i) => (
-              <p key={i} className="mt-5 text-lg leading-relaxed text-ink-2">
-                {para}
-              </p>
-            ))}
+        {/* ---- matn: aylantirilgan sari so'zma-so'z yorishadi ---- */}
+        <section aria-labelledby="topic-more" className="sec">
+          <div className="wrap tp-body">
+            <div data-m>
+              <h2 id="topic-more" className="sh-title">
+                <SplitWords text={ui.more} />
+              </h2>
+            </div>
+            <div className="tp-body-text">
+              {t.body.map((para, i) => (
+                <p key={i} className="scrub">
+                  <ScrubText text={para} />
+                </p>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* ---- qadamlar ---- */}
-        <section aria-labelledby="topic-how" className="on-purple bg-purple py-16 text-white sm:py-20">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="topic-how" className="display text-3xl sm:text-4xl">
-              {ui.howTitle}
-            </h2>
-            <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <section aria-labelledby="topic-how" className="inst on-purple text-white">
+          <div className="inst-bg" aria-hidden="true">
+            <span className="inst-glow" />
+          </div>
+          <div className="wrap">
+            <div data-m>
+              <h2 id="topic-how" className="sh-title text-white">
+                <SplitWords text={ui.howTitle} />
+              </h2>
+            </div>
+            <ol data-m="" data-m-stagger className="tp-steps">
               {steps.map((s) => (
-                <li key={s.index}>
-                  <span className="numeral text-3xl text-yellow">{s.index}</span>
-                  <p className="mt-2 text-xl font-semibold">{s.title}</p>
+                <li key={s.index} className="tp-step">
+                  <span className="tp-step-n numeral">{s.index}</span>
+                  <p className="tp-step-title">{s.title}</p>
                   <p className="mt-2 leading-relaxed text-on-purple-2">{s.detail}</p>
                 </li>
               ))}
@@ -219,26 +247,37 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         </section>
 
         {/* ---- filiallar ---- */}
-        <section aria-labelledby="topic-branches" className="py-12 sm:py-20">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="topic-branches" className="display text-3xl sm:text-4xl">
-              {ui.branchesTitle}
-            </h2>
-            <p className="mt-3 max-w-2xl text-ink-2">{ui.branchesLead}</p>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section aria-labelledby="topic-branches" className="sec">
+          <div className="wrap">
+            <div data-m className="sh">
+              <h2 id="topic-branches" className="sh-title">
+                <SplitWords text={ui.branchesTitle} />
+              </h2>
+              <p className="sh-lead">{ui.branchesLead}</p>
+            </div>
+            <ul data-m="" data-m-stagger className="tp-branches">
               {branches.map((b) => (
-                <li key={b.id} className="card flex flex-col p-6">
-                  <span className="numeral text-2xl text-purple">{cityName(b.city)}</span>
-                  <span className="mt-1 text-sm text-ink-2">{b.landmark}</span>
-                  <span className="mt-3 text-sm text-ink-3">
+                <li key={b.id} className="branch-item flex flex-col">
+                  <div className="branch-top">
+                    <span className="branch-idx numeral" aria-hidden="true">
+                      {b.index}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="branch-city">{cityName(b.city)}</p>
+                      <p className="branch-land">{b.landmark}</p>
+                    </div>
+                  </div>
+                  <p className="branch-addr">
                     {ui.hours}: {b.hours}
-                  </span>
-                  <a href={`tel:${b.phone ?? site.phone}`} className="mt-1 text-sm font-semibold text-purple hover:underline">
-                    {b.phoneDisplay ?? site.phoneDisplay}
-                  </a>
-                  <Link href={`/filiallar/${b.id}`} className="mt-4 text-sm font-semibold text-ink underline-offset-4 hover:text-purple hover:underline">
-                    {ui.pageInfo} →
-                  </Link>
+                  </p>
+                  <div className="branch-actions mt-auto pt-4">
+                    <a href={`tel:${b.phone ?? site.phone}`} className="branch-call">
+                      {b.phoneDisplay ?? site.phoneDisplay}
+                    </a>
+                    <Link href={`/filiallar/${b.id}`} className="branch-link">
+                      {ui.pageInfo} →
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -246,21 +285,23 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         </section>
 
         {/* ---- savol-javob ---- */}
-        <section aria-labelledby="topic-faq" className="bg-ground-2 py-12 sm:py-20">
-          <div className="mx-auto max-w-3xl px-5 sm:px-8">
-            <h2 id="topic-faq" className="display text-3xl sm:text-4xl">
-              {ui.faqTitle}
-            </h2>
-            <div className="mt-8 divide-y divide-line border-y border-line">
+        <section aria-labelledby="topic-faq" className="sec faq tp-faq">
+          <div className="wrap faq-grid">
+            <div className="faq-side">
+              <div data-m className="faq-sticky">
+                <h2 id="topic-faq" className="sh-title">
+                  <SplitWords text={ui.faqTitle} />
+                </h2>
+              </div>
+            </div>
+            <div data-m="" data-m-stagger className="faq-list">
               {t.faq.map((f) => (
-                <details key={f.q} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-lg font-semibold text-ink">
-                    {f.q}
-                    <span aria-hidden="true" className="mt-1 text-2xl leading-none text-purple transition-transform group-open:rotate-45">
-                      +
-                    </span>
+                <details key={f.q} className="faq-item">
+                  <summary className="faq-q">
+                    <span>{f.q}</span>
+                    <span aria-hidden="true" className="faq-plus" />
                   </summary>
-                  <p className="mt-3 leading-relaxed text-ink-2">{f.a}</p>
+                  <p className="faq-a">{f.a}</p>
                 </details>
               ))}
             </div>
@@ -270,17 +311,28 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         <LeadForm lang={lang} page={self} lead={t.cta} />
 
         {/* ---- boshqa yo'nalishlar (ichki havolalar qidiruv uchun ham muhim) ---- */}
-        <section aria-labelledby="topic-other" className="bg-ground-2 py-12 sm:py-16">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="topic-other" className="display text-3xl">
-              {ui.otherTitle}
-            </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-3">
+        <section aria-labelledby="topic-other" className="sec">
+          <div className="wrap">
+            <div data-m>
+              <h2 id="topic-other" className="sh-title">
+                <SplitWords text={ui.otherTitle} />
+              </h2>
+            </div>
+            <ul data-m="" data-m-stagger className="tp-others">
               {others.map((o) => (
                 <li key={o.id}>
-                  <LangLink lang={lang} to={href(lang, o)} className="card card-hover flex h-full flex-col p-6">
-                    <span className="numeral text-2xl text-purple">{o[lang].kicker}</span>
-                    <span className="mt-2 text-sm text-ink-2">{o[lang].h1}</span>
+                  <LangLink lang={lang} to={href(lang, o)} className="tp-other">
+                    {o.photo ? (
+                      <img src={o.photo.src} alt="" width={900} height={675} loading="lazy" decoding="async" className="tp-other-img" />
+                    ) : null}
+                    <span className="tp-other-shade" aria-hidden="true" />
+                    <span className="tp-other-body">
+                      <span className="tp-other-kicker">{o[lang].kicker}</span>
+                      <span className="tp-other-h">{o[lang].h1}</span>
+                    </span>
+                    <span aria-hidden="true" className="tp-other-arrow">
+                      &rarr;
+                    </span>
                   </LangLink>
                 </li>
               ))}

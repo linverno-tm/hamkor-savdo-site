@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { Contact } from "@/components/sections/Contact";
 import { LeadForm } from "@/components/sections/LeadForm";
+import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
  * Aloqa — alohida sahifa.
@@ -61,25 +62,37 @@ export default function AloqaPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main id="asosiy" tabIndex={-1}>
-        <section className="pt-28 sm:pt-32">
-          <div className="mx-auto max-w-7xl px-5 pb-12 sm:px-8">
-            <nav aria-label="Qayerdaman" className="text-sm text-ink-3">
-              <Link href="/" className="hover:text-purple">
+        <section className="tp-hero on-purple text-white">
+          <div className="hero-bg" aria-hidden="true">
+            <span className="hero-orb hero-orb-1" />
+            <span className="hero-orb hero-orb-2" />
+            <span className="hero-grid" />
+          </div>
+          <div className="wrap relative">
+            <nav aria-label="Qayerdaman" className="tp-crumbs in-1">
+              <Link href="/" className="hover:text-white">
                 Bosh sahifa
               </Link>
               <span className="mx-2" aria-hidden="true">
                 /
               </span>
-              <span className="text-ink-2">Aloqa</span>
+              <span className="text-white">Aloqa</span>
             </nav>
-            <p className="kicker mt-8">Aloqa</p>
-            <h1 className="display mt-3 text-4xl sm:text-5xl lg:text-6xl">Biz bilan bog&apos;lanish</h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-2 sm:text-xl">
+            <p className="hero-pill in-1 mt-7">
+              <span className="hero-pill-dot" aria-hidden="true" />
+              Aloqa
+            </p>
+            <h1 className="tp-title">
+              <span className="hero-line">
+                <span className="in-2">Biz bilan bog&apos;lanish</span>
+              </span>
+            </h1>
+            <p className="hero-lead in-4">
               Qo&apos;ng&apos;iroq qiling, eng yaqin filialga keling yoki ariza qoldiring — o&apos;zimiz qo&apos;ng&apos;iroq
               qilamiz.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href={`tel:${site.phone}`} className="btn btn-primary">
+            <div className="in-5 mt-9 flex flex-wrap gap-3">
+              <a href={`tel:${site.phone}`} className="btn btn-yellow btn-glow">
                 {site.phoneDisplay}
               </a>
               <a href="#ariza" className="btn btn-outline">
@@ -89,19 +102,28 @@ export default function AloqaPage() {
           </div>
         </section>
 
-        <section aria-labelledby="aloqa-filiallar" className="bg-ground-2 py-12 sm:py-20">
-          <div className="mx-auto max-w-7xl px-5 sm:px-8">
-            <h2 id="aloqa-filiallar" className="display text-3xl sm:text-4xl">
-              Filiallar manzili
-            </h2>
-            <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <section aria-labelledby="aloqa-filiallar" className="sec">
+          <div className="wrap">
+            <div data-m>
+              <h2 id="aloqa-filiallar" className="sh-title">
+                <SplitWords text="Filiallar manzili" />
+              </h2>
+            </div>
+            <ul data-m="" data-m-stagger className="tp-branches">
               {branches.map((b) => {
                 const phone = b.phone ?? site.phone;
                 return (
-                  <li key={b.id} className="card flex flex-col p-6">
-                    <span className="numeral text-2xl text-purple">{b.city}</span>
-                    <span className="mt-1 font-semibold text-ink">{b.landmark}</span>
-                    <span className="mt-2 text-sm leading-relaxed text-ink-2">{b.address}</span>
+                  <li key={b.id} className="branch-item flex flex-col">
+                    <div className="branch-top">
+                      <span className="branch-idx numeral" aria-hidden="true">
+                        {b.index}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="branch-city">{b.city}</p>
+                        <p className="branch-land">{b.landmark}</p>
+                      </div>
+                    </div>
+                    <p className="branch-addr">{b.address}</p>
                     {b.closed ? (
                       <span className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
                         Vaqtincha yopiq{b.closedNote ? ` — ${b.closedNote}` : ""}
@@ -121,11 +143,11 @@ export default function AloqaPage() {
                         <dd className="text-ink-2">{b.hours}</dd>
                       </div>
                     </dl>
-                    <div className="mt-auto flex flex-wrap gap-2 pt-5">
-                      <a href={mapsUrl(b)} target="_blank" rel="noopener noreferrer" className="btn btn-outline !min-h-10 !px-4 text-sm">
+                    <div className="branch-actions mt-auto pt-5">
+                      <a href={mapsUrl(b)} target="_blank" rel="noopener noreferrer" className="branch-link">
                         Xaritada
                       </a>
-                      <Link href={`/filiallar/${b.id}`} className="btn btn-outline !min-h-10 !px-4 text-sm">
+                      <Link href={`/filiallar/${b.id}`} className="branch-link">
                         Filial sahifasi
                       </Link>
                     </div>

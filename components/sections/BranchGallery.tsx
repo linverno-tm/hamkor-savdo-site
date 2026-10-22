@@ -1,4 +1,5 @@
 import type { Photo } from "@/lib/photos";
+import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
  * A branch's own photography, laid out editorially rather than as a uniform
@@ -87,17 +88,19 @@ export function BranchGallery({
   const cells = layoutCells(rest.length);
 
   return (
-    <section id="suratlar" aria-labelledby="gallery-title" className="bg-ground py-12 sm:py-20">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <p className="kicker">Haqiqiy do&apos;kon</p>
-        <h2 id="gallery-title" className="display mt-3 text-3xl sm:text-4xl">
-          {heading ?? `${city} filiali — suratlarda`}
-        </h2>
-        <p className="mt-3 text-sm text-ink-3">
-          Kattalashtirib ko&apos;rish uchun suratni bosing.
-        </p>
+    <section id="suratlar" aria-labelledby="gallery-title" className="sec bg-ground-2">
+      <div className="wrap">
+        <div data-m className="sh">
+          <p className="eyebrow">Haqiqiy do&apos;kon</p>
+          <h2 id="gallery-title" className="sh-title">
+            <SplitWords text={heading ?? `${city} filiali — suratlarda`} />
+          </h2>
+          <p className="mt-3 text-sm text-ink-3">
+            Kattalashtirib ko&apos;rish uchun suratni bosing.
+          </p>
+        </div>
 
-        <div data-reveal className="mt-10">
+        <div data-m="up" className="mt-10">
           {/* Establishing shot */}
           <a href={`#${id(0)}`} className="photo photo-lead group block">
             <img
