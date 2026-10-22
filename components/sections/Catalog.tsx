@@ -38,6 +38,10 @@ export function ProductCard({ p }: { p: Product }) {
         <p className={`mt-1 text-xs font-semibold ${p.inStock ? "text-emerald-700" : "text-ink-3"}`}>
           {p.inStock ? "Mavjud" : "Buyurtma asosida"}
         </p>
+        {/* Ariza formasiga mahsulot nomini yozib o'tadi (lib/motion.ts > data-ask). */}
+        <a href="#ariza" data-ask={p.name} className="btn btn-primary mt-4 w-full">
+          Shuni so&apos;rash
+        </a>
       </div>
     </li>
   );

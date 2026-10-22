@@ -14,6 +14,8 @@
  *  - `[data-site-header]` — sahifa siljigach `data-scrolled`.
  *  - `.action-bar` (telefondagi pastki qator) — bosh qismdan o'tgach
  *    chiqadi, ariza formasi ko'rinib turganda yashirinadi.
+ *  - `[data-ask]` ("Shuni so'rash") — bosilganda ariza formasidagi
+ *    "Nima qiziqtiradi?" maydoniga taklif nomi yoziladi, ism maydoni tanlanadi.
  *  - `[data-spot]` — sichqoncha bilan: kursor o'rni `--mx`/`--my` ga
  *    yoziladi (sahnadagi yorug'lik). Barmoq bilan ishlatilmaydi.
  *
@@ -24,6 +26,14 @@
  */
 export const MOTION_SCRIPT = `(function(){try{
 var d=document,de=d.documentElement;
+/* "Shuni so'rash" — harakat sozlamasidan qat'i nazar doim ishlaydi. */
+d.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('[data-ask]');if(!a)return;
+  var note=d.getElementById('lead-note');if(!note)return;
+  note.value=a.getAttribute('data-ask');
+  var f=note.closest('form');if(f){f.classList.remove('is-asked');void f.offsetWidth;f.classList.add('is-asked');}
+  setTimeout(function(){var n=d.getElementById('lead-name');if(n)n.focus({preventScroll:true});},700);
+});
 if(!('IntersectionObserver' in window))return;
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 de.classList.add('m-js');

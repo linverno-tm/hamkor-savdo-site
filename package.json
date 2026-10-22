@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node tools/rasmlarni-tayyorlash.mjs && node tools/api-malumot.mjs",
+    "prebuild": "node tools/rasmlarni-tayyorlash.mjs && node tools/api-malumot.mjs && node tools/kanal-katalog.mjs",
     "build": "next build",
     "postbuild": "node tools/uz-kr-build.mjs",
     "start": "next start",

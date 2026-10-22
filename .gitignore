@@ -25,3 +25,7 @@ preview/
 
 # Hostingga yuklash uchun arxiv — ichida api/secrets.php (bot kaliti) bor.
 *.zip
+
+# Telegram kanalidan katalog — har build'da tools/kanal-katalog.mjs yasaydi
+data/kanal.json
+public/kanal/
