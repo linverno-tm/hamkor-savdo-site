@@ -1430,7 +1430,7 @@ html:not(.m-js) .step-dot {
       display 80ms allow-discrete,
       overlay 80ms allow-discrete;
   }
-  .pick::picker(select):popover-open {
+  .pick:open::picker(select) {
     opacity: 1;
     translate: 0 0;
     transition:
@@ -1440,7 +1440,7 @@ html:not(.m-js) .step-dot {
       overlay 120ms allow-discrete;
   }
   @starting-style {
-    .pick::picker(select):popover-open {
+    .pick:open::picker(select) {
       opacity: 0;
       translate: 0 -6px;
     }
