@@ -23,14 +23,14 @@ const ruNav = [
 
 export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
   return (
-    <header data-site-header className="hdr fixed inset-x-0 top-0 z-50">
+    <header data-site-header className="hdr fixed inset-x-0 top-0 z-50" suppressHydrationWarning>
       <a href="#asosiy" className="skip-link">
         Перейти к содержанию
       </a>
       <div className="hdr-bar mx-auto flex max-w-7xl items-center justify-between gap-4">
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/ru/" className="tap shrink-0 text-purple" aria-label="HAMKOR SAVDO — главная">
-          <Logo className="h-8 w-auto sm:h-9" />
+          <Logo className="h-7 w-auto sm:h-9" />
         </a>
         <nav aria-label="Разделы" className="hidden items-center gap-0.5 xl:flex">
           {ruNav.slice(1).map((item) => (
@@ -43,8 +43,13 @@ export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          <ThemeToggle lang="ru" />
+        {/* Telefonda bitta qatorga sig'sin (egasi 22.10: tugmalar chetdan
+            chiqib ketgan edi): tor ekranda rejim tugmasi yashirinadi,
+            qo'ng'iroq tugmasida faqat belgi qoladi (matn ekran o'quvchiga). */}
+        <div className="ru-hdr-actions flex items-center gap-2">
+          <span className="ru-hdr-theme">
+            <ThemeToggle lang="ru" />
+          </span>
           {/* Til almashtirish — oddiy <a>: o'zbekcha sahifa boshqa til nusxasi. */}
           <a
             href={uzHref}
@@ -53,7 +58,7 @@ export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
           >
             O&apos;zbekcha
           </a>
-          <a href={`tel:${site.phone}`} className="hdr-call">
+          <a href={`tel:${site.phone}`} className="hdr-call ru-hdr-call">
             <span className="hdr-call-icon" aria-hidden="true">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path
@@ -65,7 +70,7 @@ export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
               </svg>
             </span>
             <span className="hidden sm:inline">{site.phoneDisplay}</span>
-            <span className="sm:hidden">Позвонить</span>
+            <span className="sr-only sm:hidden">Позвонить</span>
           </a>
         </div>
       </div>

@@ -29,7 +29,7 @@ const PhoneIcon = ({ size = 16 }: { size?: number }) => (
  */
 export function Header() {
   return (
-    <header data-site-header className="hdr fixed inset-x-0 top-0 z-50">
+    <header data-site-header className="hdr fixed inset-x-0 top-0 z-50" suppressHydrationWarning>
       {/* Sahifadagi birinchi fokuslanadigan element — uslubi globals.css da. */}
       <a href="#asosiy" className="skip-link">
         Asosiy qismga o&apos;tish

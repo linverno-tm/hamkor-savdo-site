@@ -141,7 +141,7 @@ export function Contact() {
                     className="group flex items-center justify-between gap-4 py-5 transition-colors hover:text-purple"
                   >
                     <span className="text-sm text-ink-2">{p.label}</span>
-                    <span className="numeral shrink-0 text-2xl tracking-wide text-purple sm:text-3xl">
+                    <span className="numeral shrink-0 text-xl tracking-wide text-purple min-[360px]:text-2xl sm:text-3xl">
                       {p.display}
                     </span>
                   </a>

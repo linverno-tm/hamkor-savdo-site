@@ -138,6 +138,12 @@
   letter-spacing: -0.04em;
   text-wrap: balance;
 }
+/* Eng tor telefon (320px): "rasmiylashtiriladi" kabi uzun so'z sig'sin. */
+@media (max-width: 359.98px) {
+  .sh-title {
+    font-size: 1.75rem;
+  }
+}
 .sh-lead {
   margin-top: 1.4rem;
   max-width: 40rem;

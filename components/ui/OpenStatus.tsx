@@ -10,7 +10,8 @@
  */
 export function OpenStatus({ hours, closed = false }: { hours: string; closed?: boolean }) {
   if (closed) return null;
-  // Matn `data-text` atributida, ko'rinishi CSS ::after da — React
-  // hidratsiyasi faqat props'ni solishtiradi, qo'shimcha atributga tegmaydi.
-  return <span className="open-st" role="status" data-open-hours={hours} />;
+  // Matn `data-text` atributida, ko'rinishi CSS ::after da. Skript sekin
+  // hidratsiyadan oldin ulgurib qolsa, React qo'shimcha atributlardan
+  // ogohlantiradi — ataylab, shuning uchun suppressHydrationWarning.
+  return <span className="open-st" role="status" data-open-hours={hours} suppressHydrationWarning />;
 }
