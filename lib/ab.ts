@@ -29,7 +29,8 @@ export interface Experiment {
 export const EXPERIMENTS: Experiment[] = [
   {
     id: "tel-forma",
-    active: false,
+    // Egasi 22.10 ikkala variantni ko'rib tasdiqladi va yoqdi.
+    active: true,
     a: "Telefonda qisqa ariza formasi yo'q (faqat pastdagi to'liq forma)",
     b: "Telefonda qisqa ariza formasi bosh qismda, tugmalardan keyin",
   },
