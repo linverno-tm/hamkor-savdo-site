@@ -29,3 +29,24 @@ export function kanalItems(): KanalItem[] {
     return [];
   }
 }
+
+/** Rasmiy kanaldagi mijoz lavhalari (tools/kanal-lavhalar.mjs, prebuild). */
+export interface Lavha {
+  id: number;
+  url: string;
+  date: string;
+  title: string;
+  /** `/lavha/<id>` — video muqovasi, `-480.webp` / `-960.webp`. */
+  image: string;
+}
+
+export function lavhalar(): Lavha[] {
+  const file = join(process.cwd(), "data", "lavhalar.json");
+  if (!existsSync(file)) return [];
+  try {
+    const data = JSON.parse(readFileSync(file, "utf8"));
+    return Array.isArray(data.items) ? data.items : [];
+  } catch {
+    return [];
+  }
+}

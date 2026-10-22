@@ -36,6 +36,20 @@ d.addEventListener('click',function(e){
   var f=note.closest('form');if(f){f.classList.remove('is-asked');void f.offsetWidth;f.classList.add('is-asked');}
   setTimeout(function(){var n=d.getElementById('lead-name');if(n)n.focus({preventScroll:true});},700);
 });
+/* Mijoz lavhasi — Telegram o'yinchisi shu sahifada ochiladi (data-lavha).
+   Manzil build'da yozilgan o'z kanalimiz posti. Ctrl/Shift bilan — odatdagidek yangi oynada. */
+d.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('[data-lavha]');
+  if(!a||e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;
+  e.preventDefault();
+  var box=d.createElement('div');box.className='lv-box';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');
+  box.innerHTML='<button type="button" class="lv-x" aria-label="×">×</button><div class="lv-frame"><iframe src="'+a.getAttribute('data-lavha')+'?embed=1&mode=tme" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Telegram"></iframe></div>';
+  function close(){box.remove();de.style.overflow='';removeEventListener('keydown',key);a.focus({preventScroll:true});}
+  function key(k){if(k.key==='Escape')close();}
+  box.addEventListener('click',function(k){if(k.target===box||k.target.classList.contains('lv-x'))close();});
+  addEventListener('keydown',key);
+  d.body.appendChild(box);de.style.overflow='hidden';box.querySelector('.lv-x').focus();
+});
 /* Filial holati (components/ui/OpenStatus.tsx) — Toshkent vaqti (UTC+5).
    Matn atributga yoziladi (CSS ::after ko'rsatadi): <span> ichiga matn
    qo'yilsa React hidratsiyada mos kelmaslik ko'rib, sahifani qayta chizadi. */

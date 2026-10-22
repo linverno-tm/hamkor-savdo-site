@@ -1,5 +1,6 @@
 import { site } from "@/data/site";
 import { SplitWords } from "@/components/ui/SplitWords";
+import { lavhalar } from "@/lib/kanal";
 
 /**
  * "Mijozlarimiz nima deydi?" — o'ylab topilgan sharh kartochkalari o'rniga
@@ -15,6 +16,7 @@ export function Reviews() {
   const rating = reviews.rating.toFixed(1).replace(".", ",");
   // 4,5 ni 5 yulduz qilib ko'rsatmaslik uchun pastga yaxlitlanadi.
   const full = Math.floor(reviews.rating);
+  const items = lavhalar();
 
   return (
     <section id="sharhlar" aria-labelledby="reviews-title" className="sec reviews">
@@ -78,6 +80,50 @@ export function Reviews() {
           </a>
         </div>
       </div>
+
+      {/* Rasmiy kanaldagi mijoz lavhalari — har kecha yangilanadi
+          (tools/kanal-lavhalar.mjs). Bosilganda Telegram'ning o'z
+          o'yinchisi shu yerda ochiladi (lib/motion.ts > data-lavha);
+          JavaScript'siz — post Telegram'da ochiladi. */}
+      {items.length > 0 ? (
+        <div className="lavha-wrap">
+          <div className="wrap lavha-head">
+            <p className="eyebrow">Rasmiy kanaldan</p>
+            <a href={site.telegramUrl} target="_blank" rel="noopener noreferrer" className="lavha-all">
+              Hammasi <span aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+          <ul data-m="" data-m-stagger className="lavha-rail" aria-label="Rasmiy kanaldagi mijoz lavhalari">
+            {items.map((l) => (
+              <li key={l.id} className="lavha-item">
+                <a href={l.url} target="_blank" rel="noopener noreferrer" data-lavha={l.url} className="lavha">
+                  <img
+                    src={`${l.image}-960.webp`}
+                    srcSet={`${l.image}-480.webp 480w, ${l.image}-960.webp 960w`}
+                    sizes="(max-width: 640px) 62vw, 260px"
+                    width={960}
+                    height={1280}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="lavha-img"
+                  />
+                  <span className="lavha-shade" aria-hidden="true" />
+                  <span className="lavha-play" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
+                    </svg>
+                  </span>
+                  <span className="lavha-body">
+                    <span className="lavha-date">{l.date.split("-").reverse().join(".")}</span>
+                    <span className="lavha-title">{l.title}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }

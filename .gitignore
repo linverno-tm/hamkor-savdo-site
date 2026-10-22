@@ -29,3 +29,5 @@ preview/
 # Telegram kanalidan katalog — har build'da tools/kanal-katalog.mjs yasaydi
 data/kanal.json
 public/kanal/
+data/lavhalar.json
+public/lavha/
