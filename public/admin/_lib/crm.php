@@ -17,7 +17,9 @@
  *
  * CRM ishlamay qolsa ariza yo'qolmaydi: u baribir saytning bazasida va
  * Telegram'da; yuborilmaganlari har 5 daqiqalik vazifada (tasks.php)
- * qayta yuboriladi — 7 kun ichida, ko'pi bilan 12 marta.
+ * qayta yuboriladi — 7 kun ichida. CRM o'chiq yoki kalit xato bo'lsa urinishlar
+ * soni cheklanmaydi (har safar faqat bitta ariza bilan sinab ko'riladi), boshqa
+ * xatolarda — ko'pi bilan 12 marta.
  */
 
 const HS_CRM_DEFAULT_URL = 'https://hamkorcrm.uz/api/webhooks/sayt-ariza';
@@ -158,15 +160,23 @@ function hs_crm_retry($limit = 20)
        allaqachon ko'rilgan, CRM'da takror chiqmasin (crm_since — kalit
        birinchi qo'yilgan vaqt, sozlamalar.php). */
     $since = max(date('Y-m-d H:i:s', time() - 7 * 86400), (string) hs_setting('crm_since', date('Y-m-d H:i:s')));
-    $st = hs_db()->prepare("SELECT id FROM leads WHERE crm_id = 0 AND crm_tries < ? AND created_at >= ?
-        AND crm_error NOT LIKE '%telefon%' ORDER BY id LIMIT ?");
-    $st->execute(array(HS_CRM_MAX_TRIES, $since, (int) $limit));
+    /* CRM o'chiq (ulanib bo'lmadi / HTTP 5xx) yoki kalit xato bo'lgan arizalar
+       urinishlar soniga qaramay 7 kun qayta yuboriladi: aks holda bir soatdan
+       uzun uzilishdagi arizalar CRM'ga hech qachon yetmasdi. */
+    $st = hs_db()->prepare("SELECT id FROM leads WHERE crm_id = 0 AND created_at >= ?
+        AND crm_error NOT LIKE '%telefon%'
+        AND (crm_tries < ? OR crm_error LIKE 'CRM bilan ulanib%' OR crm_error LIKE 'CRM kalitni%' OR crm_error LIKE 'CRM javobi: HTTP 5%')
+        ORDER BY id LIMIT ?");
+    $st->execute(array($since, HS_CRM_MAX_TRIES, (int) $limit));
     $n = 0;
     foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $id) {
         if (hs_crm_send_lead((int) $id)) {
             $n++;
-        } elseif (isset($GLOBALS['hs_crm_last_code']) && in_array($GLOBALS['hs_crm_last_code'], array(0, 401), true)) {
-            // Kalit noto'g'ri yoki CRM yetib bo'lmaydi — qolganlarini keyingi safar.
+            continue;
+        }
+        $code = isset($GLOBALS['hs_crm_last_code']) ? (int) $GLOBALS['hs_crm_last_code'] : -1;
+        if ($code === 0 || $code === 401 || $code >= 500) {
+            // CRM yetib bo'lmaydi yoki kalit xato — qolganlarini keyingi safar.
             break;
         }
     }

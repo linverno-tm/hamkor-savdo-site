@@ -65,6 +65,21 @@ function hs_len($s)
     return function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
 }
 
+/**
+ * Mijoz matnidan buzuq UTF-8 va boshqaruv belgilarini olib tashlaydi:
+ * aks holda CRM'ga bo'sh so'rov ketadi (json_encode false qaytaradi),
+ * Telegram rad etadi, Excel eksport esa buziladi. Izohda qator ko'chishi qoladi.
+ */
+function hs_clean($s, $multiline = false)
+{
+    if (function_exists('mb_check_encoding') && !mb_check_encoding($s, 'UTF-8')) {
+        $s = mb_convert_encoding($s, 'UTF-8', 'UTF-8');
+    }
+    $re = $multiline ? '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u' : '/[\x00-\x1F\x7F]/u';
+    $out = preg_replace($re, $multiline ? '' : ' ', (string) $s);
+    return $out === null ? '' : trim($out);
+}
+
 function hs_wants_json()
 {
     $accept = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : '';
@@ -167,9 +182,9 @@ if (hs_field('website') !== '' || (isset($_POST['website']) && !is_string($_POST
     hs_ok();
 }
 
-$name   = hs_cut(hs_field('name'), $MAX_NAME);
-$phone  = hs_cut(hs_field('phone'), $MAX_PHONE);
-$note   = hs_cut(hs_field('note'), $MAX_NOTE);
+$name   = hs_cut(hs_clean(hs_field('name')), $MAX_NAME);
+$phone  = hs_cut(hs_clean(hs_field('phone')), $MAX_PHONE);
+$note   = hs_cut(hs_clean(hs_field('note'), true), $MAX_NOTE);
 $branch = hs_field('branch');
 $page   = hs_cut(hs_field('page'), 200);
 /* Mijoz saytga qayerdan kelgan (instagram, google, telegram...) — brauzerdagi
@@ -196,6 +211,9 @@ if (strlen($digits) === 9) {
     $tel = '+998' . $digits;
 } elseif (strlen($digits) === 12 && substr($digits, 0, 3) === '998') {
     $tel = '+' . $digits;
+} elseif (strlen($digits) === 10 && ($digits[0] === '0' || $digits[0] === '8')) {
+    // "8 90 123 45 67" / "090 123 45 67" — mahalliy prefiks, raqamning o'zi oxirgi 9 ta.
+    $tel = '+998' . substr($digits, 1);
 } elseif (strlen($digits) > 9) {
     $tel = '+' . $digits;
 }

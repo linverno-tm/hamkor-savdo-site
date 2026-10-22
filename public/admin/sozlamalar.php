@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_set_setting('owner_hash_set_at', (string) time());
             session_regenerate_id(true);
             hs_audit($user['login'], "egasining paroli o'zgartirildi", 'IP ' . hs_ip());
-            hs_telegram_send("🔑 Admin panel paroli o'zgartirildi\nIP: " . hs_ip() . "\nQurilma: " . hs_describe_agent(hs_user_agent()) . "\nVaqt: " . date('d.m.Y H:i') . "\n\nSiz bo'lmasangiz — darhol kompyuterda php tools/admin-parol.php bilan yangi parol qo'ying.");
+            hs_telegram_send_admins("🔑 Admin panel paroli o'zgartirildi\nIP: " . hs_ip() . "\nQurilma: " . hs_describe_agent(hs_user_agent()) . "\nVaqt: " . date('d.m.Y H:i') . "\n\nSiz bo'lmasangiz — darhol kompyuterda php tools/admin-parol.php bilan yangi parol qo'ying.");
             hs_flash("Parol o'zgartirildi. Keyingi kirishda yangi parolni ishlating.");
         }
     } elseif ($action === 'crm') {

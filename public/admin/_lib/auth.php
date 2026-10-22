@@ -156,7 +156,7 @@ function hs_create_block($lastLogin)
     $id = (int) hs_db()->lastInsertId();
 
     hs_audit('tizim', 'blok', 'IP ' . hs_ip() . ', ' . hs_describe_agent(hs_user_agent()));
-    hs_telegram_send(implode("\n", array(
+    hs_telegram_send_admins(implode("\n", array(
         '🚫 ADMIN PANEL: QURILMA BLOKLANDI',
         '',
         HS_MAX_FAILS . " marta noto'g'ri login/parol kiritildi.",
@@ -239,6 +239,14 @@ function hs_password_problem($p, $kind = '')
  */
 function hs_attempt_login($login, $password)
 {
+    /* Bitta IP dan kelgan urinishlar navbatma-navbat tekshiriladi: aks holda
+       bir vaqtda yuborilgan o'nlab so'rov blok tekshiruvidan birga o'tib,
+       5 ta o'rniga ko'p parol sinab ko'rishga imkon berardi. Qulf funksiya
+       tugashi bilan (fayl yopilganda) o'zi ochiladi. */
+    $lock = @fopen(sys_get_temp_dir() . '/hs_login_' . md5(hs_ip()), 'c');
+    if ($lock) {
+        @flock($lock, LOCK_EX);
+    }
     if (hs_active_block()) {
         hs_record_attempt($login, 'blocked');
         return array('ok' => false, 'message' => 'blocked');
@@ -295,7 +303,7 @@ function hs_attempt_login($login, $password)
     // Ijara paneliga kirish savdo xodimlari chatiga chiqmasin: faqat egasining shaxsiy
     // chati (admin_chat_id) sozlangan bo'lsa, o'shanga boradi.
     $notify = hs_area() !== 'ijara' || (string) hs_config('admin_chat_id', '') !== '';
-    $notify && hs_telegram_send(implode("\n", array(
+    $notify && hs_telegram_send_admins(implode("\n", array(
         hs_area() === 'ijara' ? '🔐 Ijara paneliga kirildi' : '🔐 Admin panelga kirildi',
         'Login: ' . $user['login'],
         'IP: ' . hs_ip(),

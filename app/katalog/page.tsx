@@ -41,7 +41,7 @@ export default function CatalogPage() {
             <span className="text-ink-2">Katalog</span>
           </nav>
           <p className="kicker mt-6">Katalog</p>
-          <h1 className="display mt-3 text-4xl leading-[1.05] sm:text-5xl">Mahsulotlar</h1>
+          <h1 className="display mt-3 break-words text-3xl leading-[1.05] min-[400px]:text-4xl sm:text-5xl">Mahsulotlar</h1>
 
           {groups.length === 0 ? (
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-2">

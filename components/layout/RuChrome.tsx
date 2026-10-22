@@ -28,7 +28,6 @@ export function RuHeader({ uzHref = "/" }: { uzHref?: string }) {
         Перейти к содержанию
       </a>
       <div className="hdr-bar mx-auto flex max-w-7xl items-center justify-between gap-4">
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/ru/" className="tap shrink-0 text-purple" aria-label="HAMKOR SAVDO — главная">
           <Logo className="h-7 w-auto sm:h-9" />
         </a>

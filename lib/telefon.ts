@@ -40,7 +40,10 @@ export function telefonFormat(xom: string): string {
      tersa, o'zi qo'shgan prefiks bilan qo'shilib ketardi: "998991075508"
      -> "+998 99 899 10 75". Endi terilgani o'z holicha ko'rinadi, prefiks
      esa raqam to'lganda paydo bo'ladi. */
-  const milliy = raqamlar.slice(0, 9);
+  /* Boshidagi "0" — eski odat ("090 123 45 67"); O'zbekistonda 0 bilan
+     boshlanadigan operator kodi yo'q. Ilgari u raqamning bir qismi bo'lib
+     qolardi: "+998 09 012 34 56", oxirgi raqam esa sig'masdi. */
+  const milliy = raqamlar.replace(/^0+/, "").slice(0, 9);
   return (milliy.length === 9 ? "+998 " : "") + bolaklar(milliy);
 }
 

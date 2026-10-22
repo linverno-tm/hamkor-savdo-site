@@ -381,12 +381,24 @@ function hs_db_migrate(PDO $pdo)
         if ($version >= $v) {
             continue;
         }
-        $pdo->beginTransaction();
-        foreach ($sqls as $sql) {
-            $pdo->exec($sql);
+        /* IMMEDIATE — yozish qulfi darhol olinadi va versiya qulf ichida qayta
+           o'qiladi: deploydan keyin ikki so'rov bir vaqtda kelsa, ikkinchisi
+           shu qadamni takrorlab ("duplicate column") yiqilmaydi. */
+        $pdo->exec('BEGIN IMMEDIATE');
+        try {
+            if ((int) $pdo->query('PRAGMA user_version')->fetchColumn() >= $v) {
+                $pdo->exec('COMMIT');
+                continue;
+            }
+            foreach ($sqls as $sql) {
+                $pdo->exec($sql);
+            }
+            $pdo->exec('PRAGMA user_version = ' . (int) $v);
+            $pdo->exec('COMMIT');
+        } catch (Throwable $e) {
+            $pdo->exec('ROLLBACK');
+            throw $e;
         }
-        $pdo->exec('PRAGMA user_version = ' . (int) $v);
-        $pdo->commit();
     }
 }
 

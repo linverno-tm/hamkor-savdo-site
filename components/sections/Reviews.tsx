@@ -84,8 +84,9 @@ export function Reviews() {
       {/* Rasmiy kanaldagi mijoz lavhalari — har kecha yangilanadi
           (tools/kanal-lavhalar.mjs). Bosilganda Telegram'ning o'z
           o'yinchisi shu yerda ochiladi (lib/motion.ts > data-lavha);
-          JavaScript'siz — post Telegram'da ochiladi. */}
-      {items.length > 0 ? (
+          JavaScript'siz — post Telegram'da ochiladi. Kamida 3 ta bo'lmasa
+          ko'rsatilmaydi: bitta-ikkita karta chala ko'rinadi. */}
+      {items.length >= 3 ? (
         <div className="lavha-wrap">
           <div className="wrap lavha-head">
             <p className="eyebrow">Rasmiy kanaldan</p>

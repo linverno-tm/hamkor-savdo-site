@@ -87,3 +87,33 @@ function hs_describe_agent($ua)
     }
     return $browser . ' · ' . $os;
 }
+
+/**
+ * Xavfsizlik xabarlari (blok + blokdan chiqarish havolasi, kirish, parol
+ * o'zgarishi) — faqat shaxsiy admin chatlariga. Hech qachon guruhga
+ * (masalan arizalar guruhiga) ketmaydi: aks holda guruh a'zosi parolni
+ * taxmin qilib, har blokni o'zi ochib yuborishi mumkin edi.
+ */
+function hs_telegram_send_admins($text)
+{
+    if (!function_exists('hs_tg_admin_ids') && is_file(__DIR__ . '/tgchats.php')) {
+        require_once __DIR__ . '/tgchats.php';
+    }
+    $ids = array();
+    try {
+        $ids = function_exists('hs_tg_admin_ids') ? hs_tg_admin_ids() : array();
+    } catch (Throwable $e) {
+        $ids = array();
+    }
+    if (!$ids) {
+        $c = trim((string) hs_config('admin_chat_id', hs_config('chat_id', '')));
+        if ($c !== '' && strpos($c, '-') !== 0) {
+            $ids = array($c);
+        }
+    }
+    $ok = false;
+    foreach ($ids as $id) {
+        $ok = hs_telegram_send($text, (string) $id) || $ok;
+    }
+    return $ok;
+}

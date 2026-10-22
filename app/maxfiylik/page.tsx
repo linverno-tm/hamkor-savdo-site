@@ -58,7 +58,7 @@ export default function PrivacyPage() {
         </nav>
 
         <p className="kicker mt-6">Maxfiylik</p>
-        <h1 className="display mt-3 text-4xl leading-[1.05] sm:text-5xl">
+        <h1 className="display mt-3 break-words text-3xl leading-[1.05] min-[400px]:text-4xl sm:text-5xl">
           Ma&apos;lumotlaringiz bilan nima qilamiz
         </h1>
         <p className="mt-5 text-lg leading-relaxed text-ink-2">

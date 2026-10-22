@@ -10,7 +10,9 @@
     "start": "next start",
     "lint": "eslint",
     "mahalliy": "php -S localhost:8000 -t out tools/mahalliy-server.php",
-    "tekshir": "node tools/joylashuvni-tekshir.mjs"
+    "tekshir": "node tools/joylashuvni-tekshir.mjs",
+    "test": "node --test tools/sinov/*.test.mjs",
+    "sinov:brauzer": "node tools/brauzer-sinov.mjs"
   },
   "dependencies": {
     "next": "16.3.1",

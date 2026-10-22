@@ -145,7 +145,7 @@ const SOURCE_SCRIPT = `(function(){try{
 var src = sessionStorage.getItem('hs_src');
 if (!src) {
   var q = /[?&]utm_source=([^&#]+)/.exec(location.search);
-  if (q) { src = decodeURIComponent(q[1]); }
+  if (q) { try { src = decodeURIComponent(q[1]); } catch(e) { src = q[1]; } }
   else {
     var r = sessionStorage.getItem('hs_ref'); if (r === null) r = document.referrer;
     var host = ''; try { host = new URL(r).hostname.replace(/^www\\./, ''); } catch(e) {}
