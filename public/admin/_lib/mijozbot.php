@@ -774,7 +774,7 @@ function hs_mb_known_type($text)
 /** AI siz ham ko'rinadigan savol belgisi. */
 function hs_mb_looks_like_question($text)
 {
-    return (bool) preg_match('/\?|bormi|борми|bor mi|narx|нарх|qancha|қанча|канча|necha|неча|muddat|муддат|qayer|қаер|каер|dostavka|доставка|yetkaz|етказ|admin|админ|kerak|керак/iu', (string) $text);
+    return (bool) preg_match('/\?|bormi|борми|bor mi|narx|нарх|qancha|қанча|канча|necha|неча|muddat|муддат|qayer|қаер|каер|dostavka|доставка|yetkaz|етказ|admin|админ|kerak|керак|bering|беринг|yubor|юбор|tashla|ташла|obzor|обзор|ko.?rsat|кўрсат|курсат|bo.?lsa|бўлса|булса/iu', (string) $text);
 }
 
 /* ================== xodim bilan suhbat — bot aralashmaydi ================== */
@@ -1037,8 +1037,8 @@ function hs_mb_process_question($qid)
     }
     list($d, $err) = hs_mb_ask_ai($q['text'], $q['context'], $rows);
     if ($d === null) {
-        // AI yo'q yoki ishlamadi — oddiy qidiruv; savolga o'xshamasa jim turamiz.
-        if (!hs_mb_looks_like_question($q['text'])) {
+        // AI yo'q yoki ishlamadi — oddiy qidiruv; savolga ham, mahsulot nomiga ham o'xshamasa jim turamiz.
+        if (!hs_mb_looks_like_question($q['text']) && hs_mb_known_type($q['text']) === '') {
             hs_db()->prepare("UPDATE mb_questions SET status = 'tashlandi', error = ? WHERE id = ?")->execute(array($err, $qid));
             return;
         }
