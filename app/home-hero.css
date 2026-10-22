@@ -548,3 +548,17 @@
 [data-theme="dark"] .hero-stage {
   background: linear-gradient(165deg, #43226b 0%, #2f1749 55%, #170c26 100%);
 }
+
+/* Qisqa ariza formasi: kompyuterda doim, telefonda faqat A/B sinov
+   "tel-forma" ning B guruhida (lib/ab.ts). */
+.hero-lead-wrap {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .hero-lead-wrap {
+    display: block;
+  }
+}
+html[data-ab-tel-forma="b"] .hero-lead-wrap {
+  display: block;
+}

@@ -301,6 +301,10 @@ function hs_tg_source_text($source, $detail)
     if (isset($d['land']) && $d['land'] !== '/') {
         $extra[] = 'birinchi ochgani: ' . $d['land'];
     }
+    if (isset($d['ab'])) {
+        // A/B sinov guruhi (sayt: lib/ab.ts), masalan "tel-forma:b".
+        $extra[] = 'sinov: ' . str_replace(array(':a', ':b'), array(' — A', ' — B'), $d['ab']);
+    }
     return $out . ($extra ? ' · ' . implode(' · ', $extra) : '');
 }
 

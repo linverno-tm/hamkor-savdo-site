@@ -77,7 +77,9 @@ export function Hero() {
             </a>
           </div>
 
-          <div className="in-7 hidden lg:block">
+          {/* Kompyuterda doim; telefonda — faqat A/B sinovning "b" guruhida
+              (lib/ab.ts > tel-forma, app/home-hero.css > .hero-lead-wrap). */}
+          <div className="in-7 hero-lead-wrap">
             <HeroLead />
           </div>
         </div>

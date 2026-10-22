@@ -216,6 +216,33 @@ if (!$branchRows) {
 }
 echo '</section></div>';
 
+/* A/B sinovlar (sayt: lib/ab.ts). Mehmonlar teng ikki guruhga bo'linadi,
+   shuning uchun guruhlardagi arizalar soni to'g'ridan-to'g'ri solishtiriladi.
+   Guruh arizaning source_detail boshida: "ab=tel-forma:b;..." */
+$abRows = array();
+foreach (hs_db()->query("SELECT source_detail FROM leads WHERE source_detail LIKE 'ab=%'")->fetchAll(PDO::FETCH_COLUMN) as $det) {
+    $first = explode(';', (string) $det, 2);
+    foreach (explode(',', substr($first[0], 3)) as $pair) {
+        $kv = explode(':', $pair, 2);
+        if (count($kv) === 2 && ($kv[1] === 'a' || $kv[1] === 'b')) {
+            if (!isset($abRows[$kv[0]])) {
+                $abRows[$kv[0]] = array('a' => 0, 'b' => 0);
+            }
+            $abRows[$kv[0]][$kv[1]]++;
+        }
+    }
+}
+if ($abRows) {
+    echo '<section class="card"><h2>A/B sinovlar — arizalar soni</h2>';
+    echo '<p class="muted">Mehmonlar teng ikki guruhga bo\'lingan. Qaysi guruhda ariza ko\'p bo\'lsa, o\'sha variant yaxshiroq. Ishonchli xulosa uchun har guruhda kamida 30–50 ta ariza kerak.</p>';
+    echo '<table><thead><tr><th>Sinov</th><th class="right">A guruh</th><th class="right">B guruh</th><th class="right">Farq</th></tr></thead><tbody>';
+    foreach ($abRows as $id => $c) {
+        $diff = $c['a'] > 0 ? round((($c['b'] - $c['a']) / $c['a']) * 100) : 0;
+        echo '<tr><td>' . h($id) . '</td><td class="right">' . (int) $c['a'] . '</td><td class="right">' . (int) $c['b'] . '</td><td class="right">' . ($c['a'] > 0 ? ($diff > 0 ? '+' : '') . $diff . '%' : '—') . '</td></tr>';
+    }
+    echo '</tbody></table></section>';
+}
+
 /* Ilgari bu yerda shunchaki "10 daqiqada bir yangilanadi" deb turardi.
    Odam uchun bu hech narsa bildirmaydi: raqam eskimi, yangimi, kutish
    kerakmi yoki nimadir buzuqmi — bilib bo'lmasdi. Endi aniq vaqt

@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { MetrikaPageview } from "@/components/ui/MetrikaPageview";
 import { YM_ID } from "@/lib/metrika";
 import { MOTION_SCRIPT } from "@/lib/motion";
+import { AB_SCRIPT } from "@/lib/ab";
 import "./globals.css";
 
 /**
@@ -109,6 +110,7 @@ k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNo
 (window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=${YM_ID}','ym');
 ym(${YM_ID}, 'init', {ssr:true, webvisor:true, clickmap:true, referrer:ref, url:location.href, accurateTrackBounce:true, trackLinks:true});
 ym(${YM_ID}, 'getClientID', function(id){ window.__hsYmCid = id; });
+if (window.__hsAb) ym(${YM_ID}, 'params', {ab: window.__hsAb});
 document.addEventListener('click', function(ev){
   var a = ev.target && ev.target.closest && ev.target.closest('a[href]');
   if (!a) return;
@@ -177,7 +179,8 @@ document.addEventListener('submit', function(ev){
   var form = ev.target;
   if (!form || !form.querySelector || !form.querySelector('input[name="src"]')) return;
   hidden(form, 'src', sessionStorage.getItem('hs_src') || '');
-  hidden(form, 'src_info', sessionStorage.getItem('hs_src_info') || '');
+  /* A/B sinov guruhi boshida — admin panel Statistika'da guruhlar bo'yicha sanaydi (lib/ab.ts). */
+  hidden(form, 'src_info', (window.__hsAbTag ? 'ab=' + window.__hsAbTag + ';' : '') + (sessionStorage.getItem('hs_src_info') || ''));
   /* Metrika'dagi aynan shu mehmon: ariza uning ClientID si bilan saqlanadi —
      Metrika'da (Vebvizor) shu odam saytda nima qilganini topish mumkin. */
   hidden(form, 'ym_cid', window.__hsYmCid || '');
@@ -192,6 +195,7 @@ export default function RootLayout({
     <html lang="uz" className={`${outfit.variable} ${bebas.variable}`} suppressHydrationWarning>
       <head>
         <script data-keep dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script data-keep dangerouslySetInnerHTML={{ __html: AB_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: LANG_DETECT_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: SOURCE_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: METRIKA_SCRIPT }} />
