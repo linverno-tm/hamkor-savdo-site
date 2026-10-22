@@ -385,7 +385,13 @@ function hs_mb_catalog_line($row)
     $prices = array();
     foreach (array_slice($lines, 1) as $l) {
         if (hs_mb_is_product_text($l) || preg_match('/\d{3}[\s.,]?\d{3}/u', $l)) {
-            $prices[] = $l;
+            // Muddatli to'lov faqat 12 oygacha (egasi 22.10: 1-yanvardan qaror) — eski postlardagi 13+ oylik narx botga ko'rsatilmaydi.
+            $l = trim(implode('; ', array_filter(array_map('trim', preg_split('/[;|]/u', $l)), function ($seg) {
+                return $seg !== '' && !preg_match('/(?<!\d)(1[3-9]|[2-9]\d)\s*-?\s*(ой|oy|oй|мес)/iu', $seg);
+            })));
+            if ($l !== '') {
+                $prices[] = $l;
+            }
         }
         if (count($prices) >= 4) {
             break;
@@ -464,6 +470,8 @@ function hs_mb_system_prompt()
         . "Mos post bo'lmasa — bor ham, yo'q ham dema: \"aniq bor-yo'qligi va narxini operator aniqlab yozadi\" de (needs_operator=true). "
         . "Mahsulot turi rasmiy yo'nalishga kirsa ham (masalan kir mashina, muzlatgich), post bo'lmasa \"bor\" dema — bu omborda borligini isbotlamaydi. "
         . "Muayyan model/brend (masalan \"S21 Ultra\", \"LG 9 kg\") so'ralsa va katalogda xuddi shu model bo'lmasa — o'xshashini \"o'sha\" deb ko'rsatma. "
+        . "Muddatli to'lov FAQAT 12 oygacha: postda yoki eski reklamada 18/24 oy yozilgan bo'lsa ham uni aytma va taklif qilma; "
+        . "24 oy so'ralsa — \"muddatli to'lov 12 oygacha\" de. "
         . "Postdagi narx yoki aksiya muddati o'tgan bo'lsa, uni hozirgi narx deb aytma. Ishonching komil bo'lmasa — qisqa qilib operatorga yo'naltir. "
         . "Havola, telefon raqami yoki emoji qo'shma — tizim o'zi qo'shadi.\n"
         . "4. needs_operator: aniq narx/mavjudlik/limit/buyurtma kabi javobni faqat xodim bera oladigan bo'lsa yoki mos post topilmasa — true.\n"
