@@ -9,6 +9,7 @@ import { ActionBar } from "@/components/layout/ActionBar";
 import { Contact } from "@/components/sections/Contact";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { SplitWords } from "@/components/ui/SplitWords";
+import { OpenStatus } from "@/components/ui/OpenStatus";
 
 /**
  * Aloqa — alohida sahifa.
@@ -121,6 +122,7 @@ export default function AloqaPage() {
                       <div className="min-w-0 flex-1">
                         <p className="branch-city">{b.city}</p>
                         <p className="branch-land">{b.landmark}</p>
+                        <OpenStatus hours={b.hours} closed={b.closed} />
                       </div>
                     </div>
                     <p className="branch-addr">{b.address}</p>

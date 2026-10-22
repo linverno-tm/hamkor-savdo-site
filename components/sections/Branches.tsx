@@ -3,6 +3,7 @@ import { branches, cityList, mapsUrl } from "@/data/branches";
 import { site } from "@/data/site";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { BranchMap, type MapBranch } from "@/components/sections/BranchMap";
+import { OpenStatus } from "@/components/ui/OpenStatus";
 
 /**
  * "Bizga eng yaqin Hamkor" — chapda filiallar ro'yxati, o'ngda xarita.
@@ -52,6 +53,7 @@ export function Branches() {
                     <div className="min-w-0 flex-1">
                       <h3 className="branch-city">{b.city}</h3>
                       <p className="branch-land">{b.landmark}</p>
+                      <OpenStatus hours={b.hours} closed={b.closed} />
                     </div>
                     <span className="branch-hours">{b.hours}</span>
                   </div>

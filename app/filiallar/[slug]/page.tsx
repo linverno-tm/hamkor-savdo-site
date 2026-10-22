@@ -13,6 +13,7 @@ import { LeadForm } from "@/components/sections/LeadForm";
 import { BranchGallery } from "@/components/sections/BranchGallery";
 import { Logo } from "@/components/ui/Logo";
 import { SplitWords } from "@/components/ui/SplitWords";
+import { OpenStatus } from "@/components/ui/OpenStatus";
 
 /**
  * One indexable page per branch.
@@ -185,6 +186,7 @@ export default async function BranchPage({
                 </span>
               </h1>
               <p className="hero-lead in-4 !mt-3 !text-xl">{branch.landmark}</p>
+              <OpenStatus hours={branch.hours} closed={branch.closed} />
 
               {branch.closed ? (
                 <p className="mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">

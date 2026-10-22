@@ -12,6 +12,7 @@ import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { SplitWords } from "@/components/ui/SplitWords";
 import { ScrubText } from "@/components/ui/ScrubText";
+import { OpenStatus } from "@/components/ui/OpenStatus";
 
 /**
  * Yo'nalish sahifasi (/texnika/, /ru/tehnika/ ...). Matn `data/topics.ts` da.
@@ -265,6 +266,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                     <div className="min-w-0 flex-1">
                       <p className="branch-city">{cityName(b.city)}</p>
                       <p className="branch-land">{b.landmark}</p>
+                      <OpenStatus hours={b.hours} closed={b.closed} />
                     </div>
                   </div>
                   <p className="branch-addr">

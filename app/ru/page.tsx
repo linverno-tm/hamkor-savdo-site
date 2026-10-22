@@ -7,6 +7,7 @@ import { ActionBar } from "@/components/layout/ActionBar";
 import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { SplitWords } from "@/components/ui/SplitWords";
+import { OpenStatus } from "@/components/ui/OpenStatus";
 
 /**
  * Ruscha bosh sahifa. Rus tilida qidiradigan odam ("рассрочка Андижан",
@@ -143,6 +144,7 @@ export default function RuHome() {
                     <div className="min-w-0 flex-1">
                       <p className="branch-city">{CITY_RU[b.city] ?? b.city}</p>
                       <p className="branch-land">{b.landmark}</p>
+                      <OpenStatus hours={b.hours} closed={b.closed} />
                     </div>
                   </div>
                   <p className="branch-addr">Часы работы: {b.hours}</p>

@@ -16,6 +16,8 @@
  *    chiqadi, ariza formasi ko'rinib turganda yashirinadi.
  *  - `[data-ask]` ("Shuni so'rash") — bosilganda ariza formasidagi
  *    "Nima qiziqtiradi?" maydoniga taklif nomi yoziladi, ism maydoni tanlanadi.
+ *  - `[data-open-hours]` — filialning "hozir ochiq/yopiq" belgisi, har daqiqa
+ *    (harakat sozlamasidan qat'i nazar).
  *  - `[data-spot]` — sichqoncha bilan: kursor o'rni `--mx`/`--my` ga
  *    yoziladi (sahnadagi yorug'lik). Barmoq bilan ishlatilmaydi.
  *
@@ -34,10 +36,31 @@ d.addEventListener('click',function(e){
   var f=note.closest('form');if(f){f.classList.remove('is-asked');void f.offsetWidth;f.classList.add('is-asked');}
   setTimeout(function(){var n=d.getElementById('lead-name');if(n)n.focus({preventScroll:true});},700);
 });
+/* Filial holati (components/ui/OpenStatus.tsx) — Toshkent vaqti (UTC+5).
+   Matn atributga yoziladi (CSS ::after ko'rsatadi): <span> ichiga matn
+   qo'yilsa React hidratsiyada mos kelmaslik ko'rib, sahifani qayta chizadi. */
+function openSt(){
+  var L=de.lang||'uz',T=L==='uz-Cyrl'?['Ҳозир очиқ · {c} гача','Тез ёпилади · {c} да','Ёпиқ · {o} да очилади','Ёпиқ · эртага {o} да очилади']
+    :L==='ru'?['Сейчас открыто · до {c}','Скоро закроется · в {c}','Закрыто · откроется в {o}','Закрыто · откроется завтра в {o}']
+    :['Hozir ochiq · {c} gacha','Tez yopiladi · {c} da','Yopiq · {o} da ochiladi','Yopiq · ertaga {o} da ochiladi'];
+  var n=new Date(Date.now()+5*36e5),now=n.getUTCHours()*60+n.getUTCMinutes();
+  d.querySelectorAll('[data-open-hours]').forEach(function(el){
+    var m=/(\\d{1,2}):(\\d{2})\\D+(\\d{1,2}):(\\d{2})/.exec(el.getAttribute('data-open-hours'));if(!m)return;
+    var o=+m[1]*60+ +m[2],c=+m[3]*60+ +m[4],os=m[1]+':'+m[2],cs=m[3]+':'+m[4],st,t;
+    if(now>=o&&now<c){st=c-now<=60?'soon':'open';t=T[st==='soon'?1:0];}
+    else{st='closed';t=T[now<o?2:3];}
+    t=t.replace('{c}',cs).replace('{o}',os);el.setAttribute('data-state',st);el.setAttribute('data-text',t);el.setAttribute('aria-label',t);
+  });
+}
+/* React bor sahifada — u sahifani jonlantirib bo'lgach (load + biroz), aks
+   holda (kirillcha nusxa) — darhol. */
+function startSt(){openSt();setInterval(openSt,60000);}
+function pickSt(){if(d.querySelector('script[src*="/_next/"]')){if(d.readyState==='complete')setTimeout(startSt,400);else addEventListener('load',function(){setTimeout(startSt,400);});}else startSt();}
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',pickSt);else pickSt();
 if(!('IntersectionObserver' in window))return;
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 de.classList.add('m-js');
-function fmt(n,plain){return plain?String(n):String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+function fmt(n,plain){return plain?String(n):String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ');}
 function count(el){
   var t=+el.getAttribute('data-count');if(!isFinite(t))return;
   var suf=el.getAttribute('data-count-suffix')||'',plain=el.hasAttribute('data-count-plain'),s=null;
