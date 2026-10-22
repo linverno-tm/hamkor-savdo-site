@@ -1561,15 +1561,11 @@ html:not(.m-js) .step-dot {
   transition: transform 1100ms var(--ease);
 }
 .kanal-date {
-  position: absolute;
-  left: 1rem;
-  top: 1rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 0.35rem 0.8rem;
+  display: block;
+  margin-bottom: 0.4rem;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #1a1130;
+  font-weight: 600;
+  color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 .kanal-body {
@@ -1690,18 +1686,19 @@ html:not(.m-js) .step-dot {
   display: none;
 }
 .lavha-item {
-  flex: 0 0 clamp(11.5rem, 21vw, 15rem);
+  flex: 0 0 clamp(10.5rem, 17vw, 13rem);
   scroll-snap-align: start;
 }
 @media (max-width: 639.98px) {
   .lavha-item {
-    flex-basis: 62%;
+    flex-basis: 48%;
   }
 }
 .lavha {
   position: relative;
   display: block;
-  aspect-ratio: 3 / 4;
+  /* Telegram video kadri tik (9:16) — karta ham shunday, kadr kesilmaydi. */
+  aspect-ratio: 9 / 16;
   overflow: hidden;
   border-radius: 24px;
   background: linear-gradient(160deg, #5a3089, #2f1848);
@@ -1713,7 +1710,7 @@ html:not(.m-js) .step-dot {
   inset: 0;
   height: 100%;
   width: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 1100ms var(--ease);
 }
 .lavha-shade {
@@ -1850,4 +1847,25 @@ html:not(.m-js) .step-dot {
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
+}
+
+/* Kanal rasmlari kesilmaydi: oldda to'liq rasm (contain), orqada uning
+   xiralashgan, kattalashgan nusxasi — chetlar bo'm-bo'sh turmaydi. */
+.media-bg {
+  position: absolute;
+  inset: -10%;
+  height: 120%;
+  width: 120%;
+  object-fit: cover;
+  filter: blur(24px) saturate(1.2);
+  opacity: 0.55;
+  transform: none !important;
+}
+.media-fit {
+  object-fit: contain !important;
+}
+.kanal-media .media-fit {
+  position: relative;
+  height: 100%;
+  width: 100%;
 }

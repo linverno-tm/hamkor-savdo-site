@@ -97,16 +97,17 @@ export function Reviews() {
             {items.map((l) => (
               <li key={l.id} className="lavha-item">
                 <a href={l.url} target="_blank" rel="noopener noreferrer" data-lavha={l.url} className="lavha">
+                  <img src={`${l.image}-480.webp`} alt="" aria-hidden="true" loading="lazy" decoding="async" className="media-bg" />
                   <img
                     src={`${l.image}-960.webp`}
                     srcSet={`${l.image}-480.webp 480w, ${l.image}-960.webp 960w`}
-                    sizes="(max-width: 640px) 62vw, 260px"
-                    width={960}
-                    height={1280}
+                    sizes="(max-width: 640px) 48vw, 210px"
+                    width={180}
+                    height={320}
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className="lavha-img"
+                    className="lavha-img media-fit"
                   />
                   <span className="lavha-shade" aria-hidden="true" />
                   <span className="lavha-play" aria-hidden="true">

@@ -29,7 +29,6 @@ const LIMIT = 10;
 const DATA = join(ROOT, "data", "lavhalar.json");
 const IMG_DIR = join(ROOT, "public", "lavha");
 const SIZES = [480, 960];
-const RATIO = 3 / 4;
 const UA = { "User-Agent": "Mozilla/5.0 (HamkorSavdo sayt lavhalari)" };
 
 const LAVHA =
@@ -129,7 +128,8 @@ async function main() {
         const buf = Buffer.from(await r.arrayBuffer());
         for (const size of SIZES) {
           await sharp(buf)
-            .resize(size, Math.round(size / RATIO), { fit: "cover", position: "attention" })
+            // Kesilmaydi: poster/video kadri to'liq qoladi (egasi 22.10: tepasi qirqilgan edi).
+            .resize(size, size * 2, { fit: "inside", withoutEnlargement: true })
             .webp({ quality: 80 })
             .toFile(join(IMG_DIR, `${it.id}-${size}.webp`));
         }

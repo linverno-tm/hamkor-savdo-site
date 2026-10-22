@@ -9,7 +9,6 @@ import { Hero } from "@/components/sections/Hero";
 import { Trust } from "@/components/sections/Trust";
 import { Promotions } from "@/components/sections/Promotions";
 import { Catalog } from "@/components/sections/Catalog";
-import { KanalCatalog } from "@/components/sections/KanalCatalog";
 import { Installment } from "@/components/sections/Installment";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { LeadForm } from "@/components/sections/LeadForm";
@@ -131,7 +130,6 @@ export default function Home() {
         <Hero />
         <Trust />
         <Promotions />
-        <KanalCatalog />
         <Catalog />
         <Installment />
         <HowItWorks />

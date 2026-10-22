@@ -6,6 +6,10 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 const shortDate = (d: string) => d.split("-").reverse().slice(0, 2).join(".");
 
 /**
+ * HOZIR ISHLATILMAYDI (egasi 22.10: bo'lim butunlay o'chirilsin; keyin —
+ * admin panelda tasdiqlab chiqariladigan variant). Sahifaga ulanmagan,
+ * tools/kanal-katalog.mjs ham prebuild'dan olingan.
+ *
  * Telegram kanalidagi narxli takliflar — sayt har kecha qayta yig'ilganda
  * yangilanadi (tools/kanal-katalog.mjs). Taklif bo'lmasa, bo'lim chiqmaydi.
  *
@@ -43,7 +47,12 @@ export function KanalCatalog() {
             <li key={it.id} className="kanal-card">
               <a href={it.url} target="_blank" rel="noopener noreferrer" className="kanal-media" tabIndex={-1} aria-hidden="true">
                 {it.image ? (
+                  /* Orqada xiralashgan nusxa — rasm kesilmasdan to'liq turadi, chetlar bo'sh qolmaydi. */
+                  <img src={`${it.image}-480.webp`} alt="" aria-hidden="true" loading="lazy" decoding="async" className="media-bg" />
+                ) : null}
+                {it.image ? (
                   <img
+                    className="media-fit"
                     src={`${it.image}-960.webp`}
                     srcSet={`${it.image}-480.webp 480w, ${it.image}-960.webp 960w`}
                     sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 30vw"
@@ -54,9 +63,9 @@ export function KanalCatalog() {
                     decoding="async"
                   />
                 ) : null}
-                <span className="kanal-date">{shortDate(it.date)}</span>
               </a>
               <div className="kanal-body">
+                <span className="kanal-date">{shortDate(it.date)}</span>
                 <h3 className="kanal-title">{it.title}</h3>
                 <ul className="kanal-prices">
                   {it.prices.map((p) => (
