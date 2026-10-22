@@ -331,6 +331,31 @@ if ($multi) {
     $sent = ($body !== false && strpos($body, '"ok":true') !== false);
 }
 
+/* CRM'ga (Call center > Лидлар, filial bo'yicha) — mijozga javob qaytgandan
+   KEYIN: CRM sekin yoki o'chiq bo'lsa ham forma kutib qolmaydi. Yuborilmasa
+   panel vazifasi (tasks.php) keyinroq qayta yuboradi. _lib/crm.php */
+if ($leadId > 0 && is_file(__DIR__ . '/../admin/_lib/crm.php')) {
+    try {
+        require_once __DIR__ . '/../admin/_lib/crm.php';
+        if (hs_crm_enabled()) {
+            register_shutdown_function(function () use ($leadId) {
+                if (function_exists('fastcgi_finish_request')) {
+                    @fastcgi_finish_request();
+                } elseif (function_exists('litespeed_finish_request')) {
+                    @litespeed_finish_request();
+                }
+                try {
+                    hs_crm_send_lead($leadId);
+                } catch (Throwable $e) {
+                    error_log('HAMKOR SAVDO: CRM yuborish xatosi: ' . $e->getMessage());
+                }
+            });
+        }
+    } catch (Throwable $e) {
+        error_log('HAMKOR SAVDO: CRM moduli yuklanmadi: ' . $e->getMessage());
+    }
+}
+
 if ($sent && $leadId > 0) {
     try {
         hs_db()->prepare('UPDATE leads SET telegram_sent = 1 WHERE id = ?')->execute(array($leadId));

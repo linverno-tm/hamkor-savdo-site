@@ -29,6 +29,14 @@ jobs:
 
       - run: npm ci
 
+      # PHP fayllarda sintaksis xatosi bo'lsa (lead.php, admin panel) —
+      # hostingga hech narsa yuklanmaydi: bitta xato ariza qabul qilishni
+      # to'xtatib qo'yardi. Kompyuterda PHP yo'q, tekshiruv shu yerda.
+      - name: PHP sintaksisini tekshirish
+        run: |
+          find public -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/php-lint.txt 2>&1 || { grep -v '^No syntax errors' /tmp/php-lint.txt; exit 1; }
+          echo "PHP: $(grep -c '^No syntax errors' /tmp/php-lint.txt) ta fayl toza"
+
       - run: npm run build
 
       # FTP ma'lumotlari GitHub > Settings > Secrets and variables > Actions da:

@@ -4,6 +4,7 @@ require_once __DIR__ . '/_lib/content.php';
 require_once __DIR__ . '/_lib/metrika.php';
 require_once __DIR__ . '/_lib/leads.php';
 require_once __DIR__ . '/_lib/report.php';
+require_once __DIR__ . '/_lib/crm.php';
 
 $user = hs_require_login(true);
 
@@ -71,6 +72,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_telegram_send("🔑 Admin panel paroli o'zgartirildi\nIP: " . hs_ip() . "\nQurilma: " . hs_describe_agent(hs_user_agent()) . "\nVaqt: " . date('d.m.Y H:i') . "\n\nSiz bo'lmasangiz — darhol kompyuterda php tools/admin-parol.php bilan yangi parol qo'ying.");
             hs_flash("Parol o'zgartirildi. Keyingi kirishda yangi parolni ishlating.");
         }
+    } elseif ($action === 'crm') {
+        /* CRM ulanishi. Kalit maydoni bo'sh qoldirilsa — eski kalit saqlanadi
+           (sahifa kalitni hech qachon qayta ko'rsatmaydi). */
+        $url = trim(hs_post('crm_url'));
+        if ($url !== '' && !preg_match('#^https://[^\s]+$#i', $url)) {
+            hs_flash("CRM manzili https:// bilan boshlanishi kerak.", 'err');
+            hs_redirect('/admin/sozlamalar.php#crm');
+        }
+        hs_set_setting('crm_url', $url);
+        hs_set_setting('crm_enabled', hs_post('crm_enabled') === '1' ? '1' : '0');
+        $key = isset($_POST['crm_key']) && is_string($_POST['crm_key']) ? trim($_POST['crm_key']) : '';
+        if (hs_post('crm_key_ochir') === '1') {
+            hs_set_setting('crm_key', '');
+            hs_audit($user['login'], 'CRM kaliti o\'chirildi', '');
+        } elseif ($key !== '') {
+            if (hs_crm_key() === '') {
+                // Shu paytdan keyingi arizalar CRM'ga ketadi (eskilari emas).
+                hs_set_setting('crm_since', date('Y-m-d H:i:s'));
+            }
+            hs_set_setting('crm_key', $key);
+            // Kalitning o'zi jurnalga yozilmaydi.
+            hs_audit($user['login'], 'CRM kaliti almashtirildi', '');
+        }
+        hs_audit($user['login'], 'CRM sozlamasi', $url !== '' ? $url : HS_CRM_DEFAULT_URL);
+        hs_flash('CRM sozlamalari saqlandi.');
+        hs_redirect('/admin/sozlamalar.php#crm');
+    } elseif ($action === 'crm_sinov') {
+        list($ok, $msg) = hs_crm_ping();
+        hs_flash($msg, $ok ? 'ok' : 'err');
+        hs_redirect('/admin/sozlamalar.php#crm');
+    } elseif ($action === 'crm_qayta') {
+        // Qo'lda qayta yuborish: urinishlar hisobini nolga tushiramiz.
+        hs_db()->exec("UPDATE leads SET crm_tries = 0 WHERE crm_id = 0 AND crm_error NOT LIKE '%telefon%'");
+        $n = hs_crm_retry(50);
+        hs_flash($n > 0 ? "{$n} ta ariza CRM'ga yuborildi." : "Yuborilmadi — pastdagi xato sababini ko'ring.", $n > 0 ? 'ok' : 'err');
+        hs_redirect('/admin/sozlamalar.php#crm');
     } elseif ($action === 'sinov') {
         $ok = hs_telegram_send("🧪 Sinov hisoboti\n\n" . hs_build_daily_report(date('Y-m-d')));
         hs_flash($ok ? "Sinov hisoboti Telegram'ga yuborildi." : "Yuborilmadi — bot tokeni va chat_id ni tekshiring.", $ok ? 'ok' : 'err');
@@ -136,6 +173,41 @@ echo '<div><label for="yangi">Yangi parol</label><input id="yangi" type="passwor
 echo '<div><label for="yangi2">Yangi parolni takrorlang</label><input id="yangi2" type="password" name="yangi2" required minlength="10" autocomplete="new-password"></div>';
 echo '</div><p class="hint">Kamida 10 belgi, harf va raqam. O\'zgarganda Telegram\'ga xabar keladi. Parolni unutsangiz — kompyuterda <span class="code">php tools/admin-parol.php</span>.</p>';
 echo '<div class="actions"><button class="btn" type="submit">Parolni o\'zgartirish</button></div></form>';
+
+/* ---------------- CRM ulanishi ---------------- */
+$crmKeySet = hs_crm_key() !== '';
+$crmWeek = date('Y-m-d H:i:s', time() - 7 * 86400);
+$crmStat = hs_db()->prepare("SELECT
+    SUM(CASE WHEN crm_id > 0 THEN 1 ELSE 0 END) AS yuborilgan,
+    SUM(CASE WHEN crm_id = 0 THEN 1 ELSE 0 END) AS kutilmoqda
+    FROM leads WHERE created_at > ?");
+$crmStat->execute(array($crmWeek));
+$cs = $crmStat->fetch();
+$crmLastErr = hs_db()->query("SELECT crm_error FROM leads WHERE crm_id = 0 AND crm_error != '' ORDER BY id DESC LIMIT 1")->fetchColumn();
+echo '<form id="crm" class="card" method="post" action="/admin/sozlamalar.php" autocomplete="off">' . hs_csrf_field() . '<input type="hidden" name="amal" value="crm">';
+echo '<h2>Hamkor CRM\'ga ulanish</h2>';
+echo '<p class="muted">Har bir ariza Telegram\'dan tashqari CRM\'ning Call center &gt; Лидлар bo\'limiga ham tushadi — tanlangan filialga. "Farqi yo\'q" va boshqa viloyat arizalari umumiy ro\'yxatga. Kalitni CRM\'ning sozlamalaridan (superadmin) olib, shu yerga qo\'ying.</p>';
+echo '<label class="inline"><input type="checkbox" name="crm_enabled" value="1"' . (hs_setting('crm_enabled', '1') === '1' ? ' checked' : '') . '> Arizalar CRM\'ga yuborilsin</label>';
+echo '<div class="grid grid-2">';
+echo '<div><label for="crm_url">CRM manzili</label><input id="crm_url" type="url" name="crm_url" value="' . h((string) hs_setting('crm_url', '')) . '" placeholder="' . h(HS_CRM_DEFAULT_URL) . '"><div class="muted small">Bo\'sh qolsa — ' . h(HS_CRM_DEFAULT_URL) . '</div></div>';
+echo '<div><label for="crm_key">Kalit</label><input id="crm_key" type="password" name="crm_key" value="" autocomplete="new-password" placeholder="' . ($crmKeySet ? 'saqlangan — almashtirish uchun yangisini qo\'ying' : 'CRM\'dan olingan kalit') . '">';
+echo '<div class="muted small">' . ($crmKeySet ? 'Kalit saqlangan ✓ (xavfsizlik uchun ko\'rsatilmaydi)' : 'Kalit hali qo\'yilmagan') . '</div>';
+if ($crmKeySet) {
+    echo '<label class="inline"><input type="checkbox" name="crm_key_ochir" value="1"> Kalitni o\'chirish</label>';
+}
+echo '</div></div>';
+echo '<p class="muted">Oxirgi 7 kun: CRM\'ga yuborilgan — <b>' . (int) $cs['yuborilgan'] . '</b>, yuborilmagan — <b>' . (int) $cs['kutilmoqda'] . '</b>';
+if ($crmLastErr) {
+    echo '<br>Oxirgi xato: ' . h((string) $crmLastErr);
+}
+echo '</p>';
+echo '<div class="row"><button class="btn" type="submit">Saqlash</button></div></form>';
+echo '<form class="card" method="post" action="/admin/sozlamalar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="crm_sinov">';
+echo '<h2>CRM ulanishini sinash</h2><p class="muted">Kalit va manzilni tekshiradi. Ariza yaratilmaydi.</p><div class="row"><button class="btn outline" type="submit">Sinash</button></div></form>';
+if ((int) $cs['kutilmoqda'] > 0 && $crmKeySet) {
+    echo '<form class="card" method="post" action="/admin/sozlamalar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="crm_qayta">';
+    echo '<h2>Yuborilmagan arizalar</h2><p class="muted">CRM ishlamay qolgan paytdagi arizalar har 5 daqiqada o\'zi qayta yuboriladi. Hozir yuborish uchun:</p><button class="btn outline" type="submit">Hozir qayta yuborish</button></form>';
+}
 
 echo '<form class="card" method="post" action="/admin/sozlamalar.php">' . hs_csrf_field() . '<input type="hidden" name="amal" value="sinov">';
 echo '<h2>Sinab ko\'rish</h2><p class="muted">Bugungi hisobotni hozir Telegram\'ga yuboradi.</p><button class="btn outline" type="submit">Sinov hisobotini yuborish</button></form>';

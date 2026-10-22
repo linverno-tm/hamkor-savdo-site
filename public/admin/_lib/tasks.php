@@ -16,6 +16,7 @@ require_once __DIR__ . '/tgchats.php';
 require_once __DIR__ . '/leads.php';
 require_once __DIR__ . '/mijozbot.php';
 require_once __DIR__ . '/kuzatuv.php';
+require_once __DIR__ . '/crm.php';
 
 function hs_task_setting($key)
 {
@@ -61,6 +62,11 @@ function hs_tasks_run($fromCron = false)
         $mb = hs_mb_tasks();
         if ($mb) {
             $done[] = "{$mb} ta savol eslatmasi";
+        }
+        // CRM ishlamay qolgan paytdagi arizalarni qayta yuborish (_lib/crm.php).
+        $crm = hs_crm_retry();
+        if ($crm) {
+            $done[] = "{$crm} ta ariza CRM'ga";
         }
         // Raqobatchilar: yangi e'lonlarni yig'ish, tahlil va xulosa (alohida bot).
         $rq = hs_rq_tasks();

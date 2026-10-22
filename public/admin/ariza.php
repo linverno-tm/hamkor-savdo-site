@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/_lib/bootstrap.php';
 require_once __DIR__ . '/_lib/leads.php';
+require_once __DIR__ . '/_lib/crm.php';
 
 $user = hs_require_login();
 
@@ -70,6 +71,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             hs_audit($user['login'], "ariza Telegram'ga qayta yuborildi", "#{$id} -> " . ($to === '' ? "{$n} ta chat" : $to));
         }
         hs_flash($n > 0 ? "Ariza #{$id} Telegram'ga yuborildi ({$n} ta chat)." : "Yuborilmadi. Telegram bo'limida kamida bitta chat yoqilganini tekshiring.", $n > 0 ? 'ok' : 'err');
+    } elseif ($action === 'crm' && hs_is_owner($user)) {
+        // Bitta arizani CRM'ga qayta yuborish.
+        hs_db()->prepare('UPDATE leads SET crm_tries = 0 WHERE id = ?')->execute(array($id));
+        $ok = hs_crm_send_lead($id);
+        if ($ok) {
+            hs_audit($user['login'], "ariza CRM'ga yuborildi", "#{$id}");
+        }
+        hs_flash($ok ? "Ariza #{$id} CRM'ga yuborildi." : "Yuborilmadi — CRM sozlamasi va xato sababini tekshiring.", $ok ? 'ok' : 'err');
     } elseif ($action === 'ochirish' && hs_is_owner($user)) {
         hs_db()->prepare('DELETE FROM leads WHERE id = ?')->execute(array($id));
         hs_audit($user['login'], "ariza o'chirildi", "#{$id} ({$lead['phone']})");
@@ -106,6 +115,16 @@ if ($lead['claimed_by'] !== '') {
     echo '<dt>Kim oldi</dt><dd>🙋 ' . h($lead['claimed_by']) . ($lead['claimed_at'] ? ', ' . h(date('d.m H:i', strtotime($lead['claimed_at']))) : '') . '</dd>';
 }
 echo '<dt>Telegram</dt><dd>' . ((int) $lead['telegram_sent'] ? '<span class="pill pill-ok">yuborilgan</span>' : '<span class="pill pill-err">yetib bormagan</span>') . '</dd>';
+/* CRM holati: yuborilgan bo'lsa CRM'dagi raqami; bo'lmasa sabab va (egaga) qayta yuborish tugmasi. */
+if ((int) $lead['crm_id'] > 0) {
+    echo '<dt>CRM</dt><dd><span class="pill pill-ok">yuborilgan</span> <span class="muted">' . h(date('d.m.Y H:i', strtotime((string) $lead['crm_sent_at']))) . '</span></dd>';
+} elseif (hs_crm_enabled()) {
+    echo '<dt>CRM</dt><dd><span class="pill pill-err">yuborilmagan</span>' . ($lead['crm_error'] !== '' ? ' <span class="muted">' . h((string) $lead['crm_error']) . '</span>' : '');
+    if (hs_is_owner($user)) {
+        echo ' <form method="post" action="/admin/ariza.php" style="display:inline">' . hs_csrf_field() . '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="amal" value="crm"><button class="btn outline small" type="submit">Qayta yuborish</button></form>';
+    }
+    echo '</dd>';
+}
 echo '</dl></section>';
 
 echo '<form class="card" method="post" action="/admin/ariza.php">' . hs_csrf_field();

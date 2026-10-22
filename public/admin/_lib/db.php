@@ -369,6 +369,13 @@ function hs_db_migrate(PDO $pdo)
             )",
             "CREATE INDEX kat_import_holat ON kat_import(holat, created_at)",
         ),
+        // Arizani CRM'ga yuborish holati (_lib/crm.php).
+        13 => array(
+            "ALTER TABLE leads ADD COLUMN crm_id INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE leads ADD COLUMN crm_sent_at TEXT",
+            "ALTER TABLE leads ADD COLUMN crm_error TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE leads ADD COLUMN crm_tries INTEGER NOT NULL DEFAULT 0",
+        ),
     );
     foreach ($steps as $v => $sqls) {
         if ($version >= $v) {
