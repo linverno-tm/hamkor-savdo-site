@@ -1397,7 +1397,6 @@ html:not(.m-js) .step-dot {
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
     transform: translateY(-25%) rotate(45deg);
-    transition: transform var(--dur-2) var(--ease);
     opacity: 0.7;
   }
   .pick:open::picker-icon {
@@ -1421,22 +1420,29 @@ html:not(.m-js) .step-dot {
     padding: 0.4rem;
     color: var(--ink);
     box-shadow: 0 30px 60px -24px rgba(47, 24, 72, 0.45);
-    opacity: 1;
-    translate: 0 0;
+    /* Qisqa animatsiya (egasi 22.10: 260ms sekin tuyuldi, umuman yo'q
+       bo'lsa xunuk) — ochilish 120ms, yopilish 80ms. */
+    opacity: 0;
+    translate: 0 -6px;
     transition:
-      opacity 220ms var(--ease),
-      translate 260ms var(--ease),
-      display 260ms allow-discrete,
-      overlay 260ms allow-discrete;
+      opacity 80ms ease-out,
+      translate 80ms ease-out,
+      display 80ms allow-discrete,
+      overlay 80ms allow-discrete;
   }
   .pick::picker(select):popover-open {
     opacity: 1;
     translate: 0 0;
+    transition:
+      opacity 120ms var(--ease),
+      translate 120ms var(--ease),
+      display 120ms allow-discrete,
+      overlay 120ms allow-discrete;
   }
   @starting-style {
     .pick::picker(select):popover-open {
       opacity: 0;
-      translate: 0 -8px;
+      translate: 0 -6px;
     }
   }
 
@@ -1451,9 +1457,6 @@ html:not(.m-js) .step-dot {
     color: var(--ink);
     background: transparent;
     cursor: pointer;
-    transition:
-      background-color var(--dur-1) var(--ease),
-      color var(--dur-1) var(--ease);
   }
   .pick option:hover,
   .pick option:focus-visible {
