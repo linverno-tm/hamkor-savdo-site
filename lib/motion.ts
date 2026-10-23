@@ -36,6 +36,20 @@ d.addEventListener('click',function(e){
   var f=note.closest('form');if(f){f.classList.remove('is-asked');void f.offsetWidth;f.classList.add('is-asked');}
   setTimeout(function(){var n=d.getElementById('lead-name');if(n)n.focus({preventScroll:true});},700);
 });
+/* Turgan sahifaning o'ziga olib boruvchi havola (bosh sahifada logotip) —
+   sahifa eng tepasiga aylanadi (egasi 23.10). Next'ning Link'i bunda
+   joyidan qimirlamasdi. Capture bosqichida — React ko'rmasdan oldin. */
+function noSlash(p){return p.length>1&&p.charAt(p.length-1)==='/'?p.slice(0,-1):p;}
+d.addEventListener('click',function(e){
+  if(e.button||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+  var a=e.target.closest&&e.target.closest('a[href]');
+  if(!a||a.target==='_blank'||a.hash||a.origin!==location.origin||noSlash(a.pathname)!==noSlash(location.pathname))return;
+  e.preventDefault();e.stopPropagation();
+  var mm=d.querySelector('details.mobile-menu[open]');if(mm)mm.removeAttribute('open');
+  var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({top:0,behavior:rm?'auto':'smooth'});
+  if(location.hash)history.replaceState(history.state,'',location.pathname+location.search);
+},true);
 /* Mijoz lavhasi — Telegram o'yinchisi shu sahifada ochiladi (data-lavha).
    Manzil build'da yozilgan o'z kanalimiz posti. Ctrl/Shift bilan — odatdagidek yangi oynada. */
 d.addEventListener('click',function(e){

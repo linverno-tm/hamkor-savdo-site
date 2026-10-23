@@ -192,7 +192,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     // data-theme'ni <head> skripti hidratsiyadan oldin qo'yadi — React buni xato demasin.
-    <html lang="uz" className={`${outfit.variable} ${bebas.variable}`} suppressHydrationWarning>
+    // data-scroll-behavior: sahifadan sahifaga o'tganda Next silliq aylantirishni
+    // vaqtincha o'chirib, yangi sahifani eng tepadan ochadi (Next 16 da o'zi qilmaydi).
+    <html lang="uz" data-scroll-behavior="smooth" className={`${outfit.variable} ${bebas.variable}`} suppressHydrationWarning>
       <head>
         <script data-keep dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: AB_SCRIPT }} />
