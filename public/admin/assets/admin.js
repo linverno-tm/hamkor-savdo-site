@@ -393,3 +393,24 @@ document.addEventListener("change", function (e) {
     k.checked = bosh.checked;
   });
 });
+
+/* Toast (_lib/layout.php): pastdagi vaqt chizig'i (CSS) tugaganda yoki "×"
+   bosilganda yo'qoladi. Sichqoncha ustida tursa chiziq — demak vaqt ham — to'xtaydi. */
+(function () {
+  function hide(t) {
+    if (t.classList.contains("is-out")) return;
+    t.classList.add("is-out");
+    setTimeout(function () {
+      var box = t.parentNode;
+      t.remove();
+      if (box && !box.children.length) box.remove();
+    }, 260);
+  }
+  document.addEventListener("click", function (ev) {
+    var x = ev.target.closest && ev.target.closest(".toast-x");
+    if (x) hide(x.closest(".toast"));
+  });
+  document.addEventListener("animationend", function (ev) {
+    if (ev.animationName === "toast-time" && ev.target.classList && ev.target.classList.contains("toast")) hide(ev.target);
+  });
+})();

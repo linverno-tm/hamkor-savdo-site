@@ -229,10 +229,17 @@ function hs_page_start($title, $user = null, $subtitle = null)
     // Ijarada o'ng burchakda — eslatmalar qo'ng'iroqchasi; savdoda — "Saytni ochish".
     echo ($ijara ? (function_exists('hs_ij_bell') ? hs_ij_bell() : '') : '<a class="btn outline small" href="' . h(hs_site_url()) . '/" target="_blank" rel="noopener noreferrer" title="Saytni ochish" aria-label="Saytni ochish">' . hs_icon('external') . '<span class="label-long">Saytni ochish</span></a>') . '</div>';
     // hs_session_release() sessiyani erta yopgan bo'lsa ham, olib qo'yilgan xabarlar chiqadi.
+    /* Amal natijasi ("Saqlandi", "CRM bilan aloqa bor") — pastki burchakda toast,
+       o'zi yo'qoladi (assets/admin.js). Formadagi xatolar esa joyida, .flash bo'lib qoladi. */
     if (session_status() === PHP_SESSION_ACTIVE || isset($GLOBALS['hs_flash_olingan'])) {
+        $toasts = '';
         foreach (hs_flash() as $f) {
-            echo '<p class="flash flash-' . h($f[0]) . '">' . h($f[1]) . '</p>';
+            $toasts .= '<div class="toast toast-' . h($f[0]) . '"><p>' . h($f[1]) . '</p>'
+                . '<button type="button" class="toast-x" aria-label="Yopish">&times;</button></div>';
         }
+        // Sahifa oxirida chiqariladi (hs_page_end): .wrap dagi kirish animatsiyasi
+        // "fixed" ni o'ziga bog'lab, toastni sahifa o'rtasiga tushirib qo'yardi.
+        $GLOBALS['hs_toasts'] = $toasts;
     }
 }
 
@@ -241,6 +248,9 @@ function hs_page_end()
     echo '</main>';
     if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['user'])) {
         echo '</div></div>';
+    }
+    if (!empty($GLOBALS['hs_toasts'])) {
+        echo '<div class="toasts" role="status" aria-live="polite">' . $GLOBALS['hs_toasts'] . '</div>';
     }
     echo '</body></html>';
 }

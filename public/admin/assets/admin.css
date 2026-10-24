@@ -392,6 +392,47 @@ textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
 .flash-err { background: var(--err-bg); color: var(--err); border-color: var(--err-line); }
 .flash-warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn-line); }
 
+/* Toast — amal natijasi pastki burchakda, o'zi yo'qoladi (admin.js). Pastdagi
+   chiziq qolgan vaqtni ko'rsatadi; sichqoncha ustida tursa to'xtaydi. */
+.toasts {
+  position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1000;
+  display: grid; gap: .6rem; width: min(26rem, calc(100vw - 2rem)); pointer-events: none;
+}
+.toast {
+  position: relative; overflow: hidden; pointer-events: auto;
+  display: flex; align-items: flex-start; gap: .6rem; padding: .85rem .7rem .95rem 1rem;
+  border-radius: 14px; border: 1px solid transparent; box-shadow: var(--shadow-lg);
+  font-weight: 500; overflow-wrap: anywhere; white-space: pre-line;
+  animation: toast-in .35s var(--ease) both;
+}
+.toast p { margin: 0; flex: 1; }
+.toast-ok { background: linear-gradient(var(--ok-bg), var(--ok-bg)), var(--ground); color: var(--ok); border-color: var(--ok-line); }
+.toast-err { background: linear-gradient(var(--err-bg), var(--err-bg)), var(--ground); color: var(--err); border-color: var(--err-line); }
+.toast-warn { background: linear-gradient(var(--warn-bg), var(--warn-bg)), var(--ground); color: var(--warn); border-color: var(--warn-line); }
+.toast::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+  background: currentColor; opacity: .35; transform-origin: left;
+  animation: toast-time var(--toast-t, 4s) linear forwards;
+}
+.toast-warn { --toast-t: 7s; }
+.toast-err { --toast-t: 9s; }
+.toast:hover::after, .toast:focus-within::after { animation-play-state: paused; }
+.toast-x {
+  flex: none; border: 0; background: transparent; color: inherit; cursor: pointer;
+  font-size: 1.25rem; line-height: 1; padding: .05rem .35rem; border-radius: 8px; opacity: .65;
+}
+.toast-x:hover, .toast-x:focus-visible { opacity: 1; background: rgba(0, 0, 0, .06); }
+.toast.is-out { animation: toast-out .22s var(--ease) both; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(10px) scale(.97); } }
+@keyframes toast-time { to { transform: scaleX(0); } }
+@media (max-width: 759.98px) {
+  .toasts { left: 1rem; right: 1rem; width: auto; bottom: calc(1rem + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast.is-out { animation-duration: .01ms; }
+}
+
 /* ---------- jadvallar ---------- */
 .table-wrap { overflow-x: auto; margin: 0 -1.35rem; padding: 0 1.35rem; scrollbar-width: thin; }
 table { width: 100%; border-collapse: collapse; font-size: .92rem; }
