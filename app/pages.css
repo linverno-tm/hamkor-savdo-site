@@ -629,3 +629,389 @@
     padding-left: 0.6rem;
   }
 }
+
+/* ---------------- 404: ulkan raqam va "adashgan" 3D mahsulotlar ---------------- */
+
+.nf-stage {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  min-height: min(92svh, 56rem);
+  display: grid;
+  place-items: center;
+  padding: 8rem 1.25rem 5rem;
+  background: linear-gradient(165deg, #5a3089 0%, #48256f 50%, #2a1543 100%);
+  border-radius: 0 0 clamp(32px, 5vw, 72px) clamp(32px, 5vw, 72px);
+  text-align: center;
+}
+.nf-3d {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1200ms var(--ease);
+  pointer-events: none;
+}
+.nf-3d.is-on {
+  opacity: 1;
+}
+.nf-3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.nf-num {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 0;
+  translate: -50% -50%;
+  margin: 0;
+  font-size: clamp(9rem, 34vw, 26rem);
+  line-height: 0.8;
+  letter-spacing: 0.02em;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 75%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  user-select: none;
+  pointer-events: none;
+}
+.nf-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 40rem;
+  margin-top: clamp(6rem, 18vw, 12rem);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nf-num {
+    animation: nf-float 7s ease-in-out infinite alternate;
+  }
+  @keyframes nf-float {
+    to {
+      translate: -50% -54%;
+    }
+  }
+}
+
+/* ---------------- "Qabul qilindi" belgisi (components/ui/SuccessMark.tsx) ---------------- */
+
+.ok-mark {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.ok-mark--lg {
+  display: grid;
+  width: 6.5rem;
+  height: 6.5rem;
+  margin: 0 auto 1.5rem;
+}
+.ok-mark--sm {
+  width: 1.6rem;
+  height: 1.6rem;
+  vertical-align: -0.4em;
+  margin-right: 0.5rem;
+}
+.ok-mark svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ok-circle {
+  stroke: var(--yellow);
+  stroke-width: 3;
+  fill: rgba(223, 208, 31, 0.12);
+}
+.ok-tick {
+  stroke: currentColor;
+  stroke-width: 4;
+}
+.ok-ring,
+.ok-dot {
+  position: absolute;
+  pointer-events: none;
+}
+.ok-ring {
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(223, 208, 31, 0.5);
+  opacity: 0;
+}
+.ok-dot {
+  left: 50%;
+  top: 50%;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin: -0.225rem;
+  border-radius: 50%;
+  background: var(--yellow);
+  opacity: 0;
+}
+.ok-dot:nth-child(even) {
+  background: #c9b2ee;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ok-circle {
+    stroke-dasharray: 145;
+    stroke-dashoffset: 145;
+    animation: ok-draw 700ms var(--ease) 150ms forwards;
+  }
+  .ok-tick {
+    stroke-dasharray: 34;
+    stroke-dashoffset: 34;
+    animation: ok-draw 450ms var(--ease) 700ms forwards;
+  }
+  .ok-ring {
+    animation: ok-ring 1400ms var(--ease) 650ms;
+  }
+  .ok-ring-2 {
+    animation-delay: 900ms;
+  }
+  .ok-dot {
+    animation: ok-burst 900ms var(--ease) 750ms;
+  }
+  @keyframes ok-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes ok-ring {
+    from {
+      opacity: 0.9;
+      scale: 1;
+    }
+    to {
+      opacity: 0;
+      scale: 2.1;
+    }
+  }
+  @keyframes ok-burst {
+    0% {
+      opacity: 1;
+      transform: rotate(var(--a)) translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: rotate(var(--a)) translateY(-5.5rem) scale(0.4);
+    }
+  }
+}
+
+/* ---------------- Filiallar sxemasi (components/sections/BranchRoute.tsx) ---------------- */
+
+.rt {
+  margin: 2.5rem 0 0;
+}
+.rt-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.rt-grid {
+  fill: url(#rt-dots);
+}
+.rt-svg pattern circle {
+  fill: rgba(255, 255, 255, 0.14);
+}
+.rt-road {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 0.018 0.012;
+}
+.rt-road--glow {
+  stroke-width: 14;
+  stroke-dasharray: none;
+  opacity: 0.12;
+  filter: blur(4px);
+}
+.rt-pin {
+  cursor: pointer;
+  outline: none;
+}
+.rt-dot {
+  fill: var(--purple);
+  stroke: #fff;
+  stroke-width: 3;
+  transition: fill var(--dur-2) var(--ease);
+}
+.rt-pulse {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 2;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.rt-idx {
+  fill: #fff;
+  font-family: var(--font-bebas), sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}
+.rt-city {
+  fill: #fff;
+  font-family: var(--font-bebas), sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.06em;
+}
+.rt-land {
+  fill: rgba(255, 255, 255, 0.62);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.rt-pin:hover .rt-dot,
+.rt-pin:focus-visible .rt-dot {
+  fill: var(--yellow);
+}
+.rt-pin:hover .rt-idx,
+.rt-pin:focus-visible .rt-idx {
+  fill: #1a1130;
+}
+/* Nuqta ustiga kelinsa — pastdagi o'sha filial kartasi ham yonadi. */
+.fl-page:has(.rt-pin[data-branch="shahrixon-ozodbek"]:hover) .fl-grid > [data-branch="shahrixon-ozodbek"] .store-card,
+.fl-page:has(.rt-pin[data-branch="shahrixon-bog"]:hover) .fl-grid > [data-branch="shahrixon-bog"] .store-card,
+.fl-page:has(.rt-pin[data-branch="asaka-umid"]:hover) .fl-grid > [data-branch="asaka-umid"] .store-card,
+.fl-page:has(.rt-pin[data-branch="andijon-amir-temur"]:hover) .fl-grid > [data-branch="andijon-amir-temur"] .store-card {
+  outline: 3px solid var(--yellow);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Ekranga kirganda: yo'l chiziladi, nuqtalar navbat bilan tushadi, keyin "nafas oladi". */
+  .m-js .rt:not(.m-in) .rt-road {
+    stroke-dashoffset: 1;
+  }
+  .m-js .rt .rt-road {
+    stroke-dasharray: 1;
+    transition: stroke-dashoffset 1600ms var(--ease) 200ms;
+  }
+  .m-js .rt.m-in .rt-road {
+    stroke-dashoffset: 0;
+  }
+  .m-js .rt.m-in .rt-road:not(.rt-road--glow) {
+    animation: rt-dash 0s linear 1.9s forwards;
+  }
+  @keyframes rt-dash {
+    to {
+      stroke-dasharray: 0.018 0.012;
+    }
+  }
+  .m-js .rt:not(.m-in) .rt-pin {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  .m-js .rt .rt-pin {
+    transition:
+      opacity 500ms var(--ease),
+      transform 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition-delay: calc(500ms + var(--i) * 280ms);
+  }
+  .m-js .rt.m-in .rt-pulse {
+    animation: rt-pulse 2.6s ease-out calc(1.6s + var(--i) * 0.4s) infinite;
+  }
+  @keyframes rt-pulse {
+    0% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.4);
+    }
+  }
+}
+
+@media (min-width: 1024px) {
+  .fl-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: 2rem;
+  }
+  .fl-hero-grid .rt {
+    margin-top: 0;
+  }
+}
+/* Telefonda sxema ekran kengligiga kichrayadi (760 → ~360): manzil satri o'qilmaydi —
+   yashiriladi (u pastdagi kartalarda bor), shahar va nuqtalar kattalashadi. */
+@media (max-width: 639.98px) {
+  .rt {
+    margin-inline: -0.75rem;
+  }
+  .rt-land {
+    display: none;
+  }
+  .rt-city {
+    font-size: 40px;
+  }
+  .rt-dot,
+  .rt-pulse {
+    r: 20px;
+  }
+  .rt-idx {
+    font-size: 19px;
+    translate: 0 2px;
+  }
+  .rt-road {
+    stroke-width: 6;
+  }
+}
+
+/* ---------------- Filial sahifasi: bino surati chuqurlik bilan ---------------- */
+/* Skroll qilinganda surat ramka ichida sekinroq siljiydi va biroz kattalashadi —
+   "deraza"dan qaragandek. Faqat skrollga bog'liq brauzerda; boshqasida tinch. */
+@supports ((animation-timeline: view()) and (animation-range: 0% 100%)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .bp-photo img {
+      animation: bp-depth linear both;
+      animation-timeline: view();
+      animation-range: exit -20% exit 100%;
+    }
+    @keyframes bp-depth {
+      from {
+        transform: scale(1.04) translateY(0);
+      }
+      to {
+        transform: scale(1.16) translateY(9%);
+      }
+    }
+  }
+}
+
+/* ---------------- Maxfiylik: o'qish chizig'i ---------------- */
+.read-bar {
+  display: none;
+}
+@supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .read-bar {
+      display: block;
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 60;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--yellow));
+      transform-origin: left;
+      animation: read-grow linear both;
+      animation-timeline: scroll(root);
+    }
+    @keyframes read-grow {
+      from {
+        transform: scaleX(0);
+      }
+    }
+  }
+}

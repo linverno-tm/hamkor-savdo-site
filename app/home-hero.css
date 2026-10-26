@@ -8,7 +8,6 @@
 /* Sahifa ochilganda bir marta: .in-1 ... .in-7 navbat bilan. */
 @media (prefers-reduced-motion: no-preference) {
   .m-js .in-1,
-  .m-js .in-4,
   .m-js .in-5,
   .m-js .in-6,
   .m-js .in-7 {
@@ -17,6 +16,12 @@
   .m-js .in-2,
   .m-js .in-3 {
     animation: in-line 1000ms var(--ease) both;
+  }
+  /* Izoh matni birinchi kadrdanoq ko'rinadi (faqat biroz ko'tariladi): shaffoflikdan
+     chiqsa, brauzer uni "chizilgan" demaydi va sahifada LCP umuman bo'lmaydi
+     (26.10 o'lchov: NO_LCP). Sarlavhaning "deraza"dan chiqishi o'zgarmadi. */
+  .m-js .in-4 {
+    animation: in-nudge 900ms var(--ease) both;
   }
   .m-js .in-1 {
     animation-delay: 250ms;
@@ -44,6 +49,11 @@
   from {
     opacity: 0;
     transform: translateY(28px);
+  }
+}
+@keyframes in-nudge {
+  from {
+    transform: translateY(14px);
   }
 }
 @keyframes in-line {

@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { Logo } from "@/components/ui/Logo";
+import { SuccessMark } from "@/components/ui/SuccessMark";
 
 /**
  * Where a plain (non-JavaScript) form submission lands after it succeeds.
@@ -30,6 +31,7 @@ export default function ThanksPage() {
             className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-auto -translate-x-1/2 -translate-y-1/2 text-white/[0.07] sm:h-72"
           />
           <div className="relative mx-auto max-w-2xl px-5 text-center sm:px-8">
+            <SuccessMark />
             <p className="kicker">Rahmat</p>
             <h1 className="display mt-4 text-4xl sm:text-5xl">Arizangiz qabul qilindi</h1>
             <p className="mt-5 text-lg leading-relaxed text-on-purple-2">

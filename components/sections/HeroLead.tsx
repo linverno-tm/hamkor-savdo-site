@@ -5,6 +5,7 @@ import { branches } from "@/data/branches";
 import { site } from "@/data/site";
 import { telefonInput } from "@/lib/telefon";
 import { useLeadSubmit } from "@/lib/lead";
+import { SuccessMark } from "@/components/ui/SuccessMark";
 
 /**
  * Bosh qismning o'ng ustuni — qisqa ariza formasi.
@@ -130,6 +131,7 @@ export function HeroLead() {
       <div aria-live="polite" className="mt-4 empty:mt-0">
         {status.kind === "ok" ? (
           <p className="rounded-xl bg-white px-5 py-4 font-semibold text-purple">
+                  <SuccessMark size="sm" />
             Arizangiz qabul qilindi. Tez orada bog&apos;lanamiz — rahmat!
           </p>
         ) : null}

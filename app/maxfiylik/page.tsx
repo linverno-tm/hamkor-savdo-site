@@ -46,6 +46,8 @@ export default function PrivacyPage() {
   return (
     <>
       <Header />
+      {/* Qancha o'qilgani — sariq chiziq (app/pages.css > .read-bar). */}
+      <div className="read-bar" aria-hidden="true" />
       <main id="asosiy" tabIndex={-1} className="mx-auto max-w-3xl px-5 pb-20 pt-32 sm:px-8 sm:pt-40">
         <nav aria-label="Yo'l" className="text-sm text-ink-3">
           <Link href="/" className="tap hover:text-purple">

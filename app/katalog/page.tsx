@@ -5,6 +5,7 @@ import { absolute } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
+import { Vitrina3D } from "@/components/sections/Vitrina3D";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { CATEGORY_LABEL, ProductCard } from "@/components/sections/Catalog";
 
@@ -74,6 +75,9 @@ export default function CatalogPage() {
             </>
           )}
         </section>
+        {/* Katalog hali bo'sh bo'lsa ham sahifa quruq qolmasin: real 3D vitrina
+            (hamma yo'nalishlar). "Narxini so'rash" pastdagi formaga yozadi. */}
+        <Vitrina3D />
         <LeadForm />
       </main>
       <Footer />

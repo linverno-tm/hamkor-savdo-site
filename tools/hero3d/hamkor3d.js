@@ -135,6 +135,15 @@ const BG = [
   { id: "muzlatgich", nx: 1.0, ny: -0.2, z: -4, s: 0.5, spin: 0.18 },
 ];
 const BAND = ["muzlatgich", "televizor", "uzuk", "kir-mashina", "mikroto-lqin"];
+/* 404: mahsulotlar katta "404" raqami atrofida "adashib" suzadi (raqam CSS da, markazda). */
+const LOST = [
+  // m — telefon (tik ekran): matn o'rtada, mahsulotlar tepada va pastki burchaklarda.
+  { id: "televizor", nx: -0.62, ny: 0.42, z: -1, s: 0.2, spin: 0.25, m: { nx: -0.5, ny: 0.66, s: 0.2 } },
+  { id: "uzuk", nx: 0.58, ny: 0.5, z: 1, s: 0.13, spin: -0.5, m: { nx: 0.55, ny: 0.7, s: 0.14 } },
+  { id: "kir-mashina", nx: 0.7, ny: -0.42, z: -0.5, s: 0.2, spin: -0.2, m: { nx: 0.72, ny: -0.86, s: 0.13 } },
+  { id: "mikroto-lqin", nx: -0.66, ny: -0.46, z: 0.5, s: 0.16, spin: 0.3, m: { nx: -0.72, ny: -0.86, s: 0.13 } },
+  { id: "divan", nx: 0.02, ny: -0.93, z: -2, s: 0.22, spin: 0.12, m: { nx: 0.02, ny: 0.47, s: 0.15 } },
+];
 const FOV = 30;
 const CAM_Z = 14;
 const visibleHeight = (depth) => 2 * Math.tan(MathUtils.degToRad(FOV / 2)) * (CAM_Z - depth);
@@ -177,15 +186,18 @@ export function mountHero(host, mode) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    if (mode === "bg") {
-      const gap = measureGap();
+    if (mode === "bg" || mode === "lost") {
+      const gap = mode === "bg" ? measureGap() : { c: 0, w: 1 };
       for (const it of items) {
-        const vh = visibleHeight(it.cfg.z);
+        const c = mode === "lost" && camera.aspect < 0.8 && it.cfg.m ? { ...it.cfg, ...it.cfg.m } : it.cfg;
+        const vh = visibleHeight(c.z);
         const vw = vh * camera.aspect;
-        const nx = it.cfg.gap ? gap.c : it.cfg.nx;
-        it.base.set((nx * vw) / 2, (it.cfg.ny * vh) / 2, it.cfg.z);
+        const nx = c.gap ? gap.c : c.nx;
+        it.base.set((nx * vw) / 2, (c.ny * vh) / 2, c.z);
         // Oraliqdagilar oraliqdan tor: aylanayotgan quti burilganda enliroq ko'rinadi.
-        it.size = it.cfg.gap ? Math.min(it.cfg.s * vh, gap.w * 0.75 * vw) : it.cfg.s * vh;
+        // 404 da tor (telefon) ekranda kenglikka qarab kichrayadi — matn ustiga chiqmasin.
+        const base = mode === "lost" ? Math.min(vh, vw * 1.1) : vh;
+        it.size = c.gap ? Math.min(c.s * vh, gap.w * 0.75 * vw) : c.s * base;
       }
     } else {
       const vh = visibleHeight(0);
@@ -197,7 +209,7 @@ export function mountHero(host, mode) {
     }
   }
 
-  const list = mode === "bg" ? BG : BAND.map((id) => ({ id, spin: 0.35 }));
+  const list = mode === "bg" ? BG : mode === "lost" ? LOST : BAND.map((id) => ({ id, spin: 0.35 }));
   list.forEach((cfg, i) => {
     loadModel(cfg.id).then(async (node) => {
       node.visible = false;
@@ -216,7 +228,7 @@ export function mountHero(host, mode) {
   let my = 0;
   let tx = 0;
   let ty = 0;
-  if (mode === "bg" && matchMedia("(pointer: fine)").matches) {
+  if (mode !== "band" && matchMedia("(pointer: fine)").matches) {
     window.addEventListener(
       "pointermove",
       (e) => {
@@ -235,8 +247,8 @@ export function mountHero(host, mode) {
     my += (ty - my) * 0.05;
     const rect = host.getBoundingClientRect();
     const out = mode === "bg" ? MathUtils.clamp(-rect.top / Math.max(rect.height, 1), 0, 1) : 0;
-    if (mode === "bg") {
-      world.rotation.y = mx * 0.12;
+    if (mode !== "band") {
+      world.rotation.y = mx * (mode === "lost" ? 0.2 : 0.12);
       world.rotation.x = my * 0.06;
     }
     const order = mode === "band" ? items.slice().sort((a, b) => BAND.indexOf(a.cfg.id) - BAND.indexOf(b.cfg.id)) : items;
@@ -255,7 +267,7 @@ export function mountHero(host, mode) {
       const spin = it.node.children[0];
       // Telefonda mahsulot yuzi bilan turadi: o'ngdan chapga yumshoq buriladi (orqasi ko'rinmaydi).
       spin.rotation.y = reduce ? 0.35 : mode === "band" ? 0.75 - inSlot * 1.5 : t * (it.cfg.spin || 0.3) + it.phase;
-      spin.rotation.x = mode === "bg" && !reduce ? Math.sin(t * 0.5 + it.phase) * 0.08 : 0;
+      spin.rotation.x = mode !== "band" && !reduce ? Math.sin(t * 0.5 + it.phase) * (mode === "lost" ? 0.25 : 0.08) : 0;
       it.node.scale.setScalar(it.size * Math.max(0.0001, pop));
       it.node.visible = pop > 0.001;
     }
@@ -411,6 +423,9 @@ const heroOk = window.__h3dHero !== false;
 if (heroOk) {
   const hosts = [...document.querySelectorAll("[data-hero3d]")];
   const shown = hosts.find((h) => (h.checkVisibility ? h.checkVisibility() : h.offsetParent !== null));
-  if (shown) mountHero(shown, shown.getAttribute("data-hero3d") === "band" ? "band" : "bg");
+  if (shown) {
+    const m = shown.getAttribute("data-hero3d");
+    mountHero(shown, m === "band" || m === "lost" ? m : "bg");
+  }
 }
 document.querySelectorAll("[data-3d]").forEach(mountVitrina);

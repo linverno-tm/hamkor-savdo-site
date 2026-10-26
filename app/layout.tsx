@@ -104,9 +104,14 @@ var h = location.hostname;
 if (h !== 'hamkorsavdo.uz' && h !== 'www.hamkorsavdo.uz' && location.search.indexOf('_ym_debug') < 0) return;
 var ref = document.referrer;
 try { var s = sessionStorage.getItem('hs_ref'); if (s !== null) { ref = s; sessionStorage.removeItem('hs_ref'); } } catch(e){}
+/* Navbat (ym) darhol — hech bir hodisa yo'qolmaydi; og'ir tag.js (Vebvizor) esa sahifa
+   to'liq ochilib, brauzer bo'shaganda yuklanadi: telefonda u 1–1,5 s asosiy oqimni band
+   qiladi va birinchi chizishni kechiktirardi (Lighthouse 26.10: TBT 5,4 s). */
 (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
 for (var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
-k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+var put=function(){k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);};
+var idle=function(){(m.requestIdleCallback||function(f){setTimeout(f,1500);})(put,{timeout:4000});};
+if(e.readyState==='complete')idle();else m.addEventListener('load',idle);})
 (window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=${YM_ID}','ym');
 ym(${YM_ID}, 'init', {ssr:true, webvisor:true, clickmap:true, referrer:ref, url:location.href, accurateTrackBounce:true, trackLinks:true});
 ym(${YM_ID}, 'getClientID', function(id){ window.__hsYmCid = id; });

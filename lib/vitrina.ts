@@ -92,4 +92,4 @@ export const VITRINA_KAT: { id: VitrinaKat; uz: string; ru: string }[] = [
 
 /** 3D yadro (bosh qism sahnasi + vitrina): tools/hero3d/hamkor3d.js, `npm run hamkor3d`.
     Fayl o'zgarsa raqamni oshiring — hosting statik fayllarni 30 kun keshlaydi. */
-export const H3D_SRC = "/vendor/hamkor3d-1.js";
+export const H3D_SRC = "/vendor/hamkor3d-2.js";

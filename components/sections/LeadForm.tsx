@@ -5,6 +5,7 @@ import { branches } from "@/data/branches";
 import { site } from "@/data/site";
 import { telefonInput } from "@/lib/telefon";
 import { useLeadSubmit } from "@/lib/lead";
+import { SuccessMark } from "@/components/ui/SuccessMark";
 import { SplitWords } from "@/components/ui/SplitWords";
 
 /**
@@ -263,6 +264,7 @@ export function LeadForm({
             <div aria-live="polite" className="mt-5 empty:mt-0">
               {status.kind === "ok" ? (
                 <p className="rounded-xl bg-purple-50 px-5 py-4 font-semibold text-purple">
+                  <SuccessMark size="sm" />
                   {t.ok}
                 </p>
               ) : null}
