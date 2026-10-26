@@ -67,6 +67,11 @@
   AddOutputFilterByType DEFLATE application/javascript application/x-javascript
   AddOutputFilterByType DEFLATE application/json application/xml
   AddOutputFilterByType DEFLATE image/svg+xml
+  # 3D modellar (public/3d/*.glb) — meshopt siqilgan bo'lsa ham yana ~25% kichrayadi.
+  AddOutputFilterByType DEFLATE model/gltf-binary
+</IfModule>
+<IfModule mod_mime.c>
+  AddType model/gltf-binary .glb
 </IfModule>
 
 # --- Kesh. _next/static ichidagi fayllar nomida xesh bor, ular o'zgarmaydi. ---
@@ -97,6 +102,8 @@
   ExpiresByType image/png "access plus 1 month"
   ExpiresByType image/jpeg "access plus 1 month"
   ExpiresByType image/webp "access plus 1 month"
+  # Model o'zgarsa fayl nomi ham o'zgaradi (tools/hero3d/hamkor3d.js > GLB).
+  ExpiresByType model/gltf-binary "access plus 1 month"
 </IfModule>
 <IfModule mod_headers.c>
   <FilesMatch "\.(?:js|css|woff2)$">

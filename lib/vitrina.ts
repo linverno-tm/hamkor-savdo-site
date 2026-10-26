@@ -1,7 +1,7 @@
 /**
  * 3D vitrina modellari (components/sections/Vitrina3D.tsx).
  *
- * Fayllar `public/3d/<id>.glb` (siqilgan: WebP tekstura, kvantlangan geometriya)
+ * Fayllar `public/3d/<id>-m.glb` (siqilgan: WebP tekstura, meshopt geometriya)
  * va `public/3d/<id>.webp` (shaffof poster — 3D yuklanguncha va JavaScript'siz).
  * Manba: Sketchfab (CC BY — muallif va havola sahifada ko'rsatiladi, `credit`)
  * va Poly Haven (CC0). Yuklash: D:\Dasturlar\SketchfabMCP (egasining hisobi).
@@ -92,4 +92,4 @@ export const VITRINA_KAT: { id: VitrinaKat; uz: string; ru: string }[] = [
 
 /** 3D yadro (bosh qism sahnasi + vitrina): tools/hero3d/hamkor3d.js, `npm run hamkor3d`.
     Fayl o'zgarsa raqamni oshiring — hosting statik fayllarni 30 kun keshlaydi. */
-export const H3D_SRC = "/vendor/hamkor3d-2.js";
+export const H3D_SRC = "/vendor/hamkor3d-3.js";

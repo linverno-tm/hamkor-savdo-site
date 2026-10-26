@@ -23,6 +23,13 @@
   .m-js .in-4 {
     animation: in-nudge 900ms var(--ease) both;
   }
+  /* Orqasini xiralovchi (backdrop-filter) blok shaffoflikdan chiqsa, iPhone Safari uni
+     ba'zan umuman chizmay qo'yadi (egasi 26.10 skrinshoti: bosh qismdagi yozuv yo'q edi).
+     Shunday bloklar faqat siljib kiradi — app/home-sections.css > .inst-card-in ham. */
+  .m-js .hero-lead-wrap.in-7,
+  .m-js .tp-badge.in-7 {
+    animation-name: in-nudge;
+  }
   .m-js .in-1 {
     animation-delay: 250ms;
   }
@@ -226,8 +233,6 @@
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
   font-weight: 500;

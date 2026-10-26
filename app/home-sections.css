@@ -297,6 +297,10 @@
   padding: 2rem;
   box-shadow: 0 -20px 60px -30px rgba(8, 2, 18, 0.9);
 }
+/* Shaffoflikdan chiqmaydi, faqat siljiydi — sabab app/home-hero.css > in-nudge izohida. */
+.m-js .inst-card-in[data-m="up"]:not(.m-in) {
+  opacity: 1;
+}
 .inst-card:nth-child(2) .inst-card-in {
   background: linear-gradient(160deg, rgba(154, 114, 207, 0.6), rgba(80, 40, 124, 0.9));
 }

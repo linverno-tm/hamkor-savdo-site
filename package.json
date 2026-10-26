@@ -13,7 +13,7 @@
     "tekshir": "node tools/joylashuvni-tekshir.mjs",
     "test": "node --test tools/sinov/*.test.mjs",
     "sinov:brauzer": "node tools/brauzer-sinov.mjs",
-    "hamkor3d": "esbuild tools/hero3d/hamkor3d.js --bundle --minify --format=esm --target=es2020 --legal-comments=eof --outfile=public/vendor/hamkor3d-2.js"
+    "hamkor3d": "esbuild tools/hero3d/hamkor3d.js --bundle --minify --format=esm --target=es2020 --legal-comments=eof --outfile=public/vendor/hamkor3d-3.js"
   },
   "dependencies": {
     "next": "16.3.1",

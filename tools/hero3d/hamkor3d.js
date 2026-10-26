@@ -13,6 +13,13 @@
  *  - Hammasi sahifa ochilib, brauzer bo'shaganda tayyorlanadi (lib/motion.ts), skroll
  *    paytida emas. Ekrandan chiqsa yoki sahifa yashirilsa chizish to'xtaydi.
  *  - Barmoq bilan aylantirish faqat gorizontal: telefonda sahifani tik surish bloklanmaydi.
+ *
+ * TELEFON (egasi 26.10: "telefonda sahifalar yuklanishga qiynalyapti"):
+ *  - Modellar meshopt bilan siqilgan (`<id>-m.glb`, 5,2 → 2,4 MB). Yangi model:
+ *    npx @gltf-transform/cli meshopt kirish.glb public/3d/<id>-m.glb
+ *  - Bittadan yuklanadi, past ustuvorlikda, faqat o'z bloki ekranga yaqinlashganda.
+ *    Avval hammasi birdan (1,2 MB) yuklanib, LTE'da keyingi sahifani navbatda ushlab turardi.
+ *  - Sayt ichida boshqa sahifaga o'tilsa, yuklanayotgan model darhol to'xtatiladi.
  */
 import {
   WebGLRenderer,
@@ -32,24 +39,49 @@ import {
   CanvasTexture,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const loader = new GLTFLoader();
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const cache = new Map();
+const stop = new AbortController();
+document.addEventListener(
+  "click",
+  (e) => {
+    const a = e.target.closest?.("a[href]");
+    if (a && a.origin === location.origin && a.pathname !== location.pathname) stop.abort();
+  },
+  true,
+);
 
 /** Modelni bir marta yuklaydi; har chaqiruvga alohida nusxa (bir model ikki sahnada bo'lishi mumkin). */
 function loadModel(id) {
   if (!cache.has(id)) {
     cache.set(
       id,
-      new Promise((ok, no) => loader.load(`/3d/${id}.glb`, (g) => ok(g.scene), undefined, no)),
+      fetch(`/3d/${id}-m.glb`, { priority: "low", signal: stop.signal })
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
+        .then((buf) => new Promise((ok, no) => loader.parse(buf, "/3d/", (g) => ok(g.scene), no))),
     );
   }
-  return cache.get(id).then((s) => normalize(s.clone(true)));
+  return cache.get(id).then((s) => normalize(s.clone(true), FACE[id] || 0));
+}
+
+/* Muallif old tomonini kameraga (+z) qaratmagan modellar — shuncha radian buriladi. */
+const FACE = { "kir-mashina": -1.0 };
+
+/** Blok ekranga `margin` qadar yaqinlashganda bir marta `fn` ni chaqiradi. */
+function whenNear(el, margin, fn) {
+  const io = new IntersectionObserver((es) => {
+    if (!es.some((e) => e.isIntersecting)) return;
+    io.disconnect();
+    fn();
+  }, { rootMargin: margin });
+  io.observe(el);
 }
 
 /** Markazga olib, eng katta o'lchamini 1 ga keltiradi (mualliflarning mm/sm farqi yo'qoladi). */
-function normalize(root) {
+function normalize(root, face) {
   root.traverse((o) => {
     if (!o.isMesh) return;
     for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
@@ -60,6 +92,8 @@ function normalize(root) {
       }
     }
   });
+  root.rotation.y = face;
+  root.updateMatrixWorld(true);
   const box = new Box3().setFromObject(root);
   const size = box.getSize(new Vector3());
   root.position.sub(box.getCenter(new Vector3()));
@@ -210,19 +244,24 @@ export function mountHero(host, mode) {
   }
 
   const list = mode === "bg" ? BG : mode === "lost" ? LOST : BAND.map((id) => ({ id, spin: 0.35 }));
-  list.forEach((cfg, i) => {
-    loadModel(cfg.id).then(async (node) => {
-      node.visible = false;
-      world.add(node);
-      await renderer.compileAsync(scene, camera);
-      const it = { cfg, node, base: new Vector3(), size: 1, born: performance.now() + i * 140, phase: i * 1.7 };
-      items.push(it);
-      node.visible = true;
-      layout();
-      host.classList.add("is-on");
-      play();
-    });
-  });
+  // Navbat bilan: keyingisi oldingisi ko'rsatilgach (tarmoq ham, shader kompilyatsiyasi ham bo'linadi).
+  async function next(i) {
+    if (i >= list.length) return;
+    const cfg = list[i];
+    const node = await loadModel(cfg.id).catch(() => null);
+    if (!node) return;
+    node.visible = false;
+    world.add(node);
+    await renderer.compileAsync(scene, camera);
+    const it = { cfg, node, base: new Vector3(), size: 1, born: performance.now() + 140, phase: i * 1.7 };
+    items.push(it);
+    node.visible = true;
+    layout();
+    host.classList.add("is-on");
+    play();
+    next(i + 1);
+  }
+  whenNear(host, "200px", () => next(0));
 
   let mx = 0;
   let my = 0;
@@ -265,8 +304,9 @@ export function mountHero(host, mode) {
       const bob = reduce ? 0 : Math.sin(t * 0.9 + it.phase) * 0.12;
       it.node.position.set(it.base.x * (1 + out * 0.35), it.base.y + bob + out * 2.2, it.base.z);
       const spin = it.node.children[0];
-      // Telefonda mahsulot yuzi bilan turadi: o'ngdan chapga yumshoq buriladi (orqasi ko'rinmaydi).
-      spin.rotation.y = reduce ? 0.35 : mode === "band" ? 0.75 - inSlot * 1.5 : t * (it.cfg.spin || 0.3) + it.phase;
+      // Telefonda mahsulot yuzi bilan turadi: o'ngdan chapga ±23° buriladi. ±43° da kir mashina
+      // navbati boshida yon tomoni bilan "oq quti" bo'lib ko'rinardi (egasi 26.10 skrinshoti).
+      spin.rotation.y = reduce ? 0.35 : mode === "band" ? 0.4 - inSlot * 0.8 : t * (it.cfg.spin || 0.3) + it.phase;
       spin.rotation.x = mode !== "band" && !reduce ? Math.sin(t * 0.5 + it.phase) * (mode === "lost" ? 0.25 : 0.08) : 0;
       it.node.scale.setScalar(it.size * Math.max(0.0001, pop));
       it.node.visible = pop > 0.001;
@@ -417,6 +457,12 @@ export function mountVitrina(root) {
   if (first) show(first);
 }
 
+/** Vitrina sahifa ochilganda emas, foydalanuvchi unga yaqinlashganda tayyorlanadi. */
+function lazyVitrina(root) {
+  const stage = root.querySelector(".vt-stage");
+  if (stage) whenNear(stage, "600px 0px", () => mountVitrina(root));
+}
+
 // ============================================================ ishga tushirish
 
 const heroOk = window.__h3dHero !== false;
@@ -428,4 +474,4 @@ if (heroOk) {
     mountHero(shown, m === "band" || m === "lost" ? m : "bg");
   }
 }
-document.querySelectorAll("[data-3d]").forEach(mountVitrina);
+document.querySelectorAll("[data-3d]").forEach(lazyVitrina);
