@@ -1,19 +1,18 @@
-import { createElement } from "react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { VITRINA, VITRINA_KAT, type VitrinaKat } from "@/lib/vitrina";
 
 /**
  * 3D vitrina — real 3D modellar (Sketchfab CC BY, Poly Haven CC0), har
- * tomondan aylantirib ko'riladi; telefonda "xonangizda ko'ring" (AR).
+ * tomondan aylantirib ko'riladi.
  * Egasi 26.10: "animatsiyalar real chiqsin, internetdagi tayyor eng
  * yaxshilaridan foydalan".
  *
  * Ishlash tartibi:
  *  - Tanlov — CSS radio tugmalari (JavaScript'siz va kirillcha nusxada ham
- *    ishlaydi; strelkalar bilan ham). Har model o'z bloki, faqat tanlangani
- *    ko'rinadi — model-viewer ko'rinmaydiganini yuklamaydi (loading="lazy").
- *  - model-viewer skripti (public/vendor) vitrina ekranga yaqinlashganda
- *    yuklanadi (lib/motion.ts). Ungacha va JS'siz — shaffof poster rasm.
+ *    ishlaydi; strelkalar bilan ham). JS'siz — tanlangan mahsulotning rasmi.
+ *  - 3D — o'zimizning yengil three.js yadrosi (tools/hero3d/hamkor3d.js): sahifa
+ *    ochilib, brauzer bo'shaganda tayyorlanadi; tanlov o'zgarsa model almashadi.
+ *    model-viewer olib tashlandi: Windows'da skroll paytida 2 s qotirardi.
  *  - "Narxini so'rash" — pastdagi ariza formasiga mahsulot nomini yozadi
  *    (data-ask, lib/motion.ts).
  */
@@ -21,10 +20,9 @@ const T = {
   uz: {
     kicker: "3D vitrina",
     title: "Har tomondan ko'ring",
-    lead: "Barmoq bilan aylantiring. Telefonda esa mahsulotni xonangizga qo'yib, o'lchamini ko'ring.",
+    lead: "Barmoq yoki sichqoncha bilan aylantirib, har tomonini ko'ring.",
     ask: "Narxini so'rash",
     askNote: (n: string) => `${n} — narxi va muddatli to'lov shartlari`,
-    ar: "Xonangizda ko'ring",
     note: "3D ko'rinish namuna: do'kondagi modellar va ranglar boshqacha bo'lishi mumkin.",
     credits: "3D modellar mualliflari",
     by: "muallif",
@@ -32,10 +30,9 @@ const T = {
   ru: {
     kicker: "3D-витрина",
     title: "Рассмотрите со всех сторон",
-    lead: "Поворачивайте пальцем. А на телефоне поставьте товар у себя в комнате и оцените размер.",
+    lead: "Поворачивайте пальцем или мышью и рассмотрите товар со всех сторон.",
     ask: "Узнать цену",
     askNote: (n: string) => `${n} — цена и условия рассрочки`,
-    ar: "Посмотреть у себя дома",
     note: "3D-модели — пример: модели и цвета в магазине могут отличаться.",
     credits: "Авторы 3D-моделей",
     by: "автор",
@@ -75,6 +72,7 @@ export function Vitrina3D({ only, lang = "uz" }: { only?: VitrinaKat; lang?: "uz
               id={rid(i.id)}
               className="vt-r"
               data-kat={i.kat}
+              data-id={i.id}
               defaultChecked={n === 0}
               aria-label={i.nom[lang]}
             />
@@ -84,41 +82,10 @@ export function Vitrina3D({ only, lang = "uz" }: { only?: VitrinaKat; lang?: "uz
           <div className="vt-stage">
             <span className="vt-spot" aria-hidden="true" />
             <span className="vt-pedestal" aria-hidden="true" />
+            {/* Rasm — JS'siz va 3D tayyor bo'lguncha; 3D chiqqach so'nadi (app/home-vitrina.css > .is-3d). */}
             {items.map((i) => (
               <div key={i.id} className={`vt-model vt-model--${i.id}`}>
-                {createElement(
-                  "model-viewer",
-                  {
-                    src: `/3d/${i.id}.glb`,
-                    alt: i.nom[lang],
-                    poster: `/3d/${i.id}.webp`,
-                    loading: "lazy",
-                    reveal: "auto",
-                    "camera-controls": "",
-                    "disable-zoom": "",
-                    "touch-action": "pan-y",
-                    "camera-orbit": "35deg 75deg 125%",
-                    "interaction-prompt": "auto",
-                    "shadow-intensity": "1",
-                    "shadow-softness": "0.9",
-                    "environment-image": "neutral",
-                    exposure: String(i.exposure ?? 1),
-                    ...(i.scale ? { scale: i.scale } : {}),
-                    ...(i.ar ? { ar: "", "ar-modes": "webxr scene-viewer quick-look", "ar-scale": "fixed", "ar-placement": i.id === "konditsioner" ? "wall" : "floor" } : {}),
-                    "data-rotate": "",
-                    suppressHydrationWarning: true,
-                  },
-                  <img slot="poster" className="vt-poster" src={`/3d/${i.id}.webp`} alt="" width={640} height={640} loading="lazy" decoding="async" />,
-                  i.ar ? (
-                    <button key="ar" slot="ar-button" type="button" className="vt-ar">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z" />
-                        <path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" />
-                      </svg>
-                      {t.ar}
-                    </button>
-                  ) : null,
-                )}
+                <img className="vt-poster" src={`/3d/${i.id}.webp`} alt={i.nom[lang]} width={640} height={640} loading="lazy" decoding="async" />
               </div>
             ))}
           </div>

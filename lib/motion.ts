@@ -26,7 +26,7 @@
  * Biror sabab bilan kuzatuvchi ishlamasa, 4 soniyadan keyin hammasi
  * baribir ko'rinadi.
  */
-import { MODEL_VIEWER_SRC } from "@/lib/vitrina";
+import { H3D_SRC } from "@/lib/vitrina";
 
 export const MOTION_SCRIPT = `(function(){try{
 var d=document,de=d.documentElement;
@@ -38,24 +38,23 @@ d.addEventListener('click',function(e){
   var f=note.closest('form');if(f){f.classList.remove('is-asked');void f.offsetWidth;f.classList.add('is-asked');}
   setTimeout(function(){var n=d.getElementById('lead-name');if(n)n.focus({preventScroll:true});},700);
 });
-/* 3D vitrina (components/sections/Vitrina3D.tsx): model-viewer skripti faqat
-   vitrina ekranga yaqinlashganda yuklanadi; harakat kamaytirilmagan bo'lsa
-   model sekin aylanadi. Ungacha — poster rasm. */
-function vitrina(){
-  var v=d.querySelectorAll('[data-3d]');if(!v.length)return;
-  function load(){
-    if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))
-      d.querySelectorAll('model-viewer[data-rotate]').forEach(function(m){m.setAttribute('auto-rotate','');m.setAttribute('auto-rotate-delay','600');m.setAttribute('rotation-per-second','16deg');});
-    if(d.querySelector('script[data-mv]'))return;
-    var s=d.createElement('script');s.type='module';s.src='${MODEL_VIEWER_SRC}';s.setAttribute('data-mv','');d.head.appendChild(s);
-  }
-  if(!('IntersectionObserver' in window)){load();return;}
-  var io=new IntersectionObserver(function(es){
-    if(es.some(function(e){return e.isIntersecting;})){io.disconnect();load();}
-  },{rootMargin:'700px 0px'});
-  v.forEach(function(x){io.observe(x);});
+/* 3D (tools/hero3d/hamkor3d.js — bosh qism sahnasi va 3D vitrina): sahifa to'liq
+   ochilib, brauzer bo'shaganda bir marta yuklanadi — skroll paytida emas (egasi 26.10:
+   "scroll payti qotishlar"). Bosh qism bezagi trafik tejash, kuchsiz qurilma yoki
+   kamaytirilgan harakatda o'chiq (window.__h3dHero=false); vitrina WebGL bo'lsa ishlaydi,
+   bo'lmasa rasmlar qoladi. */
+function h3d(){
+  if(!d.querySelector('[data-hero3d],[data-3d]'))return;
+  try{var g=d.createElement('canvas');if(!(g.getContext('webgl2')||g.getContext('webgl')))return;}catch(e){return;}
+  var c=navigator.connection||{},mem=navigator.deviceMemory||4,cores=navigator.hardwareConcurrency||4;
+  var lite=c.saveData||/(^|-)2g/.test(c.effectiveType||'');
+  if(lite&&!d.querySelector('[data-3d]'))return;
+  window.__h3dHero=!(lite||mem<3||cores<4||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches));
+  var go=function(){var s=d.createElement('script');s.type='module';s.src='${H3D_SRC}';d.head.appendChild(s);};
+  var idle=function(){(window.requestIdleCallback||function(f){setTimeout(f,600);})(go,{timeout:2500});};
+  if(d.readyState==='complete')idle();else addEventListener('load',idle);
 }
-if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',vitrina);else vitrina();
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',h3d);else h3d();
 /* Turgan sahifaning o'ziga olib boruvchi havola (bosh sahifada logotip) —
    sahifa eng tepasiga aylanadi (egasi 23.10). Next'ning Link'i bunda
    joyidan qimirlamasdi. Capture bosqichida — React ko'rmasdan oldin. */

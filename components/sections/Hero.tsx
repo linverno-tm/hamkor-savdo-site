@@ -4,6 +4,9 @@ import { HeroLead } from "@/components/sections/HeroLead";
 import { CategoryCards } from "@/components/sections/Categories";
 import { Logo } from "@/components/ui/Logo";
 
+/** Telefondagi 3D tasma yuklanguncha ko'rinadigan mahsulotlar (public/3d). */
+const HERO_POSTERS = ["televizor", "muzlatgich", "uzuk"];
+
 /**
  * Bosh qism — "Bu kim va menga nima beradi?"
  *
@@ -31,6 +34,9 @@ export function Hero() {
           <span className="hero-spot" />
           <span className="hero-grid" />
           <Logo variant="mark" className="hero-mark" />
+          {/* Kompyuterda: real 3D mahsulotlar fonda, forma ortida suzadi
+              (tools/hero3d, lib/motion.ts yuklaydi). */}
+          <div className="hero-3d hero-3d--bg" data-hero3d="bg" />
         </div>
 
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
@@ -75,6 +81,15 @@ export function Hero() {
                 <span className="nudge" aria-hidden="true">&rarr;</span>
               </span>
             </a>
+
+            {/* Telefonda: matn ostida aylanma 3D vitrina. Joy oldindan band —
+                sahifa sakramaydi; 3D yuklanmasa (eski telefon, trafik tejash,
+                harakat kamaytirilgan) mahsulot rasmlari qoladi. */}
+            <div className="hero-3d hero-3d--band in-7" data-hero3d="band" aria-hidden="true">
+              {HERO_POSTERS.map((id) => (
+                <img key={id} src={`/3d/${id}.webp`} alt="" width={640} height={640} decoding="async" className="hero-3d-poster" />
+              ))}
+            </div>
           </div>
 
           {/* Kompyuterda doim; telefonda — faqat A/B sinovning "b" guruhida

@@ -12,7 +12,8 @@
     "mahalliy": "php -S localhost:8000 -t out tools/mahalliy-server.php",
     "tekshir": "node tools/joylashuvni-tekshir.mjs",
     "test": "node --test tools/sinov/*.test.mjs",
-    "sinov:brauzer": "node tools/brauzer-sinov.mjs"
+    "sinov:brauzer": "node tools/brauzer-sinov.mjs",
+    "hamkor3d": "esbuild tools/hero3d/hamkor3d.js --bundle --minify --format=esm --target=es2020 --legal-comments=eof --outfile=public/vendor/hamkor3d-1.js"
   },
   "dependencies": {
     "next": "16.3.1",
@@ -24,11 +25,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "node-html-parser": "^9.0.4",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
+    "three": "0.186.1",
     "typescript": "^5"
   }
 }

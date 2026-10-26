@@ -562,3 +562,79 @@
 html[data-ab-tel-forma="b"] .hero-lead-wrap {
   display: block;
 }
+
+/* ---------------- 3D sahna (tools/hero3d) ---------------- */
+
+/* Kompyuterda — fonda, forma ortida. Yuklanguncha ko'rinmaydi, keyin sekin chiqadi. */
+.hero-3d--bg {
+  position: absolute;
+  inset: 0;
+  display: none;
+  opacity: 0;
+  transition: opacity 1200ms var(--ease);
+  pointer-events: none;
+}
+.hero-3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@media (min-width: 1024px) {
+  .hero-3d--bg {
+    display: block;
+  }
+  .hero-3d--bg.is-on {
+    opacity: 1;
+  }
+  /* 3D chiqqach forma shishasi to'qroq: ortidagi mahsulot faqat xira soya
+     bo'lib ko'rinadi, forma doim o'qiladi. */
+  .hero-stage:has(.hero-3d--bg.is-on) .hero-form {
+    background: linear-gradient(160deg, rgba(58, 30, 92, 0.78), rgba(38, 18, 62, 0.7));
+    transition: background 1200ms var(--ease);
+  }
+  /* 3D chiqqach katta xira "H" belgisi kerak emas — fon bitta bo'lsin. */
+  .hero-bg:has(.hero-3d--bg.is-on) .hero-mark {
+    opacity: 0;
+    transition: opacity 1200ms var(--ease);
+  }
+}
+
+/* Telefonda — matn ostida tasma: joy oldindan band, ichida rasmlar; 3D tayyor
+   bo'lgach rasmlar so'nadi, sahna chiqadi. */
+.hero-3d--band {
+  position: relative;
+  margin-top: 1.75rem;
+  height: 15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.hero-3d-poster {
+  width: 30%;
+  max-width: 9rem;
+  height: auto;
+  filter: drop-shadow(0 18px 22px rgba(12, 4, 24, 0.45));
+  transition: opacity 800ms var(--ease);
+}
+.hero-3d-poster:nth-child(2) {
+  width: 36%;
+  max-width: 11rem;
+}
+.hero-3d--band canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 900ms var(--ease);
+}
+.hero-3d--band.is-on canvas {
+  opacity: 1;
+}
+.hero-3d--band.is-on .hero-3d-poster {
+  opacity: 0;
+}
+@media (min-width: 1024px) {
+  .hero-3d--band {
+    display: none;
+  }
+}
