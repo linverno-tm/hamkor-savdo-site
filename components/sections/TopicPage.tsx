@@ -362,7 +362,18 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                 <li key={o.id}>
                   <LangLink lang={lang} to={href(lang, o)} className="tp-other">
                     {o.photo ? (
-                      <img src={o.photo.src} alt="" width={900} height={675} loading="lazy" decoding="async" className="tp-other-img" />
+                      <img
+                        src={o.photo.src}
+                        // public/yonalishlar da har surat 480 va 900 px: kompyuterda karta ~280 px.
+                        srcSet={/-900\.webp$/.test(o.photo.src) ? `${o.photo.src.replace(/-900\.webp$/, "-480.webp")} 480w, ${o.photo.src} 900w` : undefined}
+                        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 300px"
+                        alt=""
+                        width={900}
+                        height={675}
+                        loading="lazy"
+                        decoding="async"
+                        className="tp-other-img"
+                      />
                     ) : null}
                     <span className="tp-other-shade" aria-hidden="true" />
                     <span className="tp-other-body">

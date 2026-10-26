@@ -110,7 +110,7 @@ export function BranchGallery({
               width={960}
               height={720}
               alt={lead.alt}
-              loading="eager"
+              loading="lazy"
               decoding="async"
             />
             <span className="photo-cap">{lead.label}</span>
@@ -175,7 +175,10 @@ export function BranchGallery({
               </a>
             ) : null}
             <figure className="lightbox-figure">
-              <img src={p.src} alt={p.alt} width={960} height={720} decoding="async" />
+              {/* lazy: yashirin oynadagi surat ochilgandagina yuklanadi. Aks holda brauzer hammasini
+                  darhol tortardi, React esa /filiallar/ dan sahifa oldindan tayyorlanganda (prefetch)
+                  ularni preload qilardi — ro'yxat sahifasida 3 MB ortiqcha surat (26.10 o'lchov). */}
+              <img src={p.src} alt={p.alt} width={960} height={720} loading="lazy" decoding="async" />
               <figcaption>
                 {p.label} — {city}
                 {photos.length > 1 ? (

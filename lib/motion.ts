@@ -151,7 +151,9 @@ function init(){
       if(f){var fr=f.getBoundingClientRect();on=fr.top<innerHeight*0.85&&fr.bottom>innerHeight*0.15;}
       bar.classList.toggle('is-shown',scrollY>innerHeight*0.55&&!on);}
   }
-  tick();
+  /* Birinchi kadr chizilgandan keyin: scrollY va o'lchamlarni ochilish paytida o'qish brauzerni
+     sahifani muddatidan oldin o'lchashga majbur qilardi (Lighthouse 26.10: forced reflow ~150 ms). */
+  requestAnimationFrame(function(){setTimeout(tick,0);});
   addEventListener('scroll',function(){tick();if(sq)return;sq=setTimeout(function(){sq=0;sweep();},250);},{passive:true});
   if(matchMedia('(pointer: fine)').matches){
     var raf=0,x=0,y=0,cur=null;

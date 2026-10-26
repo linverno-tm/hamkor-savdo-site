@@ -71,6 +71,8 @@ export function CategoryCards() {
                 width={900}
                 height={675}
                 alt={c.alt}
+                // Telefonda 3- va 4-karta ekran tashqarisida (gorizontal qator) — keyin yuklanadi.
+                loading={i >= 2 ? "lazy" : undefined}
                 decoding="async"
                 className={`cat-img ${c.pos}`}
               />
