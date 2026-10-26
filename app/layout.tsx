@@ -104,14 +104,19 @@ var h = location.hostname;
 if (h !== 'hamkorsavdo.uz' && h !== 'www.hamkorsavdo.uz' && location.search.indexOf('_ym_debug') < 0) return;
 var ref = document.referrer;
 try { var s = sessionStorage.getItem('hs_ref'); if (s !== null) { ref = s; sessionStorage.removeItem('hs_ref'); } } catch(e){}
-/* Navbat (ym) darhol — hech bir hodisa yo'qolmaydi; og'ir tag.js esa sahifa
-   to'liq ochilib, brauzer bo'shaganda yuklanadi: telefonda u 1–1,5 s asosiy oqimni band
-   qiladi va birinchi chizishni kechiktirardi (Lighthouse 26.10: TBT 5,4 s). */
+/* Navbat (ym) darhol — init, maqsadlar va ym_cid so'rovi navbatga yig'iladi va hech biri
+   yo'qolmaydi; og'ir tag.js esa sahifa to'liq ochilgandan 2,5 s keyin (brauzer bo'shaganda)
+   yoki birinchi teginish/surish/tugmada — qaysi biri oldin bo'lsa — yuklanadi. Telefonda u
+   asosiy oqimni 1–4 s band qiladi (Lighthouse 26.10: Metrika bilan 61–66, usiz 76–77);
+   egasi 26.10: "1-variantni qilsin". */
 (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
 for (var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
-var put=function(){k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);};
-var idle=function(){(m.requestIdleCallback||function(f){setTimeout(f,1500);})(put,{timeout:4000});};
-if(e.readyState==='complete')idle();else m.addEventListener('load',idle);})
+var done=false,evs=['pointerdown','touchstart','keydown','scroll','wheel'];
+var put=function(){if(done)return;done=true;evs.forEach(function(n){m.removeEventListener(n,put,true);});
+k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);};
+evs.forEach(function(n){m.addEventListener(n,put,{capture:true,passive:true,once:true});});
+var later=function(){setTimeout(function(){(m.requestIdleCallback||function(f){f();})(put,{timeout:2000});},2500);};
+if(e.readyState==='complete')later();else m.addEventListener('load',later);})
 (window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=${YM_ID}','ym');
 /* Vebvizor o'chiq (egasi 26.10: telefonda sahifani band qiladi). Statistika, maqsadlar,
    xarita va ariza bilan bog'lash (ym_cid) ishlayveradi. */
