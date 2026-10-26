@@ -1,0 +1,868 @@
+/* ==================================================================
+   "3 qadamda xarid qiling" — skroll bilan boshqariladigan 3D sahna
+   (components/sections/HowItWorks.tsx).
+
+   Asosiy uslublar = sahnaning YAKUNIY kadri (quti, pasport, karta, tasdiq,
+   oylar halqasi). Brauzer `view-timeline` ni qo'llasa va harakat
+   kamaytirilmagan bo'lsa, bo'lim ekranda qotib turadi va har narsa
+   o'z navbatida kirib keladi (pastdagi @supports bloki). Aks holda —
+   yakuniy kadr va oddiy ro'yxat, hech narsa yashirinmaydi.
+
+   Vaqt chizig'i (trekning "contain" oralig'i, 0–100%):
+     0–6   kirish          6–34  1-qadam: quti ko'tariladi
+     34–64 2-qadam: telefon, ariza to'ladi
+     64–100 3-qadam: pasport + karta, tasdiq, oylar halqasi
+   ================================================================== */
+
+.scene .scene-stage {
+  padding-bottom: clamp(4.5rem, 10vw, 8.5rem);
+}
+.scene-grid {
+  display: grid;
+  align-items: center;
+  gap: 2.5rem;
+}
+@media (min-width: 1024px) {
+  .scene-grid {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 3rem;
+  }
+}
+
+/* ---------------- qadamlar ro'yxati ---------------- */
+
+.scene-steps {
+  position: relative;
+  margin-top: 2.2rem;
+  display: grid;
+  gap: 1.4rem;
+}
+.scene-step {
+  display: flex;
+  gap: 1.1rem;
+  align-items: flex-start;
+}
+.scene-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 14px;
+  background: var(--purple);
+  color: #fff;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+}
+.scene-step-title {
+  font-size: clamp(1.2rem, 1.9vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+.scene-step-text {
+  margin-top: 0.35rem;
+  max-width: 26rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* ---------------- sahna ---------------- */
+
+.scene-view {
+  display: grid;
+  place-items: center;
+  perspective: 95em;
+  perspective-origin: 50% 35%;
+  font-size: clamp(8px, 2.4vw, 15px);
+  min-height: 30em;
+}
+@media (min-width: 1024px) {
+  .scene-view {
+    font-size: clamp(10px, 1.05vw, 17px);
+  }
+}
+.sc-world {
+  position: relative;
+  width: 34em;
+  height: 30em;
+  transform-style: preserve-3d;
+  transform: rotateX(-12deg) rotateY(16deg);
+}
+.sc-world span {
+  display: block;
+}
+.sc-slot,
+.sc-floor,
+.sc-glow,
+.sc-months,
+.sc-check {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-style: preserve-3d;
+}
+
+/* Pol: quti ostidagi aylana maydon (y = +7em). */
+.sc-floor {
+  width: 26em;
+  height: 26em;
+  margin: -13em 0 0 -13em;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--purple) 18%, transparent), transparent 72%);
+  transform: translateY(7em) rotateX(90deg);
+}
+.sc-glow {
+  width: 15em;
+  height: 15em;
+  margin: -7.5em 0 0 -7.5em;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--yellow) 70%, transparent), transparent 70%);
+  transform: translateY(6.95em) rotateX(90deg);
+  opacity: 0.55;
+}
+
+/* ---------------- 3D quti ---------------- */
+
+.sc-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+}
+.sc-f {
+  position: absolute;
+  left: calc(var(--w) / -2);
+  top: calc(var(--h) / -2);
+  width: var(--w);
+  height: var(--h);
+  display: grid;
+  place-items: center;
+  backface-visibility: hidden;
+}
+.sc-front {
+  transform: translateZ(calc(var(--d) / 2));
+}
+.sc-back {
+  transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+}
+.sc-right,
+.sc-left {
+  width: var(--d);
+  left: calc(var(--d) / -2);
+}
+.sc-right {
+  transform: rotateY(90deg) translateZ(calc(var(--w) / 2));
+}
+.sc-left {
+  transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
+}
+.sc-top,
+.sc-bottom {
+  height: var(--d);
+  top: calc(var(--d) / -2);
+}
+.sc-top {
+  transform: rotateX(90deg) translateZ(calc(var(--h) / 2));
+}
+.sc-bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--h) / 2));
+}
+
+/* Asosiy quti — brend rangida, yuzida H belgisi. */
+.sc-main .sc-f {
+  border-radius: 0.5em;
+  color: var(--yellow);
+}
+.sc-main .sc-front {
+  background: linear-gradient(160deg, #7a4fb0, var(--purple) 55%, var(--purple-dark));
+}
+.sc-main .sc-right {
+  background: linear-gradient(160deg, var(--purple), var(--purple-deep));
+}
+.sc-main .sc-left,
+.sc-main .sc-back {
+  background: var(--purple-deep);
+}
+.sc-main .sc-top {
+  background: linear-gradient(135deg, #a37fd0, #8a62bd);
+}
+.sc-main .sc-bottom {
+  background: #1c0f2c;
+}
+/* Qutining lentasi — tepada va old yuzda sariq chiziq. */
+.sc-main .sc-top::before,
+.sc-main .sc-front::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1.1em;
+  margin-left: -0.55em;
+  background: var(--yellow);
+  opacity: 0.9;
+}
+.sc-main .sc-front::before {
+  top: 0;
+  bottom: auto;
+  height: 1.4em;
+}
+.sc-mark {
+  position: relative;
+  width: 3.6em;
+  height: 3.6em;
+}
+.sc-main .sc-right .sc-mark {
+  width: 2.8em;
+  height: 2.8em;
+  opacity: 0.55;
+}
+
+/* Muzlatgich qutisi (baland) va televizor qutisi (yassi). */
+.sc-tall .sc-f {
+  background: linear-gradient(170deg, #f4f0fa, #ddd1ec);
+  border-radius: 0.4em;
+}
+.sc-tall .sc-right,
+.sc-tall .sc-left {
+  background: linear-gradient(170deg, #d9cce9, #bfa9db);
+}
+.sc-tall .sc-top {
+  background: #fff;
+}
+.sc-flat .sc-f {
+  background: linear-gradient(160deg, #2b2140, #140c22);
+  border-radius: 0.3em;
+}
+.sc-flat .sc-top,
+.sc-flat .sc-right,
+.sc-flat .sc-left {
+  background: #3a2d55;
+}
+.sc-flat .sc-front {
+  box-shadow: inset 0 0 0 0.45em #2b2140;
+  background: linear-gradient(135deg, #3b2a63, #6b45a3 55%, #2a1d47);
+}
+
+/* Joylashuv: pol y=+7em, qutilarning markazi = 7 − balandlik/2. */
+.sc-slot--main {
+  transform: translate3d(0, 3em, 0);
+}
+.sc-slot--tall {
+  transform: translate3d(-11.5em, 0.5em, -3em);
+}
+.sc-slot--flat {
+  transform: translate3d(11.5em, 3.5em, -2em);
+}
+/* Yakuniy kadrda yo'q. Shaffoflik (opacity) emas, o'lcham bilan yashiriladi:
+   opacity 3D qutini yassi rasmga aylantirib qo'yadi. */
+.sc-tall,
+.sc-flat {
+  transform: scale(0);
+}
+
+/* ---------------- telefon ---------------- */
+
+.sc-slot--phone {
+  transform: translate3d(9.5em, -1.5em, 4em);
+}
+.sc-phone {
+  position: absolute;
+  left: -3.6em;
+  top: -6.6em;
+  width: 7.2em;
+  height: 13.2em;
+  padding: 0.55em;
+  border-radius: 1.4em;
+  background: linear-gradient(160deg, #2a1d42, #120a1e);
+  box-shadow:
+    -0.45em 0.2em 0 #0b0614,
+    0 2.5em 3em -1.5em rgba(18, 8, 32, 0.6);
+  transform: rotateY(-24deg);
+  opacity: 0;
+}
+.sc-screen {
+  position: relative;
+  height: 100%;
+  border-radius: 1em;
+  background: #fff;
+  padding: 1.6em 0.8em 0.8em;
+}
+.sc-bar {
+  height: 1.1em;
+  width: 60%;
+  border-radius: 0.4em;
+  background: var(--purple);
+}
+.sc-line {
+  margin-top: 1.1em;
+  height: 1.5em;
+  border-radius: 0.45em;
+  background: var(--purple-50);
+  box-shadow: inset 0 0 0 0.12em var(--purple-100);
+  position: relative;
+  overflow: hidden;
+}
+.sc-line::after {
+  content: "";
+  position: absolute;
+  left: 0.5em;
+  top: 50%;
+  height: 0.35em;
+  margin-top: -0.175em;
+  width: 55%;
+  border-radius: 1em;
+  background: var(--purple-soft);
+  transform-origin: left;
+}
+.sc-line--2::after {
+  width: 75%;
+}
+.sc-btn {
+  position: absolute;
+  left: 0.8em;
+  right: 0.8em;
+  bottom: 1em;
+  height: 1.8em;
+  border-radius: 0.55em;
+  background: var(--yellow);
+}
+
+/* ---------------- pasport va karta ---------------- */
+
+.sc-slot--id {
+  transform: translate3d(-2.6em, 4.2em, 5.6em);
+}
+.sc-slot--bank {
+  transform: translate3d(2.4em, 4.9em, 6.4em);
+}
+.sc-card {
+  position: absolute;
+  left: -4em;
+  top: -2.5em;
+  width: 8em;
+  height: 5em;
+  border-radius: 0.6em;
+  box-shadow: 0 1.2em 1.6em -0.8em rgba(18, 8, 32, 0.55);
+}
+.sc-card--id {
+  background: linear-gradient(135deg, #e3f1ee, #bfdcd5);
+  transform: rotateZ(-9deg) rotateX(-12deg);
+}
+.sc-photo {
+  position: absolute;
+  left: 0.6em;
+  top: 0.8em;
+  width: 2.2em;
+  height: 2.8em;
+  border-radius: 0.35em;
+  background: linear-gradient(180deg, #9fc4bb, #7fa99f);
+}
+.sc-rows {
+  position: absolute;
+  left: 3.4em;
+  right: 0.7em;
+  top: 1.1em;
+  height: 2.4em;
+  background: repeating-linear-gradient(180deg, #8fb3aa 0 0.32em, transparent 0.32em 0.8em);
+  border-radius: 0.2em;
+  opacity: 0.8;
+}
+.sc-card--bank {
+  background: linear-gradient(135deg, var(--purple-soft), var(--purple) 50%, var(--purple-deep));
+  transform: rotateZ(7deg) rotateX(-12deg);
+}
+.sc-chip {
+  position: absolute;
+  left: 0.8em;
+  top: 1.5em;
+  width: 1.6em;
+  height: 1.2em;
+  border-radius: 0.25em;
+  background: linear-gradient(135deg, var(--yellow-soft), var(--yellow));
+}
+.sc-card--bank::after {
+  content: "";
+  position: absolute;
+  left: 0.8em;
+  right: 2.5em;
+  bottom: 0.8em;
+  height: 0.4em;
+  border-radius: 1em;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* ---------------- tasdiq ---------------- */
+
+.sc-check {
+  width: 4.4em;
+  height: 4.4em;
+  margin: -2.2em 0 0 -2.2em;
+  display: grid !important;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: #1a1130;
+  box-shadow:
+    0 0 0 0.45em color-mix(in srgb, var(--yellow) 30%, transparent),
+    0 1.2em 2em -1em rgba(18, 8, 32, 0.6);
+  transform: translate3d(0, -5.6em, 4em);
+}
+.sc-check svg {
+  width: 2.4em;
+  height: 2.4em;
+}
+
+/* ---------------- oylar halqasi ---------------- */
+
+.sc-months {
+  transform: translate3d(0, -1em, -14em);
+}
+.sc-month {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: rotate(calc(var(--k) * 30deg)) translateY(-11em) rotate(calc(var(--k) * -30deg));
+}
+.sc-month-in {
+  display: grid !important;
+  place-items: center;
+  width: 2.2em;
+  height: 2.2em;
+  margin: -1.1em 0 0 -1.1em;
+  font-size: 1.55em;
+  border-radius: 0.5em;
+  background: var(--ground);
+  color: var(--purple);
+  box-shadow:
+    0 0 0 0.1em var(--purple-100),
+    0 0.9em 1.4em -0.8em rgba(18, 8, 32, 0.45);
+}
+.sc-month:last-child .sc-month-in {
+  background: var(--yellow);
+  color: #1a1130;
+}
+
+[data-theme="dark"] .sc-month-in {
+  background: #241a36;
+  color: var(--purple-ink);
+  box-shadow:
+    0 0 0 0.1em rgba(255, 255, 255, 0.08),
+    0 0.9em 1.4em -0.8em rgba(0, 0, 0, 0.6);
+}
+[data-theme="dark"] .sc-screen {
+  background: #f3eef8;
+}
+
+/* ==================================================================
+   Skroll bilan harakat — faqat qo'llaydigan brauzerda
+   ================================================================== */
+@supports ((animation-timeline: view()) and (animation-range: 0% 100%)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scene-track {
+      height: 360vh;
+      view-timeline: --how block;
+    }
+    .scene .scene-stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100svh;
+      padding: 5.5rem 0 1.5rem;
+      display: flex;
+      align-items: center;
+      overflow: clip;
+    }
+    .scene-grid {
+      width: 100%;
+    }
+
+    /* Hamma harakat bitta vaqt chizig'iga bog'langan. */
+    .sc-world,
+    .sc-glow,
+    .sc-main,
+    .sc-tall,
+    .sc-flat,
+    .sc-phone,
+    .sc-line::after,
+    .sc-btn,
+    .sc-card--id,
+    .sc-card--bank,
+    .sc-check,
+    .sc-month-in,
+    .scene-step,
+    .scene-steps::before {
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --how;
+      animation-range: contain 0% contain 100%;
+    }
+
+    .sc-world {
+      animation-name: sc-world;
+    }
+    @keyframes sc-world {
+      0% {
+        transform: rotateX(-18deg) rotateY(-34deg) scale(0.86);
+      }
+      8% {
+        transform: rotateX(-16deg) rotateY(-26deg) scale(1);
+      }
+      100% {
+        transform: rotateX(-12deg) rotateY(16deg) scale(1);
+      }
+    }
+
+    /* 1-qadam: uchta quti chiqadi, brend qutisi ko'tarilib yonadi. */
+    .sc-main {
+      animation-name: sc-main;
+    }
+    @keyframes sc-main {
+      0% {
+        transform: translateY(4em) scale(0);
+      }
+      6% {
+        transform: translateY(0) scale(1);
+      }
+      12% {
+        transform: translateY(0) rotateY(0);
+      }
+      24%,
+      58% {
+        transform: translateY(-3.5em) rotateY(32deg);
+      }
+      68%,
+      100% {
+        transform: translateY(0) rotateY(0);
+      }
+    }
+    .sc-glow {
+      animation-name: sc-glow;
+    }
+    @keyframes sc-glow {
+      0%,
+      10% {
+        opacity: 0;
+      }
+      22%,
+      60% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.55;
+      }
+    }
+    .sc-tall {
+      animation-name: sc-tall;
+    }
+    .sc-flat {
+      animation-name: sc-flat;
+    }
+    @keyframes sc-tall {
+      0% {
+        transform: translateY(6em) scale(0);
+      }
+      7%,
+      24% {
+        transform: translateY(0) scale(1);
+      }
+      30% {
+        transform: translateY(0.6em) scale(0.92);
+      }
+      40%,
+      100% {
+        transform: translateX(-9em) scale(0);
+      }
+    }
+    @keyframes sc-flat {
+      0%,
+      2% {
+        transform: translateY(4em) scale(0);
+      }
+      9%,
+      24% {
+        transform: translateY(0) scale(1);
+      }
+      30% {
+        transform: translateY(0.4em) scale(0.92);
+      }
+      40%,
+      100% {
+        transform: translateX(9em) scale(0);
+      }
+    }
+
+    /* 2-qadam: telefon kiradi, ariza to'ladi, tugma bosiladi. */
+    .sc-phone {
+      animation-name: sc-phone;
+    }
+    @keyframes sc-phone {
+      0%,
+      36% {
+        transform: translateX(22em) rotateY(-70deg);
+        opacity: 0;
+      }
+      46%,
+      60% {
+        transform: rotateY(-24deg);
+        opacity: 1;
+      }
+      58% {
+        transform: rotateY(-24deg) scale(1.03);
+      }
+      68%,
+      100% {
+        transform: translateX(22em) rotateY(-50deg);
+        opacity: 0;
+      }
+    }
+    .sc-line::after {
+      animation-name: sc-line;
+    }
+    .sc-line--2::after {
+      animation-name: sc-line-2;
+    }
+    @keyframes sc-line {
+      0%,
+      46% {
+        transform: scaleX(0);
+      }
+      51%,
+      100% {
+        transform: scaleX(1);
+      }
+    }
+    @keyframes sc-line-2 {
+      0%,
+      51% {
+        transform: scaleX(0);
+      }
+      56%,
+      100% {
+        transform: scaleX(1);
+      }
+    }
+    .sc-btn {
+      animation-name: sc-btn;
+    }
+    @keyframes sc-btn {
+      0%,
+      56% {
+        background: var(--purple-100);
+        transform: none;
+      }
+      58% {
+        background: var(--yellow);
+        transform: scale(0.94);
+      }
+      61%,
+      100% {
+        background: var(--yellow);
+        transform: none;
+      }
+    }
+
+    /* 3-qadam: pasport va karta uchib kelib qutiga suyanadi. */
+    .sc-card--id {
+      animation-name: sc-id;
+    }
+    .sc-card--bank {
+      animation-name: sc-bank;
+    }
+    @keyframes sc-id {
+      0%,
+      64% {
+        transform: translate3d(-26em, -14em, 6em) rotateZ(-110deg) rotateY(70deg);
+        opacity: 0;
+      }
+      66% {
+        opacity: 1;
+      }
+      76%,
+      100% {
+        transform: rotateZ(-9deg) rotateX(-12deg);
+        opacity: 1;
+      }
+    }
+    @keyframes sc-bank {
+      0%,
+      68% {
+        transform: translate3d(26em, -16em, 6em) rotateZ(120deg) rotateY(-70deg);
+        opacity: 0;
+      }
+      70% {
+        opacity: 1;
+      }
+      80%,
+      100% {
+        transform: rotateZ(7deg) rotateX(-12deg);
+        opacity: 1;
+      }
+    }
+    .sc-check {
+      animation-name: sc-check;
+    }
+    @keyframes sc-check {
+      0%,
+      80% {
+        transform: translate3d(0, -5.6em, 4em) scale(0);
+        opacity: 0;
+      }
+      84% {
+        transform: translate3d(0, -5.6em, 4em) scale(1.18);
+        opacity: 1;
+      }
+      87%,
+      100% {
+        transform: translate3d(0, -5.6em, 4em) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Oylar halqasi — soat mili bo'ylab birin-ketin. */
+    .sc-month-in {
+      animation-name: sc-month;
+    }
+    @keyframes sc-month {
+      from {
+        transform: scale(0) rotate(-40deg);
+        opacity: 0;
+      }
+      to {
+        transform: none;
+        opacity: 1;
+      }
+    }
+    .sc-month:nth-child(1) .sc-month-in { animation-range: contain 84% contain 87%; }
+    .sc-month:nth-child(2) .sc-month-in { animation-range: contain 85% contain 88%; }
+    .sc-month:nth-child(3) .sc-month-in { animation-range: contain 86% contain 89%; }
+    .sc-month:nth-child(4) .sc-month-in { animation-range: contain 87% contain 90%; }
+    .sc-month:nth-child(5) .sc-month-in { animation-range: contain 88% contain 91%; }
+    .sc-month:nth-child(6) .sc-month-in { animation-range: contain 89% contain 92%; }
+    .sc-month:nth-child(7) .sc-month-in { animation-range: contain 90% contain 93%; }
+    .sc-month:nth-child(8) .sc-month-in { animation-range: contain 91% contain 94%; }
+    .sc-month:nth-child(9) .sc-month-in { animation-range: contain 92% contain 95%; }
+    .sc-month:nth-child(10) .sc-month-in { animation-range: contain 93% contain 96%; }
+    .sc-month:nth-child(11) .sc-month-in { animation-range: contain 94% contain 97%; }
+    .sc-month:nth-child(12) .sc-month-in { animation-range: contain 95% contain 98%; }
+
+    /* Chapdagi qadamlar: faoli yonadi, chapdagi chiziq to'ladi. */
+    .scene-steps {
+      --dim: 0.3;
+      padding-left: 1.4rem;
+    }
+    .scene-steps::after,
+    .scene-steps::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.3rem;
+      bottom: 0.3rem;
+      width: 3px;
+      border-radius: 3px;
+      background: color-mix(in srgb, var(--purple) 14%, transparent);
+    }
+    .scene-steps::before {
+      z-index: 1;
+      background: linear-gradient(180deg, var(--purple), var(--yellow));
+      transform-origin: top;
+      animation-name: sc-progress;
+    }
+    @keyframes sc-progress {
+      from {
+        transform: scaleY(0);
+      }
+      to {
+        transform: scaleY(1);
+      }
+    }
+    .scene-step:nth-child(1) {
+      animation-name: sc-step-1;
+    }
+    .scene-step:nth-child(2) {
+      animation-name: sc-step-2;
+    }
+    .scene-step:nth-child(3) {
+      animation-name: sc-step-3;
+    }
+    @keyframes sc-step-1 {
+      0%,
+      33% {
+        opacity: 1;
+        transform: none;
+      }
+      37%,
+      100% {
+        opacity: var(--dim);
+        transform: translateX(-0.4rem);
+      }
+    }
+    @keyframes sc-step-2 {
+      0%,
+      33% {
+        opacity: var(--dim);
+        transform: translateX(-0.4rem);
+      }
+      37%,
+      62% {
+        opacity: 1;
+        transform: none;
+      }
+      66%,
+      100% {
+        opacity: var(--dim);
+        transform: translateX(-0.4rem);
+      }
+    }
+    @keyframes sc-step-3 {
+      0%,
+      62% {
+        opacity: var(--dim);
+        transform: translateX(-0.4rem);
+      }
+      66%,
+      100% {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Telefonda: sarlavha, sahna, ostida faqat faol qadam (bir joyda almashadi). */
+    @media (max-width: 1023.98px) {
+      /* Pastdan joy — telefondagi "Qo'ng'iroq / Ariza" paneli matnni to'smasin. */
+      .scene .scene-stage {
+        padding-top: 5rem;
+        padding-bottom: 6.5rem;
+        align-items: stretch;
+      }
+      .scene-grid {
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: 0.5rem;
+        height: 100%;
+      }
+      .scene-copy {
+        display: contents;
+      }
+      .scene-copy > .sh {
+        order: 0;
+      }
+      .scene-view {
+        order: 1;
+        min-height: 0;
+        font-size: min(2.7vw, 1.75svh);
+      }
+      .scene-steps {
+        order: 2;
+        --dim: 0;
+        margin-top: 0;
+        padding-left: 1.1rem;
+        min-height: 7.5rem;
+      }
+      .scene-step {
+        grid-area: 1 / 1;
+      }
+    }
+  }
+}
