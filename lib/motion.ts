@@ -55,6 +55,12 @@ function h3d(){
   if(d.readyState==='complete')idle();else addEventListener('load',idle);
 }
 if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',h3d);else h3d();
+/* Sayt ichida boshqa sahifaga o'tilmoqda — keyingi <main> yumshoq kirsin
+   (app/globals.css > page-in). Ilk yuklanishda yo'q: LCP buzilmasin. */
+d.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('a[href]');
+  if(a&&a.origin===location.origin&&a.pathname!==location.pathname)de.setAttribute('data-nav','');
+},true);
 /* Turgan sahifaning o'ziga olib boruvchi havola (bosh sahifada logotip) —
    sahifa eng tepasiga aylanadi (egasi 23.10). Next'ning Link'i bunda
    joyidan qimirlamasdi. Capture bosqichida — React ko'rmasdan oldin. */

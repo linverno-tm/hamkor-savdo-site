@@ -130,17 +130,19 @@
   right: -10rem;
   background: radial-gradient(circle, rgba(154, 114, 207, 0.75), transparent 68%);
 }
+/* orb-2 va orb-3 — ekranga bog'langan (svh), mazmunga emas: shrift yuklanib bo'lim
+   balandligi o'zgarganda siljimasin (CLS, 26.10). */
 .hero-orb-2 {
   width: 26rem;
   height: 26rem;
-  bottom: 2rem;
+  top: max(10rem, calc(min(100svh, 62rem) - 28rem));
   left: -6rem;
   background: radial-gradient(circle, rgba(223, 208, 31, 0.28), transparent 68%);
 }
 .hero-orb-3 {
   width: 22rem;
   height: 22rem;
-  top: 30%;
+  top: 30svh;
   left: 40%;
   background: radial-gradient(circle, rgba(122, 79, 176, 0.7), transparent 68%);
 }
@@ -171,11 +173,14 @@
   mask-image: radial-gradient(70% 60% at 70% 30%, #000, transparent 75%);
   opacity: 0.5;
 }
+/* O'lchami ekranga bog'langan, mazmunga emas: ilgari `height: 115%` edi va shrift
+   yuklanib matn balandligi o'zgarganda belgi ham kattalashib siljirdi —
+   Lighthouse buni sahifa sakrashi deb hisobladi (CLS 0,29, 26.10). */
 .hero-mark {
   position: absolute;
   right: -4%;
-  bottom: -12%;
-  height: 115%;
+  top: -6svh;
+  height: min(118svh, 72rem);
   width: auto;
   color: rgba(255, 255, 255, 0.04);
 }

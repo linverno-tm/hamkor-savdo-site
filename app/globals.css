@@ -1227,9 +1227,12 @@ footer a:not(.btn) {
    DIQQAT: bu yerda faqat `opacity` o'zgaradi, `transform` emas. Sababi —
    transformli element o'z ichidagi `position: fixed` elementlar uchun
    chegara (containing block) bo'lib qoladi va suratni kattalashtirish
-   ekranga emas, `main` ichiga bog'lanib qolardi. */
+   ekranga emas, `main` ichiga bog'lanib qolardi.
+   Faqat sayt ichida bir sahifadan boshqasiga o'tganda (`data-nav`, lib/motion.ts):
+   ilk yuklanishda <main> shaffoflikdan boshlansa, brauzer birinchi kadrdagi
+   mazmunni ko'rinmas deb hisoblaydi va LCP umuman qayd etilmaydi (26.10). */
 @media (prefers-reduced-motion: no-preference) {
-  main {
+  :root[data-nav] main {
     animation: page-in 260ms var(--ease) both;
   }
 }
