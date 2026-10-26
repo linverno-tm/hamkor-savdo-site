@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
+import { Vitrina3D } from "@/components/sections/Vitrina3D";
 import { SplitWords } from "@/components/ui/SplitWords";
 import { ScrubText } from "@/components/ui/ScrubText";
 import { OpenStatus } from "@/components/ui/OpenStatus";
@@ -236,6 +237,11 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
             ))}
           </ul>
         </section>
+
+        {/* ---- 3D vitrina: shu yo'nalishning real 3D modellari ---- */}
+        {topic.id === "texnika" || topic.id === "mebel" || topic.id === "tilla" || topic.id === "skuter" ? (
+          <Vitrina3D only={topic.id} lang={lang} />
+        ) : null}
 
         {/* ---- matn: aylantirilgan sari so'zma-so'z yorishadi ---- */}
         <section aria-labelledby="topic-more" className="sec">

@@ -42,7 +42,7 @@ const isPageHref = (href) =>
  * ijtimoiy tarmoqdagi nom bilan mos kelmaydi. Domen va @nomlar ham shu
  * sababdan lotinda qoladi: "@ҳамкорсавдо.уз" ni mijoz qidirib topa olmaydi.
  */
-const KEEP_LATIN = /(HAMKOR\s+SAVDO|@[A-Za-z0-9_.]+|https?:\/\/[^\s<>"]+|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:uz|com|ru|me|org|net)\b(?:\/[^\s<>"]*)?)/g;
+const KEEP_LATIN = /(HAMKOR\s+SAVDO|\b\d+D\b|@[A-Za-z0-9_.]+|https?:\/\/[^\s<>"]+|\b[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:uz|com|ru|me|org|net)\b(?:\/[^\s<>"]*)?)/g;
 const toCyr = (s) =>
   s
     .split(KEEP_LATIN)
@@ -76,6 +76,9 @@ function walkText(node) {
       continue;
     }
     afterAt = false;
+    // translate="no" — HTML'ning "tarjima qilinmasin" belgisi: ichi lotinda qoladi
+    // (masalan, 3D vitrinadagi inglizcha model nomlari va mualliflar).
+    if (child.nodeType === 1 && child.getAttribute("translate") === "no") continue;
     if (child.nodeType === 1 && !SKIP_TAGS.has(child.tagName?.toLowerCase())) {
       for (const attr of ATTRS_TO_TRANSLATE) {
         const v = child.getAttribute(attr);

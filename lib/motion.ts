@@ -26,6 +26,8 @@
  * Biror sabab bilan kuzatuvchi ishlamasa, 4 soniyadan keyin hammasi
  * baribir ko'rinadi.
  */
+import { MODEL_VIEWER_SRC } from "@/lib/vitrina";
+
 export const MOTION_SCRIPT = `(function(){try{
 var d=document,de=d.documentElement;
 /* "Shuni so'rash" — harakat sozlamasidan qat'i nazar doim ishlaydi. */
@@ -36,6 +38,24 @@ d.addEventListener('click',function(e){
   var f=note.closest('form');if(f){f.classList.remove('is-asked');void f.offsetWidth;f.classList.add('is-asked');}
   setTimeout(function(){var n=d.getElementById('lead-name');if(n)n.focus({preventScroll:true});},700);
 });
+/* 3D vitrina (components/sections/Vitrina3D.tsx): model-viewer skripti faqat
+   vitrina ekranga yaqinlashganda yuklanadi; harakat kamaytirilmagan bo'lsa
+   model sekin aylanadi. Ungacha — poster rasm. */
+function vitrina(){
+  var v=d.querySelectorAll('[data-3d]');if(!v.length)return;
+  function load(){
+    if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))
+      d.querySelectorAll('model-viewer[data-rotate]').forEach(function(m){m.setAttribute('auto-rotate','');m.setAttribute('auto-rotate-delay','600');m.setAttribute('rotation-per-second','16deg');});
+    if(d.querySelector('script[data-mv]'))return;
+    var s=d.createElement('script');s.type='module';s.src='${MODEL_VIEWER_SRC}';s.setAttribute('data-mv','');d.head.appendChild(s);
+  }
+  if(!('IntersectionObserver' in window)){load();return;}
+  var io=new IntersectionObserver(function(es){
+    if(es.some(function(e){return e.isIntersecting;})){io.disconnect();load();}
+  },{rootMargin:'700px 0px'});
+  v.forEach(function(x){io.observe(x);});
+}
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',vitrina);else vitrina();
 /* Turgan sahifaning o'ziga olib boruvchi havola (bosh sahifada logotip) —
    sahifa eng tepasiga aylanadi (egasi 23.10). Next'ning Link'i bunda
    joyidan qimirlamasdi. Capture bosqichida — React ko'rmasdan oldin. */

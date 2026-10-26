@@ -26,6 +26,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const BASE = (process.argv[2] || "https://hamkorsavdo.uz").replace(/\/$/, "");
+/* Lokal statik serverda .htaccess yo'q — Next'ning oldindan yuklash yo'llari
+   (__next.*.txt) u yerda 404 beradi, haqiqiy xostingda esa qayta yo'naltiriladi. */
+const LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)/.test(BASE);
 const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const SIZES = [
   { name: "telefon", width: 390, height: 844, mobile: true },
@@ -118,7 +121,7 @@ async function visit(path, size, replace) {
   for (const e of events) {
     if (e.method === "Runtime.exceptionThrown") out.push("JS xato: " + (e.params.exceptionDetails.exception?.description || e.params.exceptionDetails.text).split("\n")[0].slice(0, 160));
     if (e.method === "Runtime.consoleAPICalled" && e.params.type === "error") out.push("konsol: " + JSON.stringify(e.params.args.map((a) => a.value ?? a.description)).slice(0, 160));
-    if (e.method === "Network.responseReceived" && e.params.response.status >= 400 && !/mc\.yandex|metrika/.test(e.params.response.url)) out.push(`HTTP ${e.params.response.status}: ${e.params.response.url}`);
+    if (e.method === "Network.responseReceived" && e.params.response.status >= 400 && !/mc\.yandex|metrika/.test(e.params.response.url) && !(LOCAL && /\/__next\./.test(e.params.response.url))) out.push(`HTTP ${e.params.response.status}: ${e.params.response.url}`);
   }
   if (r?.wide) out.push(`sahifa ekrandan keng: ${r.wide}px > ${size.width}px`);
   if (r?.closed?.length) out.push(`ochilmagan bo'limlar (${r.closed.length}): ${r.closed.slice(0, 4).join(" | ")}`);
@@ -147,6 +150,7 @@ for (const l of allLinks) {
   if (/\.(pdf|jpg|jpeg|png|webp|avif|mp4)$/i.test(l) || l.includes("/admin")) continue;
   try {
     const res = await fetch(l, { redirect: "follow" });
+    await res.arrayBuffer().catch(() => null); // javobni oxirigacha o'qiymiz — aks holda undici yiqiladi
     if (res.status >= 400) { console.log(`  ✗  ${res.status} ${l}`); errors.push(`havola ${res.status}: ${l}`); }
   } catch { errors.push(`havola ochilmadi: ${l}`); }
 }

@@ -10,6 +10,7 @@ import { Trust } from "@/components/sections/Trust";
 import { Promotions } from "@/components/sections/Promotions";
 import { Catalog } from "@/components/sections/Catalog";
 import { Installment } from "@/components/sections/Installment";
+import { Vitrina3D } from "@/components/sections/Vitrina3D";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { About } from "@/components/sections/About";
@@ -129,6 +130,7 @@ export default function Home() {
             "boshqa joyda ko'rganman" katagi. */}
         <Hero />
         <Trust />
+        <Vitrina3D />
         <Promotions />
         <Catalog />
         <Installment />
