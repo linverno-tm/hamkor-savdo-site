@@ -163,7 +163,7 @@ export function LeadForm({
                      baribir qoladi: brauzerni chetlab o'tish oson. Bo'sh joy,
                      qavs va chiziqchaga ruxsat, chunki odam raqamni
                      "+998 90 123 45 67" ko'rinishida yozadi. */
-                  pattern="[+]?[0-9()\-\s]{9,24}"
+                  pattern="[+]?[0-9\(\)\-\s]{9,24}"
                   title={t.phoneTitle}
                   aria-describedby="lead-phone-help"
                   className="field ym-disable-keys mt-2"

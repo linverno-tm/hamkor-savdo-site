@@ -74,8 +74,9 @@
   --color-line: var(--line);
   --color-on-purple: var(--on-purple);
   --color-on-purple-2: var(--on-purple-2);
-  --font-sans: var(--font-outfit), system-ui, sans-serif;
-  --font-display: var(--font-bebas), var(--font-outfit), system-ui, sans-serif;
+  /* Onest/Oswald faqat kirill harflari uchun (app/layout.tsx) — shuning uchun birinchi. */
+  --font-sans: var(--font-onest), var(--font-outfit), system-ui, sans-serif;
+  --font-display: var(--font-oswald), var(--font-bebas), var(--font-onest), var(--font-outfit), system-ui, sans-serif;
 }
 
 /* ---------------- base ---------------- */

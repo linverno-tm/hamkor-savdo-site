@@ -35,6 +35,34 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--purple) 14%, transparent);
 }
 
+/* Tekshiruv maydondan chiqqanda (on blur) yoki yuborishga urinishda — yozib
+   turgan odamga oldindan xato ko'rsatilmaydi. Rang yagona belgi emas: o'ngda
+   «!» belgisi, telefonda esa format izohi qizil bo'ladi. aria-invalid ni
+   lib/motion.ts shu holat bilan sinxron qiladi. */
+.field:user-invalid,
+.hero-field:user-invalid {
+  --err: #c62828;
+  border-color: var(--err);
+  padding-right: 2.6rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='9' fill='%23c62828'/%3E%3Cpath d='M10 5v6' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='14.6' r='1.3' fill='%23fff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1.15rem;
+}
+.field:user-invalid:focus {
+  box-shadow: 0 0 0 4px color-mix(in srgb, #c62828 16%, transparent);
+}
+.hero-field:user-invalid {
+  border-color: #ffb4a9;
+}
+.field:user-invalid + p {
+  color: #c62828;
+  font-weight: 600;
+}
+[data-theme="dark"] .field:user-invalid + p {
+  color: #ff8a80;
+}
+
 /* Binafsha tugma uchun nur. */
 .btn-glow-p {
   box-shadow: 0 16px 34px -16px rgba(90, 48, 137, 0.75);
@@ -396,6 +424,50 @@
     top: 7rem;
   }
 }
+.about-photo-wrap {
+  position: relative;
+}
+/* Pauza tugmasi faqat suratlar haqiqatan almashganda kerak. */
+.cycle-pause {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cycle-pause {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(26, 17, 48, 0.55);
+    cursor: pointer;
+  }
+  .cycle-pause svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+  }
+  .cycle-pause .cp-play,
+  .cycle-pause[aria-pressed="true"] .cp-pause {
+    display: none;
+  }
+  .cycle-pause[aria-pressed="true"] .cp-play {
+    display: inline;
+  }
+  .about-photo-wrap:has(.cycle-pause[aria-pressed="true"]) .photo-cycle > * {
+    animation-play-state: paused;
+  }
+}
+.about-photo-wrap .about-photo {
+  margin-top: 0;
+}
+.about-photo-wrap {
+  margin-top: 2.25rem;
+}
 .about-photo {
   margin-top: 2.25rem;
   aspect-ratio: 4 / 3;
@@ -441,9 +513,11 @@
       animation-timeline: view();
       animation-range: cover 18% cover 42%;
     }
+    /* Boshlang'ich xiralik 0.5 dan past emas: shunda ham matn kontrasti ≥3:1
+       (WCAG 1.4.3, 26 px katta matn) — 0.16 da Lighthouse 30+ so'zni xato dedi. */
     @keyframes word-lit {
       from {
-        opacity: 0.16;
+        opacity: 0.5;
       }
       to {
         opacity: 1;
@@ -713,6 +787,11 @@
   .branch-top {
     flex-wrap: wrap;
     row-gap: 0.6rem;
+  }
+  /* Nom ustuni min-w-0 + flex-1 — 0 gacha qisqara oladi, shuning uchun qator o'z-o'zidan
+     bo'linmasdi: telefonda nom kesilib, mo'ljal har so'zda qatorga tushardi (26.10). */
+  .branch-top > .min-w-0 {
+    flex-basis: calc(100% - 3.75rem);
   }
   .branch-top .branch-hours {
     margin-left: 3.75rem;
@@ -1602,6 +1681,10 @@
   font-weight: 600;
   color: var(--purple);
   text-underline-offset: 4px;
+}
+/* Qorong'i mavzuda to'q binafsha fon ustida 2.6:1 edi (WCAG 4.5:1 kerak). */
+[data-theme="dark"] .lavha-all {
+  color: var(--purple-ink);
 }
 .lavha-all:hover {
   text-decoration: underline;

@@ -427,7 +427,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border-radius: 999px;
+  /* 999px emas: matn ikki qatorga tushsa ham doiraga aylanmaydi. */
+  border-radius: 0.8rem;
   padding: 0.25rem 0.7rem 0.25rem 0.55rem;
   font-size: 0.78rem;
   font-weight: 600;
@@ -853,14 +854,14 @@
 }
 .rt-idx {
   fill: #fff;
-  font-family: var(--font-bebas), sans-serif;
+  font-family: var(--font-display);
   font-size: 13px;
   letter-spacing: 0.05em;
   pointer-events: none;
 }
 .rt-city {
   fill: #fff;
-  font-family: var(--font-bebas), sans-serif;
+  font-family: var(--font-display);
   font-size: 22px;
   letter-spacing: 0.06em;
 }
@@ -954,6 +955,11 @@
   }
   .rt-city {
     font-size: 40px;
+  }
+  /* Manzil yashiringach bir shahardagi ikkinchi filial (Shahrixon 02) ham "SHAHRIXON" bo'lib
+     qolardi — ikki bir xil yozuv ustma-ust. Shahar nomi bir marta, birinchi nuqta yonida. */
+  .rt-pin--dup .rt-city {
+    display: none;
   }
   .rt-dot,
   .rt-pulse {

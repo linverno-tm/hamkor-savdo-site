@@ -30,6 +30,17 @@ import { H3D_SRC } from "@/lib/vitrina";
 
 export const MOTION_SCRIPT = `(function(){try{
 var d=document,de=d.documentElement;
+/* Forma: aria-invalid ekrandagi :user-invalid holati bilan bir vaqtda — ekran
+   o'quvchi xatoni odam maydondan chiqqandagina eshitadi (app/home-sections.css). */
+var inv=function(e){var t=e.target;if(!t||!t.matches||!t.matches('.field,.hero-field'))return;
+  try{if(t.matches(':user-invalid'))t.setAttribute('aria-invalid','true');else t.removeAttribute('aria-invalid');}catch(x){}};
+d.addEventListener('blur',inv,true);
+d.addEventListener('input',function(e){if(e.target&&e.target.getAttribute&&e.target.getAttribute('aria-invalid'))inv(e);},true);
+d.addEventListener('invalid',inv,true);
+/* Suratlar almashinuvini to'xtatish / davom ettirish (components/sections/About.tsx). */
+d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-cycle-pause]');if(!b)return;
+  var on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on?'true':'false');
+  b.setAttribute('aria-label',on?"Suratlar almashinuvini davom ettirish":"Suratlar almashinuvini to'xtatish");});
 /* "Shuni so'rash" — harakat sozlamasidan qat'i nazar doim ishlaydi. */
 d.addEventListener('click',function(e){
   var a=e.target.closest&&e.target.closest('[data-ask]');if(!a)return;

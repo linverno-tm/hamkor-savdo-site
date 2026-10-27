@@ -57,8 +57,14 @@ export function BranchRoute() {
         <rect className="rt-grid" width={W} height={H} fill="url(#rt-dots)" />
         <path className="rt-road" d={d} pathLength={1} />
         <path className="rt-road rt-road--glow" d={d} pathLength={1} />
-        {pts.map(({ b, x, y, left }, i) => (
-          <Link key={b.id} href={`/filiallar/${b.id}`} className="rt-pin" data-branch={b.id} style={{ ["--i" as string]: i }}>
+        {pts.map(({ b, x, y, left, n }, i) => (
+          <Link
+            key={b.id}
+            href={`/filiallar/${b.id}`}
+            className={n > 0 ? "rt-pin rt-pin--dup" : "rt-pin"}
+            data-branch={b.id}
+            style={{ ["--i" as string]: i }}
+          >
             <circle className="rt-pulse" cx={x} cy={y} r="13" />
             <circle className="rt-dot" cx={x} cy={y} r="13" />
             <text className="rt-idx" x={x} y={y + 4.5} textAnchor="middle">

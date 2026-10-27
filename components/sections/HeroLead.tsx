@@ -80,7 +80,7 @@ export function HeroLead() {
             inputMode="tel"
             maxLength={24}
             autoComplete="tel"
-            pattern="[+]?[0-9()\-\s]{9,24}"
+            pattern="[+]?[0-9\(\)\-\s]{9,24}"
             title="Telefon raqamini kiriting, masalan: +998 90 123 45 67"
             className="hero-field ym-disable-keys mt-1.5"
             placeholder="+998 90 123 45 67"

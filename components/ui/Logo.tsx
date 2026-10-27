@@ -35,7 +35,26 @@ export function Logo({ variant = "lockup", className, title }: LogoProps) {
       aria-hidden={title ? undefined : true}
       focusable="false"
     >
-      <path fillRule="evenodd" d={isMark ? MARK_D : MARK_D + " " + WORD_D} />
+      <use href="#hs-logo-mark" />
+      {isMark ? null : <use href="#hs-logo-word" />}
+    </svg>
+  );
+}
+
+/**
+ * The two outlines, once per document (rendered by the root layout). Every
+ * <Logo> points at them with <use>: the paths are ~9 KB, and inlined they were
+ * repeated 13 times on the home page — once in the HTML and again in the RSC
+ * payload, a third of its 370 KB. The wrapper stays rendered but zero-sized,
+ * because some engines skip <use> targets inside a display:none subtree.
+ */
+export function LogoDefs() {
+  return (
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style={{ position: "absolute" }}>
+      <defs>
+        <path id="hs-logo-mark" fillRule="evenodd" d={MARK_D} />
+        <path id="hs-logo-word" fillRule="evenodd" d={WORD_D} />
+      </defs>
     </svg>
   );
 }

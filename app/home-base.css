@@ -138,6 +138,27 @@
   letter-spacing: -0.04em;
   text-wrap: balance;
 }
+/* Kirill matni (Onest) lotin Outfit'dan ~12% keng: telefonda "Мижозларимиз" kabi
+   bitta so'z kartadan chiqib, sahifani 404 px ga kengaytirardi (27.10, brauzer-sinov). */
+@media (max-width: 479.98px) {
+  :lang(uz-Cyrl) .sh-title,
+  :lang(ru) .sh-title {
+    font-size: 1.85rem;
+    overflow-wrap: break-word;
+  }
+}
+@media (max-width: 389.98px) {
+  :lang(uz-Cyrl) .sh-title,
+  :lang(ru) .sh-title {
+    font-size: 1.6rem;
+  }
+}
+@media (max-width: 359.98px) {
+  :lang(uz-Cyrl) .sh-title,
+  :lang(ru) .sh-title {
+    font-size: 1.4rem;
+  }
+}
 /* Eng tor telefon (320px): "rasmiylashtiriladi" kabi uzun so'z sig'sin. */
 @media (max-width: 359.98px) {
   .sh-title {

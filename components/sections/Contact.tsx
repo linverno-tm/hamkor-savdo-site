@@ -138,7 +138,7 @@ export function Contact() {
                 <li key={p.phone}>
                   <a
                     href={`tel:${p.phone}`}
-                    className="group flex items-center justify-between gap-4 py-5 transition-colors hover:text-purple"
+                    className="group flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-5 transition-colors hover:text-purple"
                   >
                     <span className="text-sm text-ink-2">{p.label}</span>
                     <span className="numeral shrink-0 text-xl tracking-wide text-purple min-[360px]:text-2xl sm:text-3xl">

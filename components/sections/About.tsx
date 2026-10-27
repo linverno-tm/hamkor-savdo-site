@@ -40,6 +40,9 @@ export function About() {
                 <SplitWords text="Bizga xaridor emas, **HAMKOR** bo'ling!" />
               </h2>
             </div>
+            {/* Suratlar o'zi almashadi (faqat harakatga ruxsat bo'lsa) — WCAG 2.2.2:
+                5 s dan uzun harakatni to'xtatish imkoni bo'lsin. Tugma lib/motion.ts da. */}
+            <div className="about-photo-wrap">
             <div data-m="wipe" className="photo-cycle about-photo">
               {ABOUT_PHOTOS.map((p) => (
                 <figure key={p.src}>
@@ -57,6 +60,13 @@ export function About() {
                   <figcaption className="about-cap">{p.label}</figcaption>
                 </figure>
               ))}
+            </div>
+            <button type="button" className="cycle-pause" data-cycle-pause aria-pressed="false" aria-label="Suratlar almashinuvini to'xtatish">
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path className="cp-pause" d="M6 4h3v12H6zM11 4h3v12h-3z" />
+                <path className="cp-play" d="M6 4l10 6-10 6z" />
+              </svg>
+            </button>
             </div>
           </div>
         </div>

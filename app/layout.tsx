@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Outfit, Bebas_Neue } from "next/font/google";
+import { Outfit, Bebas_Neue, Onest, Oswald } from "next/font/google";
 import { site } from "@/data/site";
 import { SITE_URL, absolute } from "@/lib/seo";
 import { Reveal } from "@/components/ui/Reveal";
+import { LogoDefs } from "@/components/ui/Logo";
 import { MetrikaPageview } from "@/components/ui/MetrikaPageview";
 import { YM_ID } from "@/lib/metrika";
 import { MOTION_SCRIPT } from "@/lib/motion";
@@ -26,6 +27,29 @@ const bebas = Bebas_Neue({
   subsets: ["latin"],
   weight: "400",
   display: "swap",
+});
+
+/* Outfit va Bebas Neue'da kirill harfi yo'q: /ru/ va kirillcha nusxada brauzer tasodifiy
+   tizim shriftini olardi, sarlavhalarning siqiq harf oralig'i bilan harflar yopishib qolardi
+   (26.10 skrinshot). Shu ikkisi faqat kirill belgilari uchun (unicode-range) ulanadi —
+   lotincha harflar ularni chetlab Outfit/Bebas'ga o'tadi, oldindan yuklash (preload) ham yo'q.
+   Zaxira shrift (adjustFontFallback) o'chiq: u Arial va kirillni qamraydi — globals.css da
+   bular birinchi turadi, zaxira bo'lsa lotin harflari ham Arial'da chiqardi. */
+const onest = Onest({
+  variable: "--font-onest",
+  subsets: ["cyrillic", "cyrillic-ext"],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
+});
+
+const oswald = Oswald({
+  variable: "--font-oswald",
+  subsets: ["cyrillic", "cyrillic-ext"],
+  weight: "600",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: false,
 });
 
 const description =
@@ -206,7 +230,7 @@ export default function RootLayout({
     // data-theme'ni <head> skripti hidratsiyadan oldin qo'yadi — React buni xato demasin.
     // data-scroll-behavior: sahifadan sahifaga o'tganda Next silliq aylantirishni
     // vaqtincha o'chirib, yangi sahifani eng tepadan ochadi (Next 16 da o'zi qilmaydi).
-    <html lang="uz" data-scroll-behavior="smooth" className={`${outfit.variable} ${bebas.variable}`} suppressHydrationWarning>
+    <html lang="uz" data-scroll-behavior="smooth" className={`${outfit.variable} ${bebas.variable} ${onest.variable} ${oswald.variable}`} suppressHydrationWarning>
       <head>
         <script data-keep dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <script data-keep dangerouslySetInnerHTML={{ __html: AB_SCRIPT }} />
@@ -228,6 +252,7 @@ export default function RootLayout({
         {/* Reveal animations never gate content: the document ships fully
             visible and <Reveal> opts individual blocks into motion at runtime,
             so no-JS and older browsers simply read the page as-is. */}
+        <LogoDefs />
         <Reveal />
         <MetrikaPageview />
         {children}
