@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { branches } from "@/data/branches";
 import { site } from "@/data/site";
-import { absolute } from "@/lib/seo";
+import { absolute, ldJson } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
@@ -104,7 +104,7 @@ export default function Home() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }}
       />
       <a
         href="#biz-haqimizda"

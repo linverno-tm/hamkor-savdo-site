@@ -6,7 +6,7 @@
     "dev": "next dev",
     "prebuild": "node tools/rasmlarni-tayyorlash.mjs && node tools/api-malumot.mjs && node tools/kanal-lavhalar.mjs",
     "build": "next build",
-    "postbuild": "node tools/uz-kr-build.mjs",
+    "postbuild": "node tools/uz-kr-build.mjs && node tools/csp.mjs",
     "start": "next start",
     "lint": "eslint",
     "mahalliy": "php -S localhost:8000 -t out tools/mahalliy-server.php",
@@ -16,7 +16,7 @@
     "hamkor3d": "esbuild tools/hero3d/hamkor3d.js --bundle --minify --format=esm --target=es2020 --legal-comments=eof --outfile=public/vendor/hamkor3d-3.js"
   },
   "dependencies": {
-    "next": "16.3.1",
+    "next": "16.4.3",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -27,9 +27,9 @@
     "@types/react-dom": "^19",
     "esbuild": "0.28.2",
     "eslint": "^9",
-    "eslint-config-next": "16.3.1",
+    "eslint-config-next": "16.4.3",
     "node-html-parser": "^9.0.4",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "three": "0.186.1",
     "typescript": "^5"

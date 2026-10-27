@@ -4,7 +4,7 @@ import { branches } from "@/data/branches";
 import { site } from "@/data/site";
 import { topics, type Topic, type Lang } from "@/data/topics";
 import { installmentSteps } from "@/data/installment";
-import { absolute } from "@/lib/seo";
+import { absolute, ldJson } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
@@ -128,7 +128,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, faqLd]) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson([breadcrumbLd, faqLd]) }} />
       {lang === "ru" ? <RuHeader uzHref={`${topic.path}/`} /> : <Header />}
       <main id="asosiy" tabIndex={-1}>
         {/* ---- asosiy qism: binafsha sahna, o'ngda yo'nalish surati ---- */}

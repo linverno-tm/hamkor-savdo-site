@@ -4,7 +4,7 @@ import Link from "next/link";
 import { branches, mapsUrl } from "@/data/branches";
 import { categories } from "@/data/categories";
 import { site } from "@/data/site";
-import { absolute } from "@/lib/seo";
+import { absolute, ldJson } from "@/lib/seo";
 import { branchCover, branchPhotos } from "@/lib/photos";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -134,7 +134,7 @@ export default async function BranchPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]) }}
+        dangerouslySetInnerHTML={{ __html: ldJson([jsonLd, breadcrumbLd]) }}
       />
       <Header />
       <main id="asosiy" tabIndex={-1}>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { branches, cityList } from "@/data/branches";
 import { site } from "@/data/site";
-import { absolute } from "@/lib/seo";
+import { absolute, ldJson } from "@/lib/seo";
 import { branchCover, branchPhotos } from "@/lib/photos";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -65,7 +65,7 @@ export default function BranchIndexPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }}
       />
       <Header />
       <main id="asosiy" tabIndex={-1} className="fl-page">

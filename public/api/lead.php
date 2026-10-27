@@ -15,6 +15,10 @@
  * PHP 7.4 va undan yuqori versiyalarda ishlaydi.
  */
 
+/* Xato matni mijozga chiqmasin (fayl yo'li, sozlama nomlari). admin/_lib/bootstrap.php
+   ham shuni qiladi, lekin u pastroqda yuklanadi — sayt.json o'qilishi undan oldin. */
+ini_set('display_errors', '0');
+
 date_default_timezone_set('Asia/Tashkent');
 
 $MAX_NAME = 80;

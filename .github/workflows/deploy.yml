@@ -29,6 +29,12 @@ jobs:
 
       - run: npm ci
 
+      # Sifat darvozasi: lint yoki sinov yiqilsa — hostingga hech narsa
+      # ketmaydi (ishlab turgan sayt o'zgarmay qoladi). Tur tekshiruvini
+      # `next build` o'zi qiladi; alohida tsc next-env.d.ts siz yiqilardi.
+      - run: npm run lint
+      - run: npm test
+
       # PHP fayllarda sintaksis xatosi bo'lsa (lead.php, admin panel) —
       # hostingga hech narsa yuklanmaydi: bitta xato ariza qabul qilishni
       # to'xtatib qo'yardi. Kompyuterda PHP yo'q, tekshiruv shu yerda.

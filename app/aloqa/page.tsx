@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { branches, mapsUrl } from "@/data/branches";
 import { site } from "@/data/site";
-import { absolute } from "@/lib/seo";
+import { absolute, ldJson } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
@@ -60,7 +60,7 @@ export default function AloqaPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }} />
       <Header />
       <main id="asosiy" tabIndex={-1}>
         <section className="tp-hero on-purple text-white">

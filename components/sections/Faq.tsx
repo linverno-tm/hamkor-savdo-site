@@ -1,4 +1,5 @@
 import { content, fill } from "@/lib/content";
+import { ldJson } from "@/lib/seo";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
@@ -25,7 +26,7 @@ export function Faq() {
 
   return (
     <section id="savollar" aria-labelledby="faq-title" className="sec faq">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }} />
       <div className="wrap faq-grid">
         <div className="faq-side">
           <div className="faq-sticky">

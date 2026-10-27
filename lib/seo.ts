@@ -19,3 +19,11 @@ export const absolute = (path: string) => {
   const withSlash = path === "" || path.endsWith("/") || hasExt ? path : `${path}/`;
   return `${SITE_URL}${withSlash}`;
 };
+
+/**
+ * JSON-LD matnini <script> ichiga xavfsiz qo'yish. Ma'lumot (filial nomi,
+ * savol-javob) admin paneldan keladi; unda "</script>" bo'lsa, oddiy
+ * JSON.stringify skriptni yopib, qolganini HTML sifatida ishga tushirardi.
+ * `<` ni \u003c qilish JSON ma'nosini o'zgartirmaydi.
+ */
+export const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
