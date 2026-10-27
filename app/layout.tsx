@@ -5,6 +5,7 @@ import { SITE_URL, absolute } from "@/lib/seo";
 import { Reveal } from "@/components/ui/Reveal";
 import { LogoDefs } from "@/components/ui/Logo";
 import { MetrikaPageview } from "@/components/ui/MetrikaPageview";
+import { LangSync } from "@/components/ui/LangSync";
 import { YM_ID } from "@/lib/metrika";
 import { MOTION_SCRIPT } from "@/lib/motion";
 import { AB_SCRIPT } from "@/lib/ab";
@@ -255,6 +256,7 @@ export default function RootLayout({
         <LogoDefs />
         <Reveal />
         <MetrikaPageview />
+        <LangSync />
         {children}
       </body>
     </html>
