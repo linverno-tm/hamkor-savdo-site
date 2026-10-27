@@ -1,6 +1,6 @@
 import { site } from "@/data/site";
 import { branches } from "@/data/branches";
-import { content } from "@/lib/content";
+import { content, Rich } from "@/lib/content";
 import { ScrubText } from "@/components/ui/ScrubText";
 import { SplitWords } from "@/components/ui/SplitWords";
 
@@ -29,6 +29,7 @@ const ABOUT_PHOTOS = [
  * (`companyStory`) egasi yozmaguncha bo'sh va ko'rinmaydi.
  */
 export function About() {
+  const [first, ...rest] = [...content.texts.aboutParagraphs, ...(site.unpublished.companyStory ? [site.unpublished.companyStory] : [])];
   return (
     <section id="biz-haqimizda" aria-labelledby="about-title" className="sec about">
       <div className="wrap about-grid">
@@ -72,15 +73,22 @@ export function About() {
         </div>
 
         <div className="about-text">
-          {content.texts.aboutParagraphs.map((p, i) => (
-            <p key={i} className="scrub">
-              <ScrubText text={p} />
-            </p>
-          ))}
-          {site.unpublished.companyStory ? (
+          {/* Egasi 27.10: matn — bitta xatboshi, qolgani yopiq bo'limda
+              (qidiruv tizimlari uni baribir o'qiydi). Asosiy gapni suratlar aytadi. */}
+          {first ? (
             <p className="scrub">
-              <ScrubText text={site.unpublished.companyStory} />
+              <ScrubText text={first} />
             </p>
+          ) : null}
+          {rest.length ? (
+            <details className="more-text">
+              <summary>To&apos;liq o&apos;qish</summary>
+              {rest.map((p, i) => (
+                <p key={i}>
+                  <Rich text={p} />
+                </p>
+              ))}
+            </details>
           ) : null}
           <div data-m="up" className="flex flex-wrap gap-3 pt-4">
             <a href="#yonalishlar" className="btn btn-primary">

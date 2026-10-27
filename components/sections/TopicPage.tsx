@@ -11,8 +11,10 @@ import { ActionBar } from "@/components/layout/ActionBar";
 import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { Vitrina3D } from "@/components/sections/Vitrina3D";
+import { BranchRoute } from "@/components/sections/BranchRoute";
 import { SplitWords } from "@/components/ui/SplitWords";
 import { ScrubText } from "@/components/ui/ScrubText";
+import { Rich } from "@/lib/content";
 import { OpenStatus } from "@/components/ui/OpenStatus";
 
 /**
@@ -30,6 +32,7 @@ const UI = {
     apply: "Ariza qoldirish",
     call: "Qo'ng'iroq",
     more: "Batafsil",
+    readAll: "To'liq o'qish",
     howTitle: "Qanday rasmiylashtiriladi",
     branchesTitle: "Filiallarimiz",
     branchesLead: "Kelib ko'ring — mahsulotni jonli ko'rib, joyida rasmiylashtirasiz.",
@@ -43,6 +46,7 @@ const UI = {
     apply: "Оставить заявку",
     call: "Позвонить",
     more: "Подробнее",
+    readAll: "Читать полностью",
     howTitle: "Как оформить",
     branchesTitle: "Наши магазины",
     branchesLead: "Приходите — посмотрите товар вживую и оформите рассрочку на месте.",
@@ -251,12 +255,22 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                 <SplitWords text={ui.more} />
               </h2>
             </div>
+            {/* Egasi 27.10: matn — sarlavha va bitta xatboshi; qolgani yopiq
+                bo'limda (qidiruv tizimlari uni baribir o'qiydi). */}
             <div className="tp-body-text">
-              {t.body.map((para, i) => (
-                <p key={i} className="scrub">
-                  <ScrubText text={para} />
-                </p>
-              ))}
+              <p className="scrub">
+                <ScrubText text={t.body[0]} />
+              </p>
+              {t.body.length > 1 ? (
+                <details className="more-text">
+                  <summary>{ui.readAll}</summary>
+                  {t.body.slice(1).map((para, i) => (
+                    <p key={i}>
+                      <Rich text={para} />
+                    </p>
+                  ))}
+                </details>
+              ) : null}
             </div>
           </div>
         </section>
@@ -273,9 +287,12 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
               </h2>
             </div>
             <ol data-m="" data-m-stagger className="tp-steps">
-              {steps.map((s) => (
+              {steps.map((s, i) => (
                 <li key={s.index} className="tp-step">
-                  <span className="tp-step-n numeral">{s.index}</span>
+                  <span className="tp-step-top">
+                    <span className="tp-step-n numeral">{s.index}</span>
+                    <StepArt i={i} />
+                  </span>
                   <p className="tp-step-title">{s.title}</p>
                   <p className="mt-2 leading-relaxed text-on-purple-2">{s.detail}</p>
                 </li>
@@ -293,6 +310,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
               </h2>
               <p className="sh-lead">{ui.branchesLead}</p>
             </div>
+            <BranchRoute lang={lang} light />
             <ul data-m="" data-m-stagger className="tp-branches">
               {branches.map((b) => (
                 <li key={b.id} className="branch-item flex flex-col">
@@ -393,5 +411,46 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
       {lang === "ru" ? <RuFooter /> : <Footer />}
       <ActionBar label={ui.apply} callLabel={ui.call} />
     </>
+  );
+}
+
+/**
+ * Qadam rasmi — matn o'qilmasa ham qadam ko'rinib tursin: tanlash (xarid
+ * sumkasi), rasmiylashtirish (pasport + karta), olish (yetkazish mashinasi —
+ * BranchRoute'dagi 3D model rendari), to'lash (oylar halqasi). Bezak.
+ */
+function StepArt({ i }: { i: number }) {
+  if (i === 2)
+    return <img src="/3d/yetkazish-160.webp" alt="" width={80} height={52} loading="lazy" decoding="async" className="tp-step-art tp-step-truck" />;
+  const months = site.facts.installmentMonthsMax;
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className="tp-step-art" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      {i === 0 ? (
+        <>
+          <path pathLength={1} className="sa-draw" d="M14 22h36l-3 32H17Z" />
+          <path pathLength={1} className="sa-draw" d="M24 26v-8a8 8 0 0 1 16 0v8" />
+        </>
+      ) : i === 1 ? (
+        <>
+          <rect pathLength={1} className="sa-draw" x="6" y="14" width="34" height="24" rx="4" />
+          <circle cx="16" cy="25" r="4" />
+          <path d="M24 23h10M24 29h7" />
+          <rect pathLength={1} className="sa-draw sa-late" x="24" y="30" width="34" height="22" rx="4" fill="var(--purple)" />
+          <path d="M24 37h34" />
+        </>
+      ) : (
+        <>
+          {Array.from({ length: months }, (_, k) => {
+            const a0 = (k / months) * 2 * Math.PI - Math.PI / 2 + 0.06;
+            const a1 = ((k + 1) / months) * 2 * Math.PI - Math.PI / 2 - 0.06;
+            const p = (a: number) => `${(32 + 24 * Math.cos(a)).toFixed(1)} ${(32 + 24 * Math.sin(a)).toFixed(1)}`;
+            return <path key={k} d={`M${p(a0)}A24 24 0 0 1 ${p(a1)}`} className="sa-seg" style={{ ["--k" as string]: k }} />;
+          })}
+          <text x="32" y="39" textAnchor="middle" className="sa-num numeral">
+            {months}
+          </text>
+        </>
+      )}
+    </svg>
   );
 }

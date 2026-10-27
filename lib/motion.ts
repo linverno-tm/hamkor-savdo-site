@@ -140,6 +140,8 @@ function init(){
   var seen=typeof WeakSet==='function'?new WeakSet():null;
   function show(el){if(el.classList.contains('m-in'))return;el.classList.add('m-in');
     if(el.hasAttribute('data-count'))count(el);
+    /* Filiallar sxemasi (components/sections/BranchRoute.tsx): yo'l chizilgach mashina bir marta yuradi. */
+    if(el.hasAttribute('data-drive'))setTimeout(function(){el.querySelectorAll('animateMotion').forEach(function(a){try{a.beginElement();}catch(x){}});},1800);
     el.querySelectorAll('[data-count]').forEach(count);}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){
     if(!e.isIntersecting)return;show(e.target);io.unobserve(e.target);
