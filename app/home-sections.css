@@ -513,11 +513,12 @@
       animation-timeline: view();
       animation-range: cover 18% cover 42%;
     }
-    /* Boshlang'ich xiralik 0.5 dan past emas: shunda ham matn kontrasti ≥3:1
-       (WCAG 1.4.3, 26 px katta matn) — 0.16 da Lighthouse 30+ so'zni xato dedi. */
+    /* Boshlang'ich xiralik 0.75: eng och holatda ham kontrast ≥4,5:1 (WCAG 1.4.3) —
+       PSI 28.10 da 0.5 xato chiqdi: binafsha qalin so'z 2,6:1, mavzu sahifalaridagi
+       oddiy so'z 3,5:1. 0.75 da qora 8:1, binafsha 4,9:1, qorong‘i rejimda ≥5,8:1. */
     @keyframes word-lit {
       from {
-        opacity: 0.5;
+        opacity: 0.75;
       }
       to {
         opacity: 1;

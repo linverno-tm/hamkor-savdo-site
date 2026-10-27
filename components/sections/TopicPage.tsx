@@ -184,11 +184,12 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                 <div className="jewel-photo">
                   <img
                     src={topic.photo.src}
+                    srcSet={photoSrcSet(topic.photo.src)}
+                    sizes={PHOTO_SIZES}
                     width={900}
                     height={675}
                     alt={topic.photo.alt[lang]}
                     decoding="async"
-                    fetchPriority="high"
                   />
                 </div>
                 <a href="#ariza" className="jewel-card">
@@ -207,11 +208,12 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
               <div className="tp-photo in-7">
                 <img
                   src={topic.photo.src}
+                  srcSet={photoSrcSet(topic.photo.src)}
+                  sizes={PHOTO_SIZES}
                   width={900}
                   height={675}
                   alt={topic.photo.alt[lang]}
                   decoding="async"
-                  fetchPriority="high"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -412,6 +414,14 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
       <ActionBar label={ui.apply} callLabel={ui.call} />
     </>
   );
+}
+
+/* Bosh qism surati. Telefonda u matndan pastda, LCP esa matn: yuqori ustunlik
+   (fetchPriority) uni CSS va shriftlar bilan raqobatga qo'yardi (PSI 28.10:
+   /texnika/ LCP 2,9–3,5 s). public/yonalishlar da har surat -480 va -900. */
+const PHOTO_SIZES = "(min-width: 1024px) 560px, calc(100vw - 2.5rem)";
+function photoSrcSet(src: string) {
+  return `${src.replace("-900.", "-480.")} 480w, ${src} 900w`;
 }
 
 /**
