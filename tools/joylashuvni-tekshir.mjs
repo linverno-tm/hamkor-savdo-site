@@ -225,6 +225,12 @@ for (const [yol, nima] of yopiqBolishi) {
     if (matn.trim() === "") {
       return { ok: true, izoh: `HTTP ${r.status}, javob bo'sh` };
     }
+    // Hostingning bot himoyasi (27.10 dan) yopiq statik faylga ham 200 bilan
+    // "One moment, please..." sahifasini beradi: mazmun chiqmagan, lekin
+    // yopiqligini ham tasdiqlab bo'lmaydi — xato emas, ogohlantirish.
+    if (/One moment, please/.test(matn)) {
+      return { ok: false, daraja: "ogoh", izoh: `HTTP ${r.status}, hosting bot himoyasi sahifasi — mazmun chiqmadi, brauzerda tekshiring` };
+    }
     return { ok: false, izoh: `HTTP ${r.status}, ${matn.length} belgi qaytdi` };
   });
 }
