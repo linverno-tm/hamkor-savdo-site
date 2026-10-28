@@ -1289,7 +1289,20 @@ function hs_mb_handle_private($msg)
         $phone = '+' . $phone;
     }
     $name = trim((isset($c['first_name']) ? $c['first_name'] : '') . ' ' . (isset($c['last_name']) ? $c['last_name'] : ''));
-    $note = $q ? "Telegram guruhidagi savol: " . $q['text'] . ($q['context'] !== '' ? "\n(Post: " . mb_substr(preg_replace('/\s+/u', ' ', $q['context']), 0, 150) . ')' : '') : '';
+    /* Izoh qatorlarga bo'lingan: CRM (sayt-ariza.ts) uni «Telegram гуруҳ» arizasi deb ko'rsatadi.
+       Ism — kontaktdagi Telegram ismi (ba'zan «Бориларга шукр…» kabi gap bo'ladi), shuning uchun
+       savol, guruh va yozgan odam alohida yoziladi — ism savolning bir qismi bo'lib ko'rinmasin. */
+    $note = '';
+    if ($q) {
+        $g = hs_tg_get_chat($q['chat_id']);
+        $guruh = $g && $g['title'] !== '' ? $g['title'] . ($g['username'] !== '' ? ' (@' . $g['username'] . ')' : '') : '';
+        $un = isset($msg['from']['username']) && $msg['from']['username'] !== '' ? '@' . $msg['from']['username'] : '';
+        $yozgan = trim($q['user_name'] . ($un !== '' && $un !== $q['user_name'] ? ' ' . $un : ''));
+        $note = 'Savol: ' . $q['text']
+            . ($guruh !== '' ? "\nGuruh: " . $guruh : '')
+            . ($yozgan !== '' ? "\nYozgan: " . $yozgan : '')
+            . ($q['context'] !== '' ? "\nPost: " . mb_substr(preg_replace('/\s+/u', ' ', $q['context']), 0, 150) : '');
+    }
     hs_db()->prepare('INSERT INTO leads(created_at, name, phone, branch, note, special, page, source, source_detail, ym_client) VALUES(?, ?, ?, ?, ?, 0, ?, ?, ?, ?)')
         ->execute(array(hs_now(), $name !== '' ? $name : 'Telegram mijozi', $phone, '', $note, 'telegram-guruh', 'telegram', 'medium=guruh;content=savol-' . (int) $qid, ''));
     $leadId = (int) hs_db()->lastInsertId();
