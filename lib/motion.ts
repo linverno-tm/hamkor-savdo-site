@@ -62,7 +62,9 @@ function h3d(){
   if(lite&&!d.querySelector('[data-3d]'))return;
   window.__h3dHero=!(lite||mem<3||cores<4||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches));
   var go=function(){var s=d.createElement('script');s.type='module';s.src='${H3D_SRC}';d.head.appendChild(s);};
-  var idle=function(){(window.requestIdleCallback||function(f){setTimeout(f,600);})(go,{timeout:2500});};
+  /* load'dan 3 s keyin: statik sahifada load ~0,3 s da keladi, 165 KB yadro darhol so'ralsa
+     PSI uni LCP zanjiriga qo'shadi (28.10: matn LCP 2,9–3,5 s, «render delay» 2,5 s). */
+  var idle=function(){setTimeout(function(){(window.requestIdleCallback||function(f){setTimeout(f,600);})(go,{timeout:2500});},3000);};
   if(d.readyState==='complete')idle();else addEventListener('load',idle);
 }
 if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',h3d);else h3d();
