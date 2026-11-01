@@ -5,20 +5,16 @@ import { absolute, ldJson } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
-import { Hero } from "@/components/sections/Hero";
-import { Trust } from "@/components/sections/Trust";
 import { Promotions } from "@/components/sections/Promotions";
 import { Catalog } from "@/components/sections/Catalog";
-import { Installment } from "@/components/sections/Installment";
-import { Vitrina3D } from "@/components/sections/Vitrina3D";
-import { HowItWorks } from "@/components/sections/HowItWorks";
 import { LeadForm } from "@/components/sections/LeadForm";
-import { About } from "@/components/sections/About";
-import { Store } from "@/components/sections/Store";
-import { Branches } from "@/components/sections/Branches";
-import { Reviews } from "@/components/sections/Reviews";
 import { Faq } from "@/components/sections/Faq";
-import { FinalCta } from "@/components/sections/FinalCta";
+import { UyHero } from "@/components/uy/UyHero";
+import { UyYol } from "@/components/uy/UyYol";
+import { UyYonalish } from "@/components/uy/UyYonalish";
+import { UyFiliallar } from "@/components/uy/UyFiliallar";
+import { UyIshonch } from "@/components/uy/UyIshonch";
+import "./uy.css";
 
 /** "8:00–18:00" -> {opens:"08:00", closes:"18:00"} — schema.org soat qatori uchun. */
 function parseHours(hours: string) {
@@ -106,42 +102,22 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: ldJson(jsonLd) }}
       />
-      <a
-        href="#biz-haqimizda"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-purple focus:px-5 focus:py-3 focus:font-semibold focus:text-white"
-      >
-        Asosiy mazmunga o&apos;tish
-      </a>
       <Header />
-      <main id="asosiy" tabIndex={-1}>
-        {/* Tartib: kim va nima (hero + kategoriyalar) → ishonch → aksiya va
-            katalog (bo'sh bo'lsa ko'rinmaydi) → muddatli to'lov → qanday
-            xarid qilinadi → biz haqimizda → jonli do'kon suratlari → filiallar
-            va xarita → sharhlar → savollar → ariza va yakuniy chaqiriq.
-
-            Ariza formasi oxirda, yakuniy chaqiriq bilan yonma-yon: ilgari u
-            o'rtada turardi va pastdagi "Ariza qoldirish" tugmasi odamni o'n
-            ekran tepaga qaytarardi. Tezroq yozmoqchi bo'lgan odam uchun hero
-            ichidagi qisqa forma bor.
-
-            "Bizda yo'qmi? Baribir olamiz" alohida bo'lim edi — yakuniy
-            chaqiriqdagi "Kerakli mahsulotni birga topamiz" bilan bir xil
-            va'da. Endi u bitta joyda: hero ostidagi havola va formadagi
-            "boshqa joyda ko'rganman" katagi. */}
-        <Hero />
-        <Trust />
-        <Vitrina3D />
+      <main id="asosiy" tabIndex={-1} className="uy-page">
+        {/* 01.11 redizayn — g'oya: «Uyingizga hozir — to'lov keyin».
+            Tartib (7 bo'lim): va'da (hero + qisqa ariza) → do'kondan uygacha
+            va to'lov taqvimi → yo'nalishlar → (aksiya va katalog — admin
+            to'ldirsa) → filiallar xaritasi → ishonch → ariza → savollar.
+            Skip-link Header ichida (#asosiy). */}
+        <UyHero />
+        <UyYol />
+        <UyYonalish />
         <Promotions />
         <Catalog />
-        <Installment />
-        <HowItWorks />
-        <About />
-        <Store />
-        <Branches />
-        <Reviews />
-        <Faq />
+        <UyFiliallar />
+        <UyIshonch />
         <LeadForm />
-        <FinalCta />
+        <Faq />
       </main>
       <Footer />
       <ActionBar />

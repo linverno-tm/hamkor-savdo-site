@@ -112,7 +112,8 @@
   <FilesMatch "\.(?:html|txt)$">
     Header set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
-  Header set X-Content-Type-Options "nosniff"
+  # X-Content-Type-Options: nosniff — bu yerda yo'q: hostingdagi nginx (Engintron)
+  # uni har javobga o'zi qo'shadi, ikkinchi nusxa sarlavhada takrorlanardi (01.11).
   Header set Referrer-Policy "strict-origin-when-cross-origin"
 
   # --- Xavfsizlik sarlavhalari ---
@@ -138,15 +139,18 @@
   # Options esa eskilari uchun — ikkalasi bir xil narsani aytadi.
   Header always set X-Frame-Options "SAMEORIGIN"
 
-  # CSP ning faqat buzilmaydigan qismi. `script-src` ataylab qo'yilmagan:
-  # Metrika va manba aniqlash skriptlari sahifa ichida yozilgan, ularni
-  # ruxsat etish uchun 'unsafe-inline' kerak bo'lardi — u esa CSP ning
-  # asosiy foydasini yo'qqa chiqaradi. Quyidagilar esa hech narsani
-  # buzmaydi va haqiqiy hujumlarni to'sadi:
+  # Majburiy CSP (01.11). Ichki skriptlar (Next, Metrika, til/manba
+  # aniqlash) sahifa ichida yozilgani uchun bu yerda 'unsafe-inline' bor —
+  # lekin begona domendan skript, ramka yoki ulanish endi bloklanadi:
+  # faqat sayt o'zi, Yandex Metrika va filial xaritasi (Yandex Maps 2.1 —
+  # 'unsafe-eval' va blob: uslubni rasmiy hujjati talab qiladi), Telegram
+  # lavha oynasi. Qattiqrog'i — hash'li siyosat — har sahifada
+  # Report-Only bo'lib turibdi (tools/csp.mjs); hisobotlar toza bo'lsa,
+  # CSP_MODE=enforce bilan shu qatorning o'rnini egallaydi.
   #   form-action  — ariza formasini begona manzilga yuborib bo'lmaydi
   #   base-uri     — <base> tegi qo'shib hamma havolani burib bo'lmaydi
   #   object-src   — eski Flash/plugin orqali kod ishga tushmaydi
-  Header always set Content-Security-Policy "frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://api-maps.yandex.ru https://suggest-maps.yandex.ru https://*.maps.yandex.net https://yandex.ru; style-src 'self' 'unsafe-inline' blob:; img-src 'self' data: blob: https:; font-src 'self' data:; media-src 'self' blob:; connect-src 'self' blob: https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://api-maps.yandex.ru https://suggest-maps.yandex.ru https://*.maps.yandex.net https://yandex.ru https://*.yandex.ru; frame-src https://t.me https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://api-maps.yandex.ru; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
 
   # Sayt bu imkoniyatlarning hech birini ishlatmaydi. Sahifaga begona kod
   # tushib qolsa ham, brauzer kameraga yoki joylashuvga yo'l bermaydi.

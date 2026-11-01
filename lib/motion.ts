@@ -126,6 +126,15 @@ if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',pickSt);else p
 if(!('IntersectionObserver' in window))return;
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 de.classList.add('m-js');
+/* Jonli video (components/uy/UyFiliallar.tsx): faqat ekranga kirganda yuklanadi va
+   o'ynaydi, chiqqanda to'xtaydi. Trafik tejash yoki 2G da — faqat poster. */
+function lv(){var vs=d.querySelectorAll('video[data-lazy-video]');if(!vs.length)return;
+  var c=navigator.connection||{};if(c.saveData||/(^|-)2g/.test(c.effectiveType||''))return;
+  var vo=new IntersectionObserver(function(es){es.forEach(function(e){var v=e.target;
+    if(e.isIntersecting){if(!v.src){v.src=v.getAttribute('data-lazy-video');}var p=v.play();if(p&&p.catch)p.catch(function(){});}
+    else if(v.src){v.pause();}});},{rootMargin:'120px 0px'});
+  vs.forEach(function(v){vo.observe(v);});}
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',lv);else lv();
 function fmt(n,plain){return plain?String(n):String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,' ');}
 function count(el){
   var t=+el.getAttribute('data-count');if(!isFinite(t))return;
