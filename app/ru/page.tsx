@@ -4,10 +4,13 @@ import { site } from "@/data/site";
 import { topics } from "@/data/topics";
 import { absolute } from "@/lib/seo";
 import { ActionBar } from "@/components/layout/ActionBar";
-import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
+import { RuHeader, RuFooter } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { SplitWords } from "@/components/ui/SplitWords";
-import { OpenStatus } from "@/components/ui/OpenStatus";
+import { UyTopHero } from "@/components/uy/UyTopHero";
+import { UyUylar } from "@/components/uy/UyUylar";
+import { UyFiliallar } from "@/components/uy/UyFiliallar";
+import "@/app/uy.css";
 
 /**
  * Ruscha bosh sahifa. Rus tilida qidiradigan odam ("рассрочка Андижан",
@@ -59,105 +62,35 @@ export default function RuHome() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <RuHeader uzHref="/" />
-      <main id="asosiy" tabIndex={-1}>
-        <section className="tp-hero on-purple text-white" data-spot>
-          <div className="hero-bg" aria-hidden="true">
-            <span className="hero-orb hero-orb-1" />
-            <span className="hero-orb hero-orb-2" />
-            <span className="hero-orb hero-orb-3" />
-            <span className="hero-spot" />
-            <span className="hero-grid" />
-          </div>
-          <div className="wrap relative">
-            <p className="hero-pill in-1">
-              <span className="hero-pill-dot" aria-hidden="true" />
-              Андижанская область · {branches.length} магазина
-            </p>
-            <h1 className="tp-title !max-w-[20ch]">
-              <span className="hero-line">
-                <span className="in-2">Бытовая техника, мебель и золото в рассрочку</span>
-              </span>
-            </h1>
-            <p className="hero-lead in-4 !max-w-[42rem]">
-              Более {site.facts.productCount.replace("+", "")} товаров в одном магазине. Рассрочка до {M} месяцев — нужны
-              только паспорт и пластиковая карта. Бесплатная доставка и установка по Андижанской области.
-            </p>
-            <div className="in-5 mt-9 flex flex-wrap gap-3">
-              <a href="#ariza" className="btn btn-yellow btn-glow">
-                Оставить заявку
-              </a>
-              <a href={`tel:${site.phone}`} className="btn btn-outline">
-                {site.phoneDisplay}
-              </a>
-            </div>
+      <main id="asosiy" tabIndex={-1} className="uy-page">
+        {/* Bosh sahifa bilan bir xil "uy" tili; matn — avvalgi ruscha matn. */}
+        <UyTopHero
+          lang="ru"
+          title="Бытовая техника, мебель и золото в рассрочку"
+          lead={`Более ${site.facts.productCount.replace("+", "")} товаров в одном магазине. Рассрочка до ${M} месяцев — нужны только паспорт и пластиковая карта. Бесплатная доставка и установка по Андижанской области.`}
+          applyLabel="Оставить заявку"
+          crumbs={<p className="uh-crumbs">Андижанская область · {branches.length} магазина</p>}
+          photo={{
+            src: "/uy/xona-640.webp",
+            srcSet: "/uy/xona-640.webp 640w, /uy/xona-1000.webp 1000w, /uy/xona-1400.webp 1400w",
+            sizes: "(min-width: 1024px) 46vw, 86vw",
+            w: 1000,
+            h: 732,
+            alt: "Светлая гостиная: телевизор, комод и кресло",
+            position: "30% 60%",
+          }}
+        />
+
+        <section aria-labelledby="ru-dirs" className="uy-sec uy">
+          <div className="u-wrap">
+            <h2 id="ru-dirs" className="u-h2">
+              Что можно купить в рассрочку
+            </h2>
+            <UyUylar lang="ru" items={topics} />
           </div>
         </section>
 
-        <section aria-labelledby="ru-dirs" className="sec">
-          <div className="wrap">
-            <div data-m>
-              <h2 id="ru-dirs" className="sh-title">
-                <SplitWords text="Что можно купить в рассрочку" />
-              </h2>
-            </div>
-            <ul data-m="" data-m-stagger className="tp-others">
-              {topics.map((t) => (
-                <li key={t.id}>
-                  <a href={`${t.ruPath}/`} className="tp-other !min-h-[20rem]">
-                    {t.photo ? (
-                      <img src={t.photo.src} width={900} height={675} alt={t.photo.alt.ru} loading="lazy" decoding="async" className="tp-other-img" />
-                    ) : (
-                      <span className="absolute left-6 top-5 flex flex-col">
-                        <span className="numeral text-7xl leading-none text-yellow">{M}</span>
-                        <span className="text-xl font-extrabold">месяцев</span>
-                      </span>
-                    )}
-                    <span className="tp-other-shade" aria-hidden="true" />
-                    <span className="tp-other-body">
-                      <span className="tp-other-kicker">{t.ru.kicker}</span>
-                      <span className="tp-other-h">{t.ru.lead}</span>
-                    </span>
-                    <span aria-hidden="true" className="tp-other-arrow">
-                      &rarr;
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section aria-labelledby="ru-branches" className="sec bg-ground-2">
-          <div className="wrap">
-            <div data-m>
-              <h2 id="ru-branches" className="sh-title">
-                <SplitWords text="Наши магазины" />
-              </h2>
-            </div>
-            <ul data-m="" data-m-stagger className="tp-branches">
-              {branches.map((b) => (
-                <li key={b.id} className="branch-item">
-                  <div className="branch-top">
-                    <span className="branch-idx numeral" aria-hidden="true">
-                      {b.index}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="branch-city">{CITY_RU[b.city] ?? b.city}</p>
-                      <p className="branch-land">{b.landmark}</p>
-                      <OpenStatus hours={b.hours} closed={b.closed} />
-                    </div>
-                  </div>
-                  <p className="branch-addr">Часы работы: {b.hours}</p>
-                  <div className="branch-actions">
-                    <a href={`tel:${b.phone ?? site.phone}`} className="branch-call">
-                      {b.phoneDisplay ?? site.phoneDisplay}
-                    </a>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        <UyFiliallar lang="ru" title="Наши магазины" />
 
         <section aria-labelledby="ru-faq" className="sec faq">
           <div className="wrap faq-grid">

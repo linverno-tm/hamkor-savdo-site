@@ -1069,7 +1069,9 @@ html[data-ab-tel-forma="b"] .uh-form-wrap {
 .fil-video {
   aspect-ratio: 16 / 10;
 }
-.fil-video video {
+.fil-video :is(img, video) {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1433,7 +1435,8 @@ html[data-ab-tel-forma="b"] .uh-form-wrap {
 /* Kirill va rus: Oswald (Bebas'ning kirill o'rnini bosadi) — Bebas kabi bosh harflarda. */
 :root:lang(ru) :is(.uh-title, .u-h2, .yol-t, .tqv-big, .yon-name, .fil-name, .uh-badge, .fil-city),
 :root:lang(uz-Cyrl) :is(.uh-title, .u-h2, .yol-t, .tqv-big, .yon-name, .fil-name, .uh-badge, .fil-city),
-:root:lang(uz-Cyrl) .uy-page :is(.lead, .faq) .sh-title {
+:root:lang(uz-Cyrl) .uy-page :is(.lead, .faq) .sh-title,
+:root:lang(ru) .uy-page :is(.lead, .faq) .sh-title {
   text-transform: uppercase;
 }
 :root:lang(uz-Cyrl) .fil-name span,
@@ -1462,4 +1465,198 @@ html[data-ab-tel-forma="b"] .uh-form-wrap {
   @media (min-width: 1024px) {
     font-size: clamp(52px, 5vw, 80px);
   }
+}
+
+/* ==================================================================
+   Ichki sahifalar (yo'nalishlar, /ru/) — 02.11. Bosh sahifadagi tilning
+   o'zi: UyTopHero, "deraza" afzalliklar, qadamlar yo'li, uylar ro'yxati.
+   ================================================================== */
+
+.uh-head {
+  grid-area: title;
+}
+.uh-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 15px;
+  color: var(--u-on-2);
+}
+.uh-crumbs a {
+  color: var(--u-on-2);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-underline-offset: 4px;
+}
+.uh-crumbs a:hover {
+  color: #fff;
+}
+.uh-crumbs [aria-current] {
+  color: #fff;
+}
+.uh--tp .uh-title {
+  font-size: clamp(48px, 13.4vw, 76px);
+  line-height: 0.92;
+  text-wrap: balance;
+}
+:root:lang(ru) .uh--tp .uh-title,
+:root:lang(uz-Cyrl) .uh--tp .uh-title {
+  font-size: clamp(34px, 9.6vw, 56px);
+  line-height: 1.08;
+}
+/* Mahsulot uyning tomidan chiqib turadi (bosh sahifadagi yo'nalish kartalari kabi). */
+.uh-pr {
+  position: absolute;
+  z-index: 1;
+  right: 2%;
+  top: -16%;
+  width: 34%;
+  height: auto;
+  filter: drop-shadow(0 22px 26px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+}
+.uh--tp .uh-badge {
+  bottom: -26px;
+}
+@media (min-width: 1024px) {
+  .uh--tp .uh-grid {
+    grid-template-areas:
+      "title uy"
+      "lead  uy"
+      "cta   uy";
+    grid-template-rows: auto auto 1fr;
+  }
+  .uh--tp .uh-title {
+    font-size: clamp(72px, 6.6vw, 108px);
+  }
+  :root:lang(ru) .uh--tp .uh-title,
+  :root:lang(uz-Cyrl) .uh--tp .uh-title {
+    font-size: clamp(50px, 4.6vw, 76px);
+  }
+  /* Ichki sahifada hero'da forma yo'q — sariq tugma kompyuterda ham turadi. */
+  .uh--tp .uh-cta {
+    margin-top: 32px;
+  }
+  .uh--tp .uh-cta .btn-yellow {
+    display: inline-flex;
+  }
+  .uh--tp .uh-uy {
+    min-height: 460px;
+  }
+  .uh-pr {
+    width: 200px;
+    right: -12px;
+    top: -36px;
+  }
+}
+
+/* Afzalliklar — har band oldida yongan "deraza" (sariq tomli kvadrat). */
+.tpu-points {
+  padding-block: clamp(56px, 8vw, 104px);
+}
+.tpu-points-grid {
+  display: grid;
+  gap: 32px 28px;
+}
+@media (min-width: 640px) {
+  .tpu-points-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .tpu-points-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.tpu-win {
+  display: block;
+  width: 44px;
+  height: 40px;
+  clip-path: var(--u-roof);
+  background: var(--yellow);
+}
+.tpu-point-title {
+  margin-top: 16px;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.25;
+}
+.tpu-point-text {
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* Qadamlar — kartalar emas, tungi fonda bitta yo'l: tepada sariq uzuq chiziq. */
+.tpu-how .tp-steps {
+  margin-top: 0;
+  gap: 40px 28px;
+}
+.tpu-how .tp-step {
+  border: 0;
+  border-top: 2px dashed rgba(223, 208, 31, 0.55);
+  border-radius: 0;
+  background: none;
+  padding: 24px 0 0;
+}
+.tpu-how .tp-step:hover {
+  background: none;
+  transform: none;
+}
+.tpu-how .tp-step-n {
+  font-family: var(--font-display);
+  font-size: 56px;
+}
+.tpu-how .tp-step-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.tpu-how .tp-step p:last-child {
+  color: var(--u-on-2);
+}
+
+/* Uylar ro'yxati (boshqa yo'nalishlar, /ru/ yo'nalishlari). */
+.uylar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 48px 16px;
+  padding-top: 24px;
+}
+@media (min-width: 1024px) {
+  .uylar {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 56px 28px;
+  }
+}
+.uylar .yon-pr {
+  width: 42%;
+  top: -16%;
+}
+.uylar .yon-name {
+  font-size: clamp(28px, 4vw, 40px);
+}
+.uylar .yon-line {
+  font-size: 14px;
+}
+.uylar-oy {
+  display: grid;
+  place-items: center;
+  background: var(--yellow);
+  color: #1a1130;
+}
+.uylar-oy > span {
+  display: grid;
+  justify-items: center;
+  padding-top: 18%;
+  font-weight: 600;
+  font-size: 16px;
+}
+.uylar-oy b {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(64px, 12vw, 104px);
+  line-height: 0.85;
 }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { branches } from "@/data/branches";
 import { site } from "@/data/site";
 import { topics, type Topic, type Lang } from "@/data/topics";
 import { installmentSteps } from "@/data/installment";
@@ -8,14 +7,16 @@ import { absolute, ldJson } from "@/lib/seo";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
-import { RuHeader, RuFooter, CITY_RU } from "@/components/layout/RuChrome";
+import { RuHeader, RuFooter } from "@/components/layout/RuChrome";
 import { LeadForm } from "@/components/sections/LeadForm";
 import { Vitrina3D } from "@/components/sections/Vitrina3D";
-import { BranchRoute } from "@/components/sections/BranchRoute";
+import { UyTopHero } from "@/components/uy/UyTopHero";
+import { UyFiliallar } from "@/components/uy/UyFiliallar";
+import { UyUylar } from "@/components/uy/UyUylar";
 import { SplitWords } from "@/components/ui/SplitWords";
 import { ScrubText } from "@/components/ui/ScrubText";
 import { Rich } from "@/lib/content";
-import { OpenStatus } from "@/components/ui/OpenStatus";
+import "@/app/uy.css";
 
 /**
  * Yo'nalish sahifasi (/texnika/, /ru/tehnika/ ...). Matn `data/topics.ts` da.
@@ -111,7 +112,6 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
   const ui = UI[lang];
   const self = href(lang, topic);
   const homeHref = lang === "ru" ? "/ru/" : "/";
-  const cityName = (c: string) => (lang === "ru" ? CITY_RU[c] ?? c : c);
   const steps = lang === "ru" ? STEPS_RU : installmentSteps;
   const others = topics.filter((o) => o.id !== topic.id);
 
@@ -134,111 +134,53 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson([breadcrumbLd, faqLd]) }} />
       {lang === "ru" ? <RuHeader uzHref={`${topic.path}/`} /> : <Header />}
-      <main id="asosiy" tabIndex={-1}>
-        {/* ---- asosiy qism: binafsha sahna, o'ngda yo'nalish surati ---- */}
-        <section className={`tp-hero tp-hero--${topic.id} on-purple text-white`}>
-          <div className="hero-bg" aria-hidden="true">
-            <span className="hero-orb hero-orb-1" />
-            <span className="hero-orb hero-orb-2" />
-            <span className="hero-grid" />
-          </div>
-          {/* Orqada yo'nalish nomi ulkan kontur harflarda — sekin suzadi
-              (app/pages.css > .tp-giant). Bezak, matn yuqorida bor. */}
-          <span className="tp-giant numeral" aria-hidden="true">
-            {t.kicker}
-          </span>
-          <div className="wrap relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
-            <div>
-              <nav aria-label={lang === "ru" ? "Навигация" : "Qayerdaman"} className="tp-crumbs in-1">
-                <LangLink lang={lang} to={homeHref} className="hover:text-white">
-                  {ui.home}
-                </LangLink>
-                <span className="mx-2" aria-hidden="true">
-                  /
-                </span>
-                <span className="text-white">{t.kicker}</span>
-              </nav>
-              <p className="hero-pill in-1 mt-7">
-                <span className="hero-pill-dot" aria-hidden="true" />
-                {t.kicker}
-              </p>
-              <h1 className="tp-title">
-                <span className="hero-line">
-                  <span className="in-2">{t.h1}</span>
-                </span>
-              </h1>
-              <p className="hero-lead in-4">{t.lead}</p>
-              <div className="in-5 mt-9 flex flex-wrap gap-3">
-                <a href="#ariza" className="btn btn-yellow btn-glow">
-                  {ui.apply}
-                </a>
-                <a href={`tel:${site.phone}`} className="btn btn-outline">
-                  {site.phoneDisplay}
-                </a>
-              </div>
-            </div>
-            {topic.photo && topic.id === "tilla" ? (
-              /* Tilla — zargarlik do'konlari uslubida: iliq fondagi baland
-                 surat va pastida "mahsulot kartasi" kvadrat strelka bilan. */
-              <div className="jewel in-7">
-                <div className="jewel-photo">
-                  <img
-                    src={topic.photo.src}
-                    srcSet={photoSrcSet(topic.photo.src)}
-                    sizes={PHOTO_SIZES}
-                    width={900}
-                    height={675}
-                    alt={topic.photo.alt[lang]}
-                    decoding="async"
-                  />
-                </div>
-                <a href="#ariza" className="jewel-card">
-                  <span>
-                    <span className="jewel-name">{t.kicker}</span>
-                    <span className="jewel-note">
-                      {site.facts.installmentMonthsMax} {lang === "ru" ? "месяцев рассрочки" : "oygacha muddatli to'lov"}
-                    </span>
-                  </span>
-                  <span className="jewel-arrow" aria-hidden="true">
-                    &rarr;
-                  </span>
-                </a>
-              </div>
-            ) : topic.photo ? (
-              <div className="tp-photo in-7">
-                <img
-                  src={topic.photo.src}
-                  srcSet={photoSrcSet(topic.photo.src)}
-                  sizes={PHOTO_SIZES}
-                  width={900}
-                  height={675}
-                  alt={topic.photo.alt[lang]}
-                  decoding="async"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="tp-badge in-7">
-                <p className="tp-badge-num numeral">{site.facts.installmentMonthsMax}</p>
-                <p className="tp-badge-title">{lang === "ru" ? "месяцев рассрочки" : "oygacha muddatli to'lov"}</p>
-                <p className="mt-4 text-on-purple-2">{lang === "ru" ? "Паспорт + пластиковая карта" : "Pasport + plastik karta"}</p>
-              </div>
-            )}
-          </div>
-        </section>
+      <main id="asosiy" tabIndex={-1} className="uy-page tpu">
+        {/* ---- bosh qism: bosh sahifadagi "uy" tili — tomli oynada yo'nalish surati ---- */}
+        <UyTopHero
+          lang={lang}
+          title={t.h1}
+          lead={t.lead}
+          applyLabel={ui.apply}
+          crumbs={
+            <nav aria-label={lang === "ru" ? "Навигация" : "Qayerdaman"} className="uh-crumbs">
+              <LangLink lang={lang} to={homeHref}>
+                {ui.home}
+              </LangLink>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{t.kicker}</span>
+            </nav>
+          }
+          photo={
+            topic.photo
+              ? {
+                  src: topic.photo.src.replace("-900.", "-480."),
+                  srcSet: photoSrcSet(topic.photo.src),
+                  sizes: PHOTO_SIZES,
+                  w: 900,
+                  h: 675,
+                  alt: topic.photo.alt[lang],
+                }
+              : {
+                  src: "/uy/xona-640.webp",
+                  srcSet: "/uy/xona-640.webp 640w, /uy/xona-1000.webp 1000w, /uy/xona-1400.webp 1400w",
+                  sizes: PHOTO_SIZES,
+                  w: 1000,
+                  h: 732,
+                  alt: lang === "ru" ? "Светлая гостиная: телевизор, комод и кресло" : "Yorug' mehmonxona: devorda televizor, yog'och komod va yumshoq kreslo",
+                  position: "30% 60%",
+                }
+          }
+          product={PRODUCT[topic.id]}
+        />
 
-        {/* ---- asosiy afzalliklar ---- */}
-        <section aria-label={t.kicker} className="tp-points">
-          <ul data-m="" data-m-stagger className="wrap tp-points-grid">
-            {t.points.map((p, i) => (
-              <li key={p.title} className={`tile ${i === 0 ? "tile-yellow" : ""}`}>
-                <span className="tp-point-n numeral" aria-hidden="true">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <p className="tp-point-title">{p.title}</p>
-                  <p className="tile-note mt-2 leading-relaxed">{p.text}</p>
-                </div>
+        {/* ---- asosiy afzalliklar: har biri yongan "deraza" ---- */}
+        <section aria-label={t.kicker} className="uy-sec tpu-points">
+          <ul data-m="" data-m-stagger className="u-wrap tpu-points-grid">
+            {t.points.map((p) => (
+              <li key={p.title}>
+                <span className="tpu-win" aria-hidden="true" />
+                <p className="tpu-point-title">{p.title}</p>
+                <p className="tpu-point-text">{p.text}</p>
               </li>
             ))}
           </ul>
@@ -250,13 +192,11 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         ) : null}
 
         {/* ---- matn: aylantirilgan sari so'zma-so'z yorishadi ---- */}
-        <section aria-labelledby="topic-more" className="sec">
-          <div className="wrap tp-body">
-            <div data-m>
-              <h2 id="topic-more" className="sh-title">
-                <SplitWords text={ui.more} />
-              </h2>
-            </div>
+        <section aria-labelledby="topic-more" className="uy-sec uy">
+          <div className="u-wrap tp-body">
+            <h2 id="topic-more" className="u-h2">
+              {ui.more}
+            </h2>
             {/* Egasi 27.10: matn — sarlavha va bitta xatboshi; qolgani yopiq
                 bo'limda (qidiruv tizimlari uni baribir o'qiydi). */}
             <div className="tp-body-text">
@@ -278,16 +218,11 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         </section>
 
         {/* ---- qadamlar ---- */}
-        <section aria-labelledby="topic-how" className="inst on-purple text-white">
-          <div className="inst-bg" aria-hidden="true">
-            <span className="inst-glow" />
-          </div>
-          <div className="wrap">
-            <div data-m>
-              <h2 id="topic-how" className="sh-title text-white">
-                <SplitWords text={ui.howTitle} />
-              </h2>
-            </div>
+        <section aria-labelledby="topic-how" className="uy-sec uy-tun tpu-how">
+          <div className="u-wrap">
+            <h2 id="topic-how" className="u-h2">
+              {ui.howTitle}
+            </h2>
             <ol data-m="" data-m-stagger className="tp-steps">
               {steps.map((s, i) => (
                 <li key={s.index} className="tp-step">
@@ -303,45 +238,8 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
           </div>
         </section>
 
-        {/* ---- filiallar ---- */}
-        <section aria-labelledby="topic-branches" className="sec">
-          <div className="wrap">
-            <div data-m className="sh">
-              <h2 id="topic-branches" className="sh-title">
-                <SplitWords text={ui.branchesTitle} />
-              </h2>
-              <p className="sh-lead">{ui.branchesLead}</p>
-            </div>
-            <BranchRoute lang={lang} light />
-            <ul data-m="" data-m-stagger className="tp-branches">
-              {branches.map((b) => (
-                <li key={b.id} className="branch-item flex flex-col">
-                  <div className="branch-top">
-                    <span className="branch-idx numeral" aria-hidden="true">
-                      {b.index}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="branch-city">{cityName(b.city)}</p>
-                      <p className="branch-land">{b.landmark}</p>
-                      <OpenStatus hours={b.hours} closed={b.closed} />
-                    </div>
-                  </div>
-                  <p className="branch-addr">
-                    {ui.hours}: {b.hours}
-                  </p>
-                  <div className="branch-actions mt-auto pt-4">
-                    <a href={`tel:${b.phone ?? site.phone}`} className="branch-call">
-                      {b.phoneDisplay ?? site.phoneDisplay}
-                    </a>
-                    <Link href={`/filiallar/${b.id}`} className="branch-link">
-                      {ui.pageInfo} →
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        {/* ---- filiallar: o'z SVG xaritasi, video va kartalar (bosh sahifa bilan bir xil) ---- */}
+        <UyFiliallar lang={lang} title={ui.branchesTitle} />
 
         {/* ---- savol-javob ---- */}
         <section aria-labelledby="topic-faq" className="sec faq tp-faq">
@@ -370,43 +268,12 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
         <LeadForm lang={lang} page={self} lead={t.cta} />
 
         {/* ---- boshqa yo'nalishlar (ichki havolalar qidiruv uchun ham muhim) ---- */}
-        <section aria-labelledby="topic-other" className="sec">
-          <div className="wrap">
-            <div data-m>
-              <h2 id="topic-other" className="sh-title">
-                <SplitWords text={ui.otherTitle} />
-              </h2>
-            </div>
-            <ul data-m="" data-m-stagger className="tp-others">
-              {others.map((o) => (
-                <li key={o.id}>
-                  <LangLink lang={lang} to={href(lang, o)} className="tp-other">
-                    {o.photo ? (
-                      <img
-                        src={o.photo.src}
-                        // public/yonalishlar da har surat 480 va 900 px: kompyuterda karta ~280 px.
-                        srcSet={/-900\.webp$/.test(o.photo.src) ? `${o.photo.src.replace(/-900\.webp$/, "-480.webp")} 480w, ${o.photo.src} 900w` : undefined}
-                        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 300px"
-                        alt=""
-                        width={900}
-                        height={675}
-                        loading="lazy"
-                        decoding="async"
-                        className="tp-other-img"
-                      />
-                    ) : null}
-                    <span className="tp-other-shade" aria-hidden="true" />
-                    <span className="tp-other-body">
-                      <span className="tp-other-kicker">{o[lang].kicker}</span>
-                      <span className="tp-other-h">{o[lang].h1}</span>
-                    </span>
-                    <span aria-hidden="true" className="tp-other-arrow">
-                      &rarr;
-                    </span>
-                  </LangLink>
-                </li>
-              ))}
-            </ul>
+        <section aria-labelledby="topic-other" className="uy-sec">
+          <div className="u-wrap">
+            <h2 id="topic-other" className="u-h2">
+              {ui.otherTitle}
+            </h2>
+            <UyUylar lang={lang} items={others} />
           </div>
         </section>
       </main>
@@ -416,10 +283,12 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
   );
 }
 
-/* Bosh qism surati. Telefonda u matndan pastda, LCP esa matn: yuqori ustunlik
-   (fetchPriority) uni CSS va shriftlar bilan raqobatga qo'yardi (PSI 28.10:
-   /texnika/ LCP 2,9–3,5 s). public/yonalishlar da har surat -480 va -900. */
-const PHOTO_SIZES = "(min-width: 1024px) 560px, calc(100vw - 2.5rem)";
+/* Bosh qism surati — telefonda sarlavha va matndan keyin birinchi ekranda
+   turadi va eng katta element (LCP), shuning uchun UyTopHero uni yuqori
+   ustunlik bilan yuklaydi. public/yonalishlar da har surat -480 va -900. */
+const PHOTO_SIZES = "(min-width: 1024px) 46vw, 86vw";
+/* Tom ustidan chiqib turadigan mahsulot (public/3d/<id>-320.webp). */
+const PRODUCT: Partial<Record<Topic["id"], string>> = { texnika: "muzlatgich", mebel: "divan", tilla: "uzuk", skuter: "skuter" };
 function photoSrcSet(src: string) {
   return `${src.replace("-900.", "-480.")} 480w, ${src} 900w`;
 }

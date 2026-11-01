@@ -3,6 +3,7 @@ import { branches, mapsUrl } from "@/data/branches";
 import { site } from "@/data/site";
 import { branchCover, branchPhotos } from "@/lib/photos";
 import { OpenStatus } from "@/components/ui/OpenStatus";
+import { CITY_RU } from "@/components/layout/RuChrome";
 
 /**
  * Filiallar — xarita birinchi.
@@ -29,7 +30,36 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
   return 6371 * 2 * Math.asin(Math.sqrt(a));
 }
 
-export function UyFiliallar() {
+const T = {
+  uz: {
+    count: (n: number) => `${n} ta`,
+    caption: `${site.freeDeliveryArea} bo'ylab yetkazish va o'rnatish bepul · masofalar to'g'ri chiziqda`,
+    mapLabel: "Filiallar xaritasi",
+    video: "Shahrixon filiali, Ozodbek savdo markazi — tashqi ko'rinish",
+    videoCap: "Shahrixon, Ozodbek savdo markazi",
+    hours: (h: string) => `Har kuni ${h}`,
+    closed: "Vaqtincha yopiq",
+    map: "Xaritada",
+  },
+  ru: {
+    count: (n: number) => `${n}`,
+    caption: "Доставка и установка по Андижанской области бесплатно · расстояния по прямой",
+    mapLabel: "Карта магазинов",
+    video: "Магазин в Шахрихане, торговый центр Озодбек — снаружи",
+    videoCap: "Шахрихан, торговый центр Озодбек",
+    hours: (h: string) => `Часы работы: ${h}`,
+    closed: "Временно закрыт",
+    map: "На карте",
+  },
+};
+
+/**
+ * @param title — sahifaning o'z sarlavhasi (yo'nalish/ruscha sahifalarda
+ *   avvalgi "Filiallarimiz" / "Наши магазины" matni saqlanadi).
+ */
+export function UyFiliallar({ lang = "uz", title }: { lang?: "uz" | "ru"; title?: string } = {}) {
+  const tr = T[lang];
+  const cityName = (c: string) => (lang === "ru" ? CITY_RU[c] ?? c : c);
   /* Shahar bo'yicha guruh: o'rtacha nuqta va soni. */
   const cities = new Map<string, { n: number; lat: number; lng: number }>();
   for (const b of branches) {
@@ -59,12 +89,12 @@ export function UyFiliallar() {
     <section id="filiallar" aria-labelledby="fil-title" className="uy-sec uy-tun">
       <div className="u-wrap">
         <h2 id="fil-title" className="u-h2">
-          {branches.length} ta do&apos;kon — {site.freeDeliveryArea}da
+          {title ?? `${branches.length} ta do'kon — ${site.freeDeliveryArea}da`}
         </h2>
 
         <div className="fil-top">
           <figure className="fil-map" data-m="">
-            <svg viewBox={`0 0 ${BOX.w} ${BOX.h}`} role="img" aria-label={`Filiallar xaritasi: ${pins.map((p) => p.city).join(", ")}`}>
+            <svg viewBox={`0 0 ${BOX.w} ${BOX.h}`} role="img" aria-label={`${tr.mapLabel}: ${pins.map((p) => cityName(p.city)).join(", ")}`}>
               <defs>
                 <pattern id="fil-grid" width="32" height="32" patternUnits="userSpaceOnUse">
                   <path d="M32 0H0V32" fill="none" />
@@ -79,35 +109,51 @@ export function UyFiliallar() {
                   ≈{l.km} km
                 </text>
               ))}
-              {pins.map((p) => (
+              {pins.map((p, i) => (
                 <g key={p.city} className="fil-pin" transform={`translate(${p.x} ${p.y})`}>
                   <circle className="fil-pulse" r="18" />
                   <path className="fil-house" d="M-11 10V-2L0 -11l11 9v12Z" />
-                  <text className="fil-city" y="34" textAnchor="middle">
-                    {p.city}
-                    {p.n > 1 ? ` · ${p.n} ta` : ""}
+                  {/* Chetki shaharlar nomi tepada va ichkariga qarab — xaritadan chiqmasin
+                      va masofa yozuvi bilan ustma-ust tushmasin (kirillda so'z uzunroq). */}
+                  <text
+                    className="fil-city"
+                    x={i === 0 ? -14 : i === pins.length - 1 ? 14 : 0}
+                    y={i === 0 ? -24 : 34}
+                    textAnchor={i === 0 ? "start" : i === pins.length - 1 ? "end" : "middle"}
+                  >
+                    {cityName(p.city)}
+                    {p.n > 1 ? ` · ${tr.count(p.n)}` : ""}
                   </text>
                 </g>
               ))}
             </svg>
-            <figcaption>
-              {site.freeDeliveryArea} bo&apos;ylab yetkazish va o&apos;rnatish bepul · masofalar to&apos;g&apos;ri chiziqda
-            </figcaption>
+            <figcaption>{tr.caption}</figcaption>
           </figure>
 
           <figure className="fil-video">
+            {/* Poster — oddiy lazy <img>: video `poster` atributi sahifa ochilishi bilan
+                yuklanib, hero rasmi bilan tarmoq uchun bellashardi (LH 01.11). */}
+            <img
+              src="/uy/ozodbek-poster-640.webp"
+              srcSet="/uy/ozodbek-poster-640.webp 640w, /uy/ozodbek-poster-1280.webp 1280w"
+              sizes="(min-width: 1024px) 40vw, 92vw"
+              width={640}
+              height={360}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
             <video
               data-lazy-video="/uy/ozodbek-1280.mp4"
-              poster="/uy/ozodbek-poster-640.webp"
               muted
               loop
               playsInline
               preload="none"
               width={1280}
               height={720}
-              aria-label="Shahrixon filiali, Ozodbek savdo markazi — tashqi ko'rinish"
+              aria-label={tr.video}
             />
-            <figcaption>Shahrixon, Ozodbek savdo markazi</figcaption>
+            <figcaption>{tr.videoCap}</figcaption>
           </figure>
         </div>
 
@@ -131,13 +177,20 @@ export function UyFiliallar() {
                 ) : null}
                 <div className="fil-body">
                   <h3 className="fil-name">
-                    <Link href={`/filiallar/${b.id}`}>
-                      {b.city}
-                      <span>{b.landmark}</span>
-                    </Link>
+                    {lang === "ru" ? (
+                      <a href={`/filiallar/${b.id}/`} hrefLang="uz">
+                        {cityName(b.city)}
+                        <span>{b.landmark}</span>
+                      </a>
+                    ) : (
+                      <Link href={`/filiallar/${b.id}`}>
+                        {b.city}
+                        <span>{b.landmark}</span>
+                      </Link>
+                    )}
                   </h3>
                   <p className="fil-hours">
-                    {b.closed ? (b.closedNote || "Vaqtincha yopiq") : <>Har kuni {b.hours}</>}{" "}
+                    {b.closed ? (lang === "ru" ? tr.closed : b.closedNote || tr.closed) : tr.hours(b.hours)}{" "}
                     <OpenStatus hours={b.hours} closed={b.closed} />
                   </p>
                   <div className="fil-act">
@@ -145,7 +198,7 @@ export function UyFiliallar() {
                       {phoneDisplay}
                     </a>
                     <a href={mapsUrl(b)} target="_blank" rel="noopener noreferrer" className="fil-map-a">
-                      Xaritada
+                      {tr.map}
                     </a>
                   </div>
                 </div>

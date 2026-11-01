@@ -54,7 +54,7 @@ export function UyHero() {
             <img
               src="/uy/xona-1000.webp"
               srcSet="/uy/xona-640.webp 640w, /uy/xona-1000.webp 1000w, /uy/xona-1400.webp 1400w"
-              sizes="(min-width: 1024px) 46vw, 92vw"
+              sizes="(min-width: 1024px) 46vw, 86vw"
               width={1000}
               height={732}
               alt="Yorug' mehmonxona: devorda televizor, yog'och komod va yumshoq kreslo"

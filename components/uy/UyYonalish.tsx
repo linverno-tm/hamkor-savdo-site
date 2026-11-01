@@ -19,6 +19,8 @@ const ITEMS = [
     photo: "texnika",
     alt: "Filialdagi maishiy texnika bo'limi",
     product: "muzlatgich",
+    sizes: "(min-width: 1024px) 460px, 92vw",
+    prSizes: "(min-width: 1024px) 185px, 37vw",
   },
   {
     id: "mebel",
@@ -28,6 +30,8 @@ const ITEMS = [
     photo: "mebel",
     alt: "Filialdagi mebel bo'limi — oshxona stoli va o'rindiqlar",
     product: "divan",
+    sizes: "(min-width: 1024px) 380px, 44vw",
+    prSizes: "(min-width: 1024px) 175px, 21vw",
   },
   {
     id: "tilla",
@@ -37,6 +41,8 @@ const ITEMS = [
     photo: "tilla",
     alt: "Filialdagi zargarlik bo'limi peshtaxtasi",
     product: "uzuk",
+    sizes: "(min-width: 1024px) 380px, 44vw",
+    prSizes: "(min-width: 1024px) 175px, 21vw",
   },
   {
     id: "skuter",
@@ -46,6 +52,8 @@ const ITEMS = [
     photo: "skuter",
     alt: "Skuter",
     product: "skuter",
+    sizes: "(min-width: 1024px) 720px, 92vw",
+    prSizes: "(min-width: 1024px) 175px, 28vw",
   },
 ] as const;
 
@@ -68,7 +76,7 @@ export function UyYonalish() {
                   <img
                     src={`/yonalishlar/${it.photo}-480.webp`}
                     srcSet={`/yonalishlar/${it.photo}-480.webp 480w, /yonalishlar/${it.photo}-900.webp 900w`}
-                    sizes="(min-width: 1024px) 34vw, (min-width: 640px) 46vw, 92vw"
+                    sizes={it.sizes}
                     width={480}
                     height={360}
                     alt={it.alt}
@@ -78,7 +86,9 @@ export function UyYonalish() {
                 </span>
                 <img
                   className="yon-pr"
-                  src={`/3d/${it.product}.webp`}
+                  src={`/3d/${it.product}-320.webp`}
+                  srcSet={`/3d/${it.product}-320.webp 320w, /3d/${it.product}.webp 640w`}
+                  sizes={it.prSizes}
                   width={640}
                   height={640}
                   alt=""
