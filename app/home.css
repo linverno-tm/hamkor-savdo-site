@@ -50,8 +50,7 @@
 }
 @keyframes hdr-in {
   from {
-    opacity: 0;
-    transform: translateY(-120%);
+    transform: translateY(-10px);
   }
 }
 

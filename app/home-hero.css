@@ -52,10 +52,11 @@
     animation-delay: 700ms;
   }
 }
+/* 01.11: matn birinchi kadrdanoq ko'rinadi — kirish faqat siljish, shaffoflik yo'q
+   (telefonda sarlavha 1–4 s ko'rinmay turardi, LCP kechikardi). */
 @keyframes in-rise {
   from {
-    opacity: 0;
-    transform: translateY(28px);
+    transform: translateY(18px);
   }
 }
 @keyframes in-nudge {
@@ -65,7 +66,7 @@
 }
 @keyframes in-line {
   from {
-    transform: translateY(110%) rotate(3deg);
+    transform: translateY(14px);
   }
 }
 
