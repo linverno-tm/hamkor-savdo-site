@@ -11,3 +11,5 @@
 
 Egasidan kerak bo'lsa: haqiqiy mijoz uyida mahsulot (yetkazib berilgan muzlatgich, o'rnatilgan konditsioner)
 surati — `xona-*.webp` o'rniga shu qo'yiladi (nomi va o'lchami saqlansa, kod o'zgarmaydi).
+
+- `public/yonalishlar/*-640.webp`, `public/3d/*-320.webp` (02.11) — mavjud -900 / 640 px fayllardan kichraytirilgan nusxalar (telefon uchun), manba o'sha.

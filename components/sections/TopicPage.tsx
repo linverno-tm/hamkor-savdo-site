@@ -290,7 +290,7 @@ const PHOTO_SIZES = "(min-width: 1024px) 46vw, 86vw";
 /* Tom ustidan chiqib turadigan mahsulot (public/3d/<id>-320.webp). */
 const PRODUCT: Partial<Record<Topic["id"], string>> = { texnika: "muzlatgich", mebel: "divan", tilla: "uzuk", skuter: "skuter" };
 function photoSrcSet(src: string) {
-  return `${src.replace("-900.", "-480.")} 480w, ${src} 900w`;
+  return `${src.replace("-900.", "-480.")} 480w, ${src.replace("-900.", "-640.")} 640w, ${src} 900w`;
 }
 
 /**

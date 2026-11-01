@@ -75,7 +75,7 @@ export function UyYonalish() {
                 <span className="yon-uy">
                   <img
                     src={`/yonalishlar/${it.photo}-480.webp`}
-                    srcSet={`/yonalishlar/${it.photo}-480.webp 480w, /yonalishlar/${it.photo}-900.webp 900w`}
+                    srcSet={`/yonalishlar/${it.photo}-480.webp 480w, /yonalishlar/${it.photo}-640.webp 640w, /yonalishlar/${it.photo}-900.webp 900w`}
                     sizes={it.sizes}
                     width={480}
                     height={360}

@@ -23,7 +23,7 @@ export function UyUylar({ lang, items }: { lang: "uz" | "ru"; items: Topic[] }) 
               {o.photo ? (
                 <img
                   src={o.photo.src.replace("-900.", "-480.")}
-                  srcSet={`${o.photo.src.replace("-900.", "-480.")} 480w, ${o.photo.src} 900w`}
+                  srcSet={`${o.photo.src.replace("-900.", "-480.")} 480w, ${o.photo.src.replace("-900.", "-640.")} 640w, ${o.photo.src} 900w`}
                   sizes="(min-width: 1024px) 300px, 44vw"
                   width={480}
                   height={360}

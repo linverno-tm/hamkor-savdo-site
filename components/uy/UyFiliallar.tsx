@@ -106,7 +106,7 @@ export function UyFiliallar({ lang = "uz", title }: { lang?: "uz" | "ru"; title?
               <path className="fil-route" d={route} pathLength={1} />
               {legs.map((l) => (
                 <text key={`${l.x}-${l.y}`} className="fil-km" x={l.x} y={l.y - 12} textAnchor="middle">
-                  ≈{l.km} km
+                  ≈{l.km} {lang === "ru" ? "км" : "km"}
                 </text>
               ))}
               {pins.map((p, i) => (
