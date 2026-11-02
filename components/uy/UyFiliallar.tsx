@@ -4,6 +4,8 @@ import { site } from "@/data/site";
 import { branchCover, branchPhotos } from "@/lib/photos";
 import { OpenStatus } from "@/components/ui/OpenStatus";
 import { CITY_RU } from "@/components/layout/RuChrome";
+import { Yukl } from "@/components/ui/Yukl";
+import { lqipStyle } from "@/lib/lqip";
 
 /**
  * Filiallar — xarita birinchi.
@@ -130,9 +132,10 @@ export function UyFiliallar({ lang = "uz", title }: { lang?: "uz" | "ru"; title?
             <figcaption>{tr.caption}</figcaption>
           </figure>
 
-          <figure className="fil-video">
+          <figure className="fil-video yk" style={lqipStyle("ozodbek")}>
             {/* Poster — oddiy lazy <img>: video `poster` atributi sahifa ochilishi bilan
-                yuklanib, hero rasmi bilan tarmoq uchun bellashardi (LH 01.11). */}
+                yuklanib, hero rasmi bilan tarmoq uchun bellashardi (LH 01.11).
+                Muqova va video kelguncha — yuklanish qatlami (foizli chiziq). */}
             <img
               src="/uy/ozodbek-poster-640.webp"
               srcSet="/uy/ozodbek-poster-640.webp 640w, /uy/ozodbek-poster-1280.webp 1280w"
@@ -143,8 +146,10 @@ export function UyFiliallar({ lang = "uz", title }: { lang?: "uz" | "ru"; title?
               loading="lazy"
               decoding="async"
             />
+            <Yukl />
             <video
               data-lazy-video="/uy/ozodbek-1280.mp4"
+              data-lazy-webm="/uy/ozodbek-1280-av1.webm"
               muted
               loop
               playsInline
@@ -165,15 +170,10 @@ export function UyFiliallar({ lang = "uz", title }: { lang?: "uz" | "ru"; title?
             return (
               <li key={b.id} className="fil-i">
                 {cover ? (
-                  <img
-                    className="fil-img"
-                    src={cover.srcSmall}
-                    width={480}
-                    height={360}
-                    alt={cover.alt}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <span className="fil-img yk">
+                    <Yukl />
+                    <img src={cover.srcSmall} width={480} height={360} alt={cover.alt} loading="lazy" decoding="async" />
+                  </span>
                 ) : null}
                 <div className="fil-body">
                   <h3 className="fil-name">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site } from "@/data/site";
+import { Yukl } from "@/components/ui/Yukl";
 
 /**
  * "Do'kondan uyingizgacha" — muddatli to'lov hikoyasi, so'z emas, rasm bilan.
@@ -40,7 +41,8 @@ export function UyYol() {
         </div>
           <ol className="yol-list">
           <li className="yol-step">
-            <div className="yol-pic yol-pic--foto">
+            <div className="yol-pic yol-pic--foto yk">
+              <Yukl />
               <img
                 src="/filiallar/shahrixon-ozodbek/zal-7-480.webp"
                 width={480}

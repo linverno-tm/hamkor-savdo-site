@@ -1,5 +1,6 @@
 import { content } from "@/lib/content";
 import { tashkentToday, uploadedImage } from "@/lib/images";
+import { Yukl } from "@/components/ui/Yukl";
 
 /**
  * Aksiyalar — admin paneldan. Build paytida muddati o'tganlari tashlab
@@ -52,7 +53,9 @@ export function Promotions() {
                 className="card flex flex-col overflow-hidden"
               >
                 {img ? (
-                  <img
+                  <span className="yk block">
+                    <Yukl />
+                    <img
                     src={img.src}
                     srcSet={`${img.srcSmall} 480w, ${img.src} 960w`}
                     sizes="(max-width: 768px) 100vw, 50vw"
@@ -63,6 +66,7 @@ export function Promotions() {
                     decoding="async"
                     className="block aspect-[16/9] w-full object-cover"
                   />
+                  </span>
                 ) : null}
                 <div className="flex flex-1 flex-col p-7">
                   <h3 className="display text-2xl">{p.title}</h3>

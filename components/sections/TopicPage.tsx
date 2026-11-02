@@ -159,6 +159,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                   w: 900,
                   h: 675,
                   alt: topic.photo.alt[lang],
+                  lqip: topic.id,
                 }
               : {
                   src: "/uy/xona-640.webp",
@@ -168,6 +169,7 @@ export function TopicPage({ topic, lang }: { topic: Topic; lang: Lang }) {
                   h: 732,
                   alt: lang === "ru" ? "Светлая гостиная: телевизор, комод и кресло" : "Yorug' mehmonxona: devorda televizor, yog'och komod va yumshoq kreslo",
                   position: "30% 60%",
+                  lqip: "xona",
                 }
           }
           product={PRODUCT[topic.id]}

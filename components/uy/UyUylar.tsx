@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { site } from "@/data/site";
 import type { Topic } from "@/data/topics";
+import { Yukl } from "@/components/ui/Yukl";
+import { lqipStyle } from "@/lib/lqip";
 
 /**
  * Yo'nalishlar ro'yxati "uylar" ko'rinishida — bosh sahifadagi UyYonalish
@@ -19,7 +21,8 @@ export function UyUylar({ lang, items }: { lang: "uz" | "ru"; items: Topic[] }) 
         const product = PRODUCT[o.id];
         const inner = (
           <>
-            <span className={`yon-uy${o.photo ? "" : " uylar-oy"}`}>
+            <span className={`yon-uy${o.photo ? " yk" : " uylar-oy"}`} style={o.photo ? lqipStyle(o.id) : undefined}>
+              {o.photo ? <Yukl /> : null}
               {o.photo ? (
                 <img
                   src={o.photo.src.replace("-900.", "-480.")}

@@ -1,6 +1,7 @@
 import { site } from "@/data/site";
 import { kanalItems } from "@/lib/kanal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Yukl } from "@/components/ui/Yukl";
 
 /** "2026-10-17" -> "17.10" */
 const shortDate = (d: string) => d.split("-").reverse().slice(0, 2).join(".");
@@ -45,7 +46,8 @@ export function KanalCatalog() {
         <ul data-m="" data-m-stagger className="kanal-grid">
           {items.map((it) => (
             <li key={it.id} className="kanal-card">
-              <a href={it.url} target="_blank" rel="noopener noreferrer" className="kanal-media" tabIndex={-1} aria-hidden="true">
+              <a href={it.url} target="_blank" rel="noopener noreferrer" className="kanal-media yk" tabIndex={-1} aria-hidden="true">
+                {it.image ? <Yukl /> : null}
                 {it.image ? (
                   /* Orqada xiralashgan nusxa — rasm kesilmasdan to'liq turadi, chetlar bo'sh qolmaydi. */
                   <img src={`${it.image}-480.webp`} alt="" aria-hidden="true" loading="lazy" decoding="async" className="media-bg" />

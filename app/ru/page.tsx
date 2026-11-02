@@ -78,6 +78,7 @@ export default function RuHome() {
             h: 732,
             alt: "Светлая гостиная: телевизор, комод и кресло",
             position: "30% 60%",
+            lqip: "xona",
           }}
         />
 

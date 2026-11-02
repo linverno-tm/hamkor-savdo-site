@@ -1,4 +1,6 @@
 import { site } from "@/data/site";
+import { Yukl } from "@/components/ui/Yukl";
+import { lqipStyle } from "@/lib/lqip";
 
 /**
  * Ichki sahifalar (yo'nalishlar, /ru/) uchun bosh qism — bosh sahifadagi
@@ -14,7 +16,7 @@ export type UyTopHeroProps = {
   lead: string;
   applyLabel: string;
   crumbs?: React.ReactNode;
-  photo: { src: string; srcSet?: string; sizes: string; alt: string; w: number; h: number; position?: string };
+  photo: { src: string; srcSet?: string; sizes: string; alt: string; w: number; h: number; position?: string; lqip?: string };
   /** Tom ustidan chiqib turadigan mahsulot (public/3d/<id>-320.webp). */
   product?: string;
 };
@@ -51,7 +53,8 @@ export function UyTopHero({ lang, title, lead, applyLabel, crumbs, photo, produc
         </div>
 
         <figure className="uh-uy">
-          <div className="uh-uy-frame">
+          <div className="uh-uy-frame yk" style={lqipStyle(photo.lqip)}>
+            <Yukl />
             <img
               src={photo.src}
               srcSet={photo.srcSet}

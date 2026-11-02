@@ -1,6 +1,7 @@
 import { site } from "@/data/site";
 import { content, Rich } from "@/lib/content";
 import { lavhalar } from "@/lib/kanal";
+import { Yukl } from "@/components/ui/Yukl";
 
 /**
  * Ishonch — o'ylab topilgan sharh yo'q, faqat tekshirsa bo'ladigan narsalar:
@@ -51,7 +52,8 @@ export function UyIshonch() {
 
           <ul className="ish-foto" data-m="" data-m-stagger>
             {PHOTOS.map((p) => (
-              <li key={p.src}>
+              <li key={p.src} className="yk">
+                <Yukl />
                 <img src={p.src} width={480} height={360} alt={p.alt} loading="lazy" decoding="async" />
               </li>
             ))}
@@ -71,7 +73,8 @@ export function UyIshonch() {
             <ul className="ish-rail" aria-label="Rasmiy kanaldagi mijoz lavhalari">
               {items.map((l) => (
                 <li key={l.id}>
-                  <a href={l.url} target="_blank" rel="noopener noreferrer" data-lavha={l.url} className="ish-lavha">
+                  <a href={l.url} target="_blank" rel="noopener noreferrer" data-lavha={l.url} className="ish-lavha yk">
+                    <Yukl />
                     <img
                       src={`${l.image}-480.webp`}
                       width={180}

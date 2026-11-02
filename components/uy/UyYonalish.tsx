@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { VITRINA } from "@/lib/vitrina";
+import { Yukl } from "@/components/ui/Yukl";
+import { lqipStyle } from "@/lib/lqip";
 
 /**
  * Yo'nalishlar — har biri "uy" shaklidagi oyna: ichida filialdagi haqiqiy
@@ -72,7 +74,8 @@ export function UyYonalish() {
           {ITEMS.map((it) => (
             <li key={it.id} className={`yon-i yon-i--${it.id}`}>
               <Link href={it.href} className="yon-a">
-                <span className="yon-uy">
+                <span className="yon-uy yk" style={lqipStyle(it.photo)}>
+                  <Yukl />
                   <img
                     src={`/yonalishlar/${it.photo}-480.webp`}
                     srcSet={`/yonalishlar/${it.photo}-480.webp 480w, /yonalishlar/${it.photo}-640.webp 640w, /yonalishlar/${it.photo}-900.webp 900w`}

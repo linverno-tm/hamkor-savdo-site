@@ -1660,3 +1660,40 @@ html[data-ab-tel-forma="b"] .uh-form-wrap {
   font-size: clamp(64px, 12vw, 104px);
   line-height: 0.85;
 }
+
+/* Yuklanish qatlami (app/yukl.css) bilan qatlamlar tartibi — rasm z-index 1. */
+.ish-lavha::after {
+  z-index: 1;
+}
+.ish-play,
+.ish-lv-t {
+  z-index: 2;
+}
+.ish-foto li {
+  border-radius: 16px;
+}
+/* Filial videosi: muqova (1) → yuklanish chizig'i (2) → video (3) → soya va yozuv. */
+.fil-video > img {
+  z-index: 1;
+}
+.fil-video > .yk-l {
+  z-index: 2;
+}
+.fil-video > video {
+  z-index: 3;
+}
+.fil-video::after {
+  z-index: 4;
+}
+.fil-video figcaption {
+  z-index: 5;
+}
+.fil-img {
+  display: block;
+  overflow: hidden;
+}
+.fil-img > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

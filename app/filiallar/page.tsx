@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ActionBar } from "@/components/layout/ActionBar";
 import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
 import { BranchRoute } from "@/components/sections/BranchRoute";
+import { Yukl } from "@/components/ui/Yukl";
 
 /**
  * The branch index at `/filiallar/`.
@@ -118,7 +119,8 @@ export default function BranchIndexPage() {
                   href={`/filiallar/${branch.id}`}
                   className="store-card group"
                 >
-                  <span className="store-media">
+                  <span className={`store-media${cover ? " yk" : ""}`}>
+                    {cover ? <Yukl /> : null}
                     {cover ? (
                       <img
                         src={cover.src}

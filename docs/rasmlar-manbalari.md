@@ -13,3 +13,5 @@ Egasidan kerak bo'lsa: haqiqiy mijoz uyida mahsulot (yetkazib berilgan muzlatgic
 surati — `xona-*.webp` o'rniga shu qo'yiladi (nomi va o'lchami saqlansa, kod o'zgarmaydi).
 
 - `public/yonalishlar/*-640.webp`, `public/3d/*-320.webp` (02.11) — mavjud -900 / 640 px fayllardan kichraytirilgan nusxalar (telefon uchun), manba o'sha.
+- `public/uy/ozodbek-1280-av1.webm` (02.11) — `ozodbek-1280.mp4` dan AV1 (libaom, CRF 46): 586 KB (MP4 600 KB), SSIM 0,982. Brauzer AV1 ochmasa MP4 ishlaydi (lib/motion.ts).
+- `lib/lqip.ts` — hero/yo'nalish/video suratlarining 24 px xira muqovalari (data: URI).

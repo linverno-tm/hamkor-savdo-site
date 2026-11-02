@@ -123,15 +123,38 @@ function openSt(){
 function startSt(){openSt();setInterval(openSt,60000);}
 function pickSt(){if(d.querySelector('script[src*="/_next/"]')){if(d.readyState==='complete')setTimeout(startSt,400);else addEventListener('load',function(){setTimeout(startSt,400);});}else startSt();}
 if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',pickSt);else pickSt();
+/* Yuklanish qatlami (components/ui/Yukl.tsx, app/yukl.css): idishdagi rasmlar
+   kelgach (yoki xato bo'lsa) data-yk="ok". Video idishida — o'ynay boshlaganda; kutish
+   paytida chiziq yuklangan foizni ko'rsatadi. Hodisalar hujjatda capture bosqichida
+   ushlanadi — React elementni almashtirsa ham ishlaydi, DOM'ga tugun qo'shilmaydi. */
+var lvOk=('IntersectionObserver' in window)&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)
+  &&!((navigator.connection||{}).saveData||/(^|-)2g/.test((navigator.connection||{}).effectiveType||''));
+function ykOk(c){if(c&&c.getAttribute('data-yk')!=='ok')c.setAttribute('data-yk','ok');}
+function ykVid(c){var v=c.querySelector('video[data-lazy-video]');return v&&lvOk?v:null;}
+function ykImgs(c){var a=c.querySelectorAll('img');for(var i=0;i<a.length;i++){if(!a[i].complete)return false;}return true;}
+function ykCheck(c){if(!c||c.getAttribute('data-yk')==='ok'||ykVid(c))return;if(ykImgs(c))ykOk(c);}
+function ykAll(){d.querySelectorAll('.yk').forEach(ykCheck);}
+d.addEventListener('load',function(e){var t=e.target;if(t&&t.tagName==='IMG')ykCheck(t.closest('.yk'));},true);
+d.addEventListener('error',function(e){var t=e.target;if(!t||!t.closest)return;var c=t.closest('.yk');
+  if(t.tagName==='IMG')ykCheck(c);else if(t.tagName==='VIDEO'&&!/\\.webm$/.test(t.src||''))ykOk(c);},true);
+d.addEventListener('progress',function(e){var v=e.target;if(!v||v.tagName!=='VIDEO')return;var c=v.closest('.yk');
+  if(!c||c.getAttribute('data-yk')==='ok')return;
+  try{if(v.duration>0&&v.buffered.length){c.style.setProperty('--p',Math.min(1,v.buffered.end(v.buffered.length-1)/v.duration).toFixed(3));c.setAttribute('data-yk','p');}}catch(x){}},true);
+d.addEventListener('playing',function(e){var v=e.target;if(v&&v.tagName==='VIDEO')ykOk(v.closest('.yk'));},true);
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',ykAll);else ykAll();
+addEventListener('load',ykAll);
 if(!('IntersectionObserver' in window))return;
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 de.classList.add('m-js');
 /* Jonli video (components/uy/UyFiliallar.tsx): faqat ekranga kirganda yuklanadi va
    o'ynaydi, chiqqanda to'xtaydi. Trafik tejash yoki 2G da — faqat poster. */
-function lv(){var vs=d.querySelectorAll('video[data-lazy-video]');if(!vs.length)return;
-  var c=navigator.connection||{};if(c.saveData||/(^|-)2g/.test(c.effectiveType||''))return;
+function lv(){var vs=d.querySelectorAll('video[data-lazy-video]');if(!vs.length||!lvOk)return;
   var vo=new IntersectionObserver(function(es){es.forEach(function(e){var v=e.target;
-    if(e.isIntersecting){if(!v.src){v.src=v.getAttribute('data-lazy-video');}var p=v.play();if(p&&p.catch)p.catch(function(){});}
+    if(e.isIntersecting){if(!v.src){var w=v.getAttribute('data-lazy-webm');
+      v.src=w&&v.canPlayType('video/webm; codecs="av01.0.05M.08"')?w:v.getAttribute('data-lazy-video');
+      /* AV1 ochilmasa (eski dekoder, 404) — MP4 ga qaytadi. */
+      v.addEventListener('error',function(){var m=v.getAttribute('data-lazy-video');if(v.src.indexOf(m)<0){v.src=m;var q=v.play();if(q&&q.catch)q.catch(function(){ykOk(v.closest('.yk'));});}},{once:true});}
+      var p=v.play();if(p&&p.catch)p.catch(function(){if(!/\\.webm$/.test(v.src))ykOk(v.closest('.yk'));});}
     else if(v.src){v.pause();}});},{rootMargin:'120px 0px'});
   vs.forEach(function(v){vo.observe(v);});}
 if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',lv);else lv();

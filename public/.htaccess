@@ -72,6 +72,9 @@
 </IfModule>
 <IfModule mod_mime.c>
   AddType model/gltf-binary .glb
+  AddType video/mp4 .mp4
+  AddType video/webm .webm
+  AddType image/avif .avif
 </IfModule>
 
 # --- Kesh. _next/static ichidagi fayllar nomida xesh bor, ular o'zgarmaydi. ---
@@ -104,6 +107,11 @@
   ExpiresByType image/webp "access plus 1 month"
   # Model o'zgarsa fayl nomi ham o'zgaradi (tools/hero3d/hamkor3d.js > GLB).
   ExpiresByType model/gltf-binary "access plus 1 month"
+  # Video (public/uy/*.mp4, *.webm) avval ExpiresDefault'ga tushib 1 soat keshlanardi.
+  # Fayl almashsa NOMI almashadi (ozodbek-1280 -> ozodbek-1280-v2), shuning uchun bir yil.
+  ExpiresByType video/mp4 "access plus 1 year"
+  ExpiresByType video/webm "access plus 1 year"
+  ExpiresByType image/avif "access plus 1 month"
 </IfModule>
 <IfModule mod_headers.c>
   <FilesMatch "\.(?:js|css|woff2)$">
@@ -111,6 +119,15 @@
   </FilesMatch>
   <FilesMatch "\.(?:html|txt)$">
     Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+  # Media (02.11): video bir yil. Suratlar 30 kun yangi hisoblanadi; undan keyin ham
+  # eski nusxa darhol ko'rsatilib, yangisi fonda olinadi (stale-while-revalidate).
+  # Nomi o'zgarmay almashtirilgan surat ko'pi bilan 30 kunda yangilanadi.
+  <FilesMatch "\.(?:mp4|webm)$">
+    Header set Cache-Control "public, max-age=31536000"
+  </FilesMatch>
+  <FilesMatch "\.(?:webp|avif|jpe?g|png)$">
+    Header set Cache-Control "public, max-age=2592000, stale-while-revalidate=31536000"
   </FilesMatch>
   # X-Content-Type-Options: nosniff — bu yerda yo'q: hostingdagi nginx (Engintron)
   # uni har javobga o'zi qo'shadi, ikkinchi nusxa sarlavhada takrorlanardi (01.11).

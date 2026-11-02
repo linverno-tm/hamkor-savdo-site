@@ -1,5 +1,6 @@
 import type { Photo } from "@/lib/photos";
 import { SplitWords } from "@/components/ui/SplitWords";
+import { Yukl } from "@/components/ui/Yukl";
 
 /**
  * A branch's own photography, laid out editorially rather than as a uniform
@@ -102,7 +103,8 @@ export function BranchGallery({
 
         <div data-m="up" className="mt-10">
           {/* Establishing shot */}
-          <a href={`#${id(0)}`} className="photo photo-lead group block">
+          <a href={`#${id(0)}`} className="photo photo-lead group block yk">
+            <Yukl />
             <img
               src={lead.src}
               srcSet={`${lead.srcSmall} 480w, ${lead.src} 960w`}
@@ -122,7 +124,8 @@ export function BranchGallery({
                 const kind = cells[i];
                 return (
                   <li key={p.src} className={CELL_CLASS[kind]}>
-                    <a href={`#${id(i + 1)}`} className="photo group block">
+                    <a href={`#${id(i + 1)}`} className="photo group block yk">
+                      <Yukl />
                       <img
                         src={p.src}
                         srcSet={`${p.srcSmall} 480w, ${p.src} 960w`}

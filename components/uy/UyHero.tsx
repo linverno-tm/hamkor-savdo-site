@@ -1,5 +1,7 @@
 import { site } from "@/data/site";
 import { UyTezForma } from "@/components/uy/UyTezForma";
+import { Yukl } from "@/components/ui/Yukl";
+import { lqipStyle } from "@/lib/lqip";
 
 /**
  * Bosh qism — g'oya: «Uyingizga hozir — to'lov keyin».
@@ -50,7 +52,8 @@ export function UyHero() {
         </div>
 
         <figure className="uh-uy">
-          <div className="uh-uy-frame">
+          <div className="uh-uy-frame yk" style={lqipStyle("xona")}>
+            <Yukl />
             <img
               src="/uy/xona-1000.webp"
               srcSet="/uy/xona-640.webp 640w, /uy/xona-1000.webp 1000w, /uy/xona-1400.webp 1400w"

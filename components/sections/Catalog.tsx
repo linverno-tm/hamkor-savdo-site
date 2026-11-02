@@ -2,6 +2,7 @@ import Link from "next/link";
 import { content, formatPrice, type CategoryId, type Product } from "@/lib/content";
 import { uploadedImage } from "@/lib/images";
 import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
+import { Yukl } from "@/components/ui/Yukl";
 
 export const CATEGORY_LABEL: Record<CategoryId, string> = {
   texnika: "Texnika",
@@ -14,7 +15,9 @@ export function ProductCard({ p }: { p: Product }) {
   return (
     <li className="card flex flex-col overflow-hidden">
       {img ? (
-        <img
+        <span className="yk block">
+          <Yukl />
+          <img
           src={img.src}
           srcSet={`${img.srcSmall} 480w, ${img.src} 960w`}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -24,7 +27,8 @@ export function ProductCard({ p }: { p: Product }) {
           loading="lazy"
           decoding="async"
           className="block aspect-[4/3] w-full object-cover"
-        />
+          />
+        </span>
       ) : (
         <PhotoPlaceholder className="aspect-[4/3]" caption="Surat tayyorlanmoqda" />
       )}

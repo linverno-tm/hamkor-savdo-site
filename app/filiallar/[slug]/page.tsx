@@ -14,6 +14,7 @@ import { BranchGallery } from "@/components/sections/BranchGallery";
 import { Logo } from "@/components/ui/Logo";
 import { SplitWords } from "@/components/ui/SplitWords";
 import { OpenStatus } from "@/components/ui/OpenStatus";
+import { Yukl } from "@/components/ui/Yukl";
 
 /**
  * One indexable page per branch.
@@ -243,7 +244,8 @@ export default async function BranchPage({
             </div>
 
             {cover ? (
-              <figure className="tp-photo bp-photo in-7 relative">
+              <figure className="tp-photo bp-photo in-7 relative yk">
+                <Yukl />
                 <img
                   src={cover.src}
                   srcSet={`${cover.srcSmall} 480w, ${cover.src} 960w`}
