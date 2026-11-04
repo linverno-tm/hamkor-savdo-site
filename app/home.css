@@ -45,8 +45,15 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .m-js .hdr-bar {
-    animation: hdr-in 900ms var(--ease) 100ms both;
+    /* `backwards`, `both` emas: tugagach transform qolsa, telefon menyusining
+       fixed paneli butun ekran o'rniga shu orolcha ichiga qamalib qoladi. */
+    animation: hdr-in 900ms var(--ease) 100ms backwards;
   }
+}
+/* backdrop-filter ham fixed bolalar uchun konteyner yaratadi — menyu ochiqda o'chadi. */
+.hdr-bar:has(.mobile-menu[open]) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 @keyframes hdr-in {
   from {
